@@ -13,3 +13,24 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model Lot {
+  id               String   @id @default(uuid())
+  blockKey         String   @unique
+  blockNumber      Int?
+  sectionNumber    Int?
+  areaSqm          Float
+  zoning           String
+  overlays         String?
+  address          String?
+  district         String?
+  division         String?
+  lifecycleStage   String?
+  shapeArea        Float?
+  shapeLength      Float?
+  globalId         String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
