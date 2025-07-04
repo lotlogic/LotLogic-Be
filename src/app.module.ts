@@ -8,7 +8,6 @@ import { FacadeModule } from './modules/facade/facade.module';
 import { EnquiryModule } from './modules/enquiry/enquiry.module';
 import { ZoningModule } from './modules/zoning/zoning.module';
 import { GeoModule } from './modules/geo/geo.module';
-
 @Module({
   imports: [
     EstateModule,
