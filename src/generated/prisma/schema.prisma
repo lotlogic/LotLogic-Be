@@ -1,0 +1,49 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model Lot {
+  id             String  @id @default(uuid())
+  blockKey       String  @unique
+  blockNumber    Int?
+  sectionNumber  Int?
+  areaSqm        Float
+  zoning         String
+  overlays       String?
+  address        String?
+  district       String?
+  division       String?
+  lifecycleStage String?
+  shapeArea      Float?
+  shapeLength    Float?
+  globalId       String?
+
+  // GeoJSON fields
+  geojson  Json? // Raw GeoJSON backup
+  geometry Unsupported("geometry")? // PostGIS geometry column
+
+  // Relationships
+  estate   Estate? @relation(fields: [estateId], references: [id])
+  estateId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([geometry], map: "geometry_index") // Spatial index for performance
+}
+
+model Estate {
+  id        String   @id @default(uuid())
+  name      String
+  lots      Lot[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
