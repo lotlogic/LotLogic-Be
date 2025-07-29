@@ -1,37 +1,103 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const prisma_1 = require("../generated/prisma");
-const fs_1 = require("fs");
-const path_1 = require("path");
-const prisma = new prisma_1.PrismaClient();
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 async function main() {
-    const filePath = path_1.default.resolve(__dirname, '../src/prisma/data/ACTGOV_BLOCKS.geojson');
-    const raw = fs_1.default.readFileSync(filePath, 'utf-8');
-    const geo = JSON.parse(raw);
-    const features = geo.features.slice(0, 100);
-    for (const feature of features) {
-        const props = feature.properties ?? {};
-        const geometry = feature.geometry;
-        const { BLOCK_KEY, BLOCK_NO, SECTION_NO, AREA_SQM, ZONING, OVERLAYS, BLOCK_ADDRESS, DISTRICT, DIVISION, LIFECYCLE_STAGE, } = props;
-        await prisma.lot.create({
-            data: {
-                blockKey: typeof BLOCK_KEY === 'string'
-                    ? BLOCK_KEY
-                    : `missing-${Math.random()}`,
-                blockNumber: BLOCK_NO ? parseInt(BLOCK_NO) : null,
-                sectionNumber: SECTION_NO ? parseInt(SECTION_NO) : null,
-                areaSqm: AREA_SQM ? parseFloat(AREA_SQM) : 0,
-                zoning: typeof ZONING === 'string' ? ZONING : 'Unknown',
-                overlays: typeof OVERLAYS === 'string' ? [OVERLAYS] : [],
-                address: typeof BLOCK_ADDRESS === 'string' ? BLOCK_ADDRESS : null,
-                district: typeof DISTRICT === 'string' ? DISTRICT : null,
-                division: typeof DIVISION === 'string' ? DIVISION : null,
-                lifecycleStage: typeof LIFECYCLE_STAGE === 'string' ? LIFECYCLE_STAGE : null,
-                geojson: geometry,
-            },
-        });
-    }
-    console.log(`✅ Inserted ${features.length} features`);
+    const zoningRule1 = await prisma.zoningRule.upsert({
+        where: { code: 'RZ1' },
+        update: {},
+        create: {
+            code: 'RZ1',
+            name: 'Residential Zone 1',
+            type: 'Residential',
+            isOverlay: false,
+            minFrontSetback_m: 4,
+            minRearSetback_m: 3,
+            minSideSetback_m: 3,
+            minFSR: 0.5,
+            appliesToZones: ['RZ1']
+        }
+    });
+    const zoningRule2 = await prisma.zoningRule.upsert({
+        where: { code: 'RZ2' },
+        update: {},
+        create: {
+            code: 'RZ2',
+            name: 'Residential Zone 2',
+            type: 'Residential',
+            isOverlay: false,
+            minFrontSetback_m: 6,
+            minRearSetback_m: 4,
+            minSideSetback_m: 4,
+            minFSR: 0.4,
+            appliesToZones: ['RZ2']
+        }
+    });
+    const lot1 = await prisma.lot.upsert({
+        where: { blockKey: 'BLOCK123' },
+        update: {},
+        create: {
+            blockKey: 'BLOCK123',
+            blockNumber: 101,
+            sectionNumber: 202,
+            areaSqm: 500.0,
+            zoning: 'RZ1',
+            address: '101 Block Street, Canberra',
+            district: 'Gungahlin',
+            division: 'Division A',
+            lifecycleStage: 'Available',
+            overlays: ['BPA'],
+            geojson: {
+                properties: {
+                    width: 20,
+                    depth: 35
+                }
+            }
+        }
+    });
+    const lot2 = await prisma.lot.upsert({
+        where: { blockKey: 'BLOCK456' },
+        update: {},
+        create: {
+            blockKey: 'BLOCK456',
+            blockNumber: 102,
+            sectionNumber: 203,
+            areaSqm: 600.0,
+            zoning: 'RZ2',
+            address: '102 Block Street, Canberra',
+            district: 'Belconnen',
+            division: 'Division B',
+            lifecycleStage: 'Available',
+            overlays: ['BPA'],
+            geojson: {
+                properties: {
+                    width: 25,
+                    depth: 40
+                }
+            }
+        }
+    });
+    await prisma.lotZoningRule.upsert({
+        where: { lotId_zoningRuleId: { lotId: lot1.id, zoningRuleId: zoningRule1.id } },
+        update: {},
+        create: {
+            lotId: lot1.id,
+            zoningRuleId: zoningRule1.id,
+            isOverlay: false
+        }
+    });
+    await prisma.lotZoningRule.upsert({
+        where: { lotId_zoningRuleId: { lotId: lot2.id, zoningRuleId: zoningRule2.id } },
+        update: {},
+        create: {
+            lotId: lot2.id,
+            zoningRuleId: zoningRule2.id,
+            isOverlay: false
+        }
+    });
+    console.log('✅ Sample data created successfully!');
+    console.log(`Lot 1 ID: ${lot1.id}`);
+    console.log(`Lot 2 ID: ${lot2.id}`);
 }
 main()
     .catch((err) => {
@@ -39,6 +105,6 @@ main()
     process.exit(1);
 })
     .finally(() => {
-    prisma.$disconnect().then(() => { });
+    prisma.$disconnect();
 });
 //# sourceMappingURL=seed.js.map

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: lotlogic-postgres
+    environment:
+      POSTGRES_DB: lotlogic
+      POSTGRES_USER: lotlogic_user
+      POSTGRES_PASSWORD: lotlogic_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lotlogic-network
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lotlogic-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@lotlogic.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - lotlogic-network
+
+  # NestJS Backend Application
+  backend:
+    build: .
+    container_name: lotlogic-backend
+    environment:
+      DATABASE_URL: postgresql://lotlogic_user:lotlogic_password@postgres:5432/lotlogic
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./public:/app/public
+    depends_on:
+      - postgres
+    networks:
+      - lotlogic-network
+    command: pnpm run start:dev
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  lotlogic-network:
+    driver: bridge 
