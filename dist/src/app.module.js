@@ -12,12 +12,13 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const estate_module_1 = require("./modules/estate/estate.module");
 const lot_module_1 = require("./modules/lot/lot.module");
 const design_on_lot_module_1 = require("./modules/design-on-lot/design-on-lot.module");
+const house_design_module_1 = require("./modules/house-design/house-design.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, estate_module_1.EstateModule, lot_module_1.LotModule, design_on_lot_module_1.DesignOnLotModule],
+        imports: [prisma_module_1.PrismaModule, estate_module_1.EstateModule, lot_module_1.LotModule, design_on_lot_module_1.DesignOnLotModule, house_design_module_1.HouseDesignModule],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

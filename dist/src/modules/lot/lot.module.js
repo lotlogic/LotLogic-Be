@@ -19,6 +19,7 @@ exports.LotModule = LotModule = __decorate([
         imports: [prisma_module_1.PrismaModule],
         controllers: [lot_controller_1.LotController],
         providers: [lot_service_1.LotService],
+        exports: [lot_service_1.LotService],
     })
 ], LotModule);
 //# sourceMappingURL=lot.module.js.map

@@ -34,6 +34,13 @@ let LotService = class LotService {
       RETURNING *;
     `;
     }
+    async findLot(lotId) {
+        return this.prisma.lot.findUnique({
+            where: {
+                id: lotId
+            }
+        });
+    }
 };
 exports.LotService = LotService;
 exports.LotService = LotService = __decorate([

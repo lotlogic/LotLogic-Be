@@ -1,0 +1,11 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "files.exclude": {
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/*.js.map": true
+  },
+  "typescript.validate.enable": true,
+  "typescript.preferences.includePackageJsonAutoImports": "off"
+} 
