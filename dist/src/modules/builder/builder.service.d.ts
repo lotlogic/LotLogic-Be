@@ -43,4 +43,12 @@ export declare class BuilderService {
         email: string;
         phone: string;
     }>;
+    findByIds(filter: string[]): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        email: string;
+        phone: string;
+    }[]>;
 }

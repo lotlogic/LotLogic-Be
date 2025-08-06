@@ -32,6 +32,15 @@ let BuilderService = class BuilderService {
     async remove(id) {
         return await this.prisma.builder.delete({ where: { id } });
     }
+    async findByIds(filter) {
+        return await this.prisma.builder.findMany({
+            where: {
+                id: {
+                    in: filter
+                }
+            }
+        });
+    }
 };
 exports.BuilderService = BuilderService;
 exports.BuilderService = BuilderService = __decorate([

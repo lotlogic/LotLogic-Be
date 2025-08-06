@@ -63,6 +63,13 @@ let HouseDesignService = class HouseDesignService {
         });
         return filteredDesign;
     }
+    async getHouseDesignById(house_design_id) {
+        return await this.prisma.houseDesign.findUnique({
+            where: {
+                id: house_design_id
+            }
+        });
+    }
 };
 exports.HouseDesignService = HouseDesignService;
 exports.HouseDesignService = HouseDesignService = __decorate([
