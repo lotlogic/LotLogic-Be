@@ -1,0 +1,103 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title New Lot Assignment
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .highlight {
+        color: green;
+        font-weight: bold;
+      }
+
+      .content p {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333333;
+      }
+
+      .lot-details {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border: 1px solid #dddddd;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+
+      .lot-details p {
+        margin: 8px 0;
+        font-weight: bold;
+      }
+
+      .image-container {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .image-container img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
+
+      .footer {
+        margin-top: 30px;
+        font-size: 14px;
+        color: #999999;
+        text-align: center;
+      }
+
+  body
+    .container
+      .header
+        h2 New Lot Notification
+
+      .content
+        p Dear #{builderName},
+
+        if isSelected
+          p.highlight Congratulations! You have been selected to proceed with this lot.
+
+        else
+          p We’d like to share details about a new lot for your consideration.
+
+        .lot-details
+          p Lot Number: #{lotNumber}
+          p Address: #{lotAddress}
+          p Size: #{lotSize} m²
+          p Zoning: #{lotZoning}
+          p Status: #{lotStatus}
+
+        if imageUrl
+          .image-container
+            img(src=imageUrl alt="House Design")
+
+        p Please reach out if you need further information.
+
+        p Best regards,  
+        p The LotLogic Team
+
+      .footer
+        p This is an automated message. Please do not reply directly to this email.
