@@ -93,5 +93,3 @@ prisma/generated
 .DS_Store
 
 node_modules/
-
-dist/
