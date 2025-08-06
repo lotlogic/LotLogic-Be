@@ -7,5 +7,6 @@ import { PrismaModule } from '../../prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [LotController],
   providers: [LotService],
+  exports: [LotService],
 })
 export class LotModule {}
