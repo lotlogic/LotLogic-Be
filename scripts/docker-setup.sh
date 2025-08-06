@@ -22,14 +22,14 @@ wait_for_db() {
 # Function to run database migrations
 run_migrations() {
     echo "🔄 Running database migrations..."
-    docker exec lotlogic-backend-dev pnpm prisma migrate deploy
+    docker exec lotlogic-backend-dev npx prisma migrate deploy
     echo "✅ Migrations completed!"
 }
 
 # Function to seed the database
 seed_database() {
     echo "🌱 Seeding database..."
-    docker exec lotlogic-backend-dev pnpm prisma db seed
+    docker exec lotlogic-backend-dev npx prisma db seed
     echo "✅ Database seeded!"
 }
 
