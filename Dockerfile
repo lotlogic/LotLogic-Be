@@ -4,23 +4,20 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
-
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN pnpm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Generate Prisma client
-RUN pnpm prisma generate
+RUN npx prisma generate
 
 # Expose port
 EXPOSE 3000
 
 # Start the application in development mode
-CMD ["pnpm", "run", "start:dev"] 
+CMD ["npm", "run", "start:dev"] 

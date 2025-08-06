@@ -45,7 +45,6 @@ export class DesignOnLotService {
     if (!lot) throw new NotFoundException('Lot not found');
 
     const zoningRule = lot.lotZoningRules[0]?.zoningRule;
-    console.log(lot.lotZoningRules);
 
     if (!zoningRule) throw new NotFoundException('Zoning rules not found');
 
