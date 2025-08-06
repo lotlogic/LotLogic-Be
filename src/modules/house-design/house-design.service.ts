@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/await-thenable */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -55,19 +59,19 @@ export class HouseDesignService {
             include: {
                 facades: true
             }
-        });
-        const filteredDesign = houseDesigns.map(house => {
-            let images = house.facades.map(facade=> {
+        }) as any;
+        const filteredDesign = houseDesigns.map((house: any) => {
+            const images = house.facades?.map((facade: any) => {
                 return {
                     src: facade.imageUrl,
                     faced: facade.label
                 };
-            });
+            }) || [];
             return {
                 id: house.id,
                 title: house.name,
                 area: house.areaSqm,
-                image: house.facades.length ? house.facades[0].imageUrl : "",
+                image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
                 images,
                 bedrooms: house.bedrooms,
                 bathrooms: house.bathrooms,
@@ -79,11 +83,14 @@ export class HouseDesignService {
         return filteredDesign;
     }
 
-        async getHouseDesignById(house_design_id: string) {
+    async getHouseDesignById(house_design_id: string) {
         return await this.prisma.houseDesign.findUnique({
             where: {
                 id: house_design_id
+            },
+            include: {
+                facades: true
             }
-        });
+        }) as any;
     }
 }

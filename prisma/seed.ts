@@ -164,7 +164,10 @@ async function main(): Promise<void> {
       garages: 1,
       areaSqm: 150.0,
       minLotWidth: 12.0,
-      minLotDepth: 15.0
+      minLotDepth: 15.0,
+      rumpus: false,
+      alfresco: true,
+      pergola: false
     }
   }) as any;
 
@@ -180,7 +183,10 @@ async function main(): Promise<void> {
       garages: 1,
       areaSqm: 100.0,
       minLotWidth: 10.0,
-      minLotDepth: 12.0
+      minLotDepth: 12.0,
+      rumpus: false,
+      alfresco: false,
+      pergola: true
     }
   }) as any;
 
@@ -196,7 +202,10 @@ async function main(): Promise<void> {
       garages: 2,
       areaSqm: 200.0,
       minLotWidth: 15.0,
-      minLotDepth: 20.0
+      minLotDepth: 20.0,
+      rumpus: true,
+      alfresco: true,
+      pergola: true
     }
   }) as any;
 
