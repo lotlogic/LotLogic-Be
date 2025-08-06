@@ -13,9 +13,7 @@ async function bootstrap() {
             res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         }
     });
-    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-    await app.listen(port);
-    console.log(`🚀 Server is running on http://localhost:${port}`);
+    await app.listen(3000);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map
