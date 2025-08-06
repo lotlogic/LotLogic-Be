@@ -93,3 +93,4 @@ prisma/generated
 
 node_modules/
 dist/
+.vscode/
