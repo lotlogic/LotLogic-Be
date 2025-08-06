@@ -79,7 +79,6 @@ public
 .svelte-kit
 
 # Build output
-dist
 build
 
 # Prisma generated files
@@ -93,5 +92,4 @@ prisma/generated
 .DS_Store
 
 node_modules/
-
 dist/
