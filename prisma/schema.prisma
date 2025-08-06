@@ -93,6 +93,9 @@ model HouseDesign {
   minLotDepth  Float
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  rumpus       Boolean
+  alfresco     Boolean
+  pergola      Boolean
   designOnLots DesignOnLot[]
   enquiries    Enquiry[]
   facades      Facade[]

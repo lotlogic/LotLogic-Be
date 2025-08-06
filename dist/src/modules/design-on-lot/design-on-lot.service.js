@@ -25,7 +25,6 @@ let DesignOnLotService = class DesignOnLotService {
         if (!lot)
             throw new common_1.NotFoundException('Lot not found');
         const zoningRule = lot.lotZoningRules[0]?.zoningRule;
-        console.log(lot.lotZoningRules);
         if (!zoningRule)
             throw new common_1.NotFoundException('Zoning rules not found');
         const houseDesigns = await this.prisma.houseDesign.findMany();

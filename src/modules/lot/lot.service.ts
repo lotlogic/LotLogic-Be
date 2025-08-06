@@ -54,4 +54,13 @@ export class LotService {
       RETURNING *;
     `;
   }
+
+  async findLot(lotId: string) {
+    // Use raw query to bypass Prisma's type limitations
+    return this.prisma.lot.findUnique({
+      where: {
+        id: lotId
+      }
+    });
+  }
 }
