@@ -21,18 +21,15 @@ export declare class HouseDesignService {
     getFilteredHouseDesigns(bedroom: number[], bathroom: number[], car: number[], min_size: number, max_size: number, rumpus: boolean, alfresco: boolean, pergola: boolean): Promise<HouseDesignFilterResult[]>;
     getHouseDesignById(house_design_id: string): Promise<{
         id: string;
-        areaSqm: number;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         floorplanUrl: string | null;
         bedrooms: number;
         bathrooms: number;
         garages: number;
+        areaSqm: number;
         minLotWidth: number;
         minLotDepth: number;
-        rumpus: boolean;
-        alfresco: boolean;
-        pergola: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     } | null>;
 }
