@@ -25,4 +25,14 @@ export class BuilderService {
   async remove(id: string) {
     return await this.prisma.builder.delete({ where: { id } });
   }
+
+    async findByIds(filter: string[]) {
+    return await this.prisma.builder.findMany({
+      where: {
+        id: {
+          in: filter
+        }
+      }
+    });
+  }
 } 

@@ -15,6 +15,7 @@ exports.ZoningModule = ZoningModule;
 exports.ZoningModule = ZoningModule = __decorate([
     (0, common_1.Module)({
         providers: [zoning_service_1.ZoningService],
+        exports: [zoning_service_1.ZoningService],
     })
 ], ZoningModule);
 //# sourceMappingURL=zoning.module.js.map

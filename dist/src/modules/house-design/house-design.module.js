@@ -8,10 +8,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HouseDesignModule = void 0;
 const common_1 = require("@nestjs/common");
+const house_design_service_1 = require("./house-design.service");
+const lot_service_1 = require("../lot/lot.service");
+const zoning_service_1 = require("../zoning/zoning.service");
+const house_design_controller_1 = require("./house-design.controller");
+const prisma_module_1 = require("../../prisma/prisma.module");
 let HouseDesignModule = class HouseDesignModule {
 };
 exports.HouseDesignModule = HouseDesignModule;
 exports.HouseDesignModule = HouseDesignModule = __decorate([
-    (0, common_1.Module)({})
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [house_design_service_1.HouseDesignService, lot_service_1.LotService, zoning_service_1.ZoningService],
+        controllers: [house_design_controller_1.HouseDesignController]
+    })
 ], HouseDesignModule);
 //# sourceMappingURL=house-design.module.js.map
