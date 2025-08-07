@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { LotModule } from './modules/lot/lot.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { EstateModule } from './modules/estate/estate.module';
@@ -16,6 +18,8 @@ import { MailModule } from './modules/mail/mail.module';
       HouseDesignModule,
       EnquiryModule,
       MailModule
-    ]
+    ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
