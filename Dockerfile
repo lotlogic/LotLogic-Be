@@ -1,28 +1,23 @@
-# Stage 1: Build the application
-FROM node:20-alpine AS builder
+# Use Node.js 20 Alpine as base image
+FROM node:20-alpine
 
+# Set working directory
 WORKDIR /app
 
+# Copy package files
 COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm ci
 
+# Copy source code
 COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-RUN npm run build
-
-# Stage 2: Run the built app
-FROM node:20-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY --from=builder /app/dist ./dist
-
+# Expose port
 EXPOSE 3000
 
-CMD ["node", "dist/src/main"]
+# Start the application in development mode
+CMD ["npm", "run", "start:dev"] 
