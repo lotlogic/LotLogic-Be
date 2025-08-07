@@ -1,98 +1,283 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# LotLogic Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based backend service for managing land lots, estates, and zoning information with geospatial capabilities and house design compatibility analysis.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Project Overview
 
-## Description
+LotLogic Backend is a comprehensive land management system that handles:
+- **Lot Management**: Land parcels with geospatial data and zoning information
+- **Estate Management**: Property development projects and their associated lots
+- **Zoning Analysis**: Land use regulations and overlay information
+- **House Design Compatibility**: Automated analysis of house designs on lots
+- **Geospatial Operations**: PostGIS-powered spatial queries and analysis
+- **Enquiry System**: User inquiries and property assessments
+- **Planning Integration**: Development plan management
+- **Facade Management**: Building facade and design information
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Tech Stack
 
-## Project setup
+- **Framework**: [NestJS](https://nestjs.com/) - Progressive Node.js framework
+- **Database**: PostgreSQL with PostGIS extension for geospatial data
+- **ORM**: Prisma with custom PostgreSQL extensions
+- **Language**: TypeScript
+- **Package Manager**: npm
+- **Testing**: Jest for unit and e2e tests
+- **Containerization**: Docker & Docker Compose
+- **Database Management**: pgAdmin
 
-```bash
-$ pnpm install
+## 📁 Project Structure
+
+```
+src/
+├── modules/
+│   ├── lot/              # Lot management and geospatial operations
+│   ├── estate/           # Estate and property development management
+│   ├── zoning/           # Zoning regulations and land use analysis
+│   ├── enquiry/          # User inquiry handling
+│   ├── facade/           # Building facade management
+│   ├── plan/             # Development plan management
+│   ├── design-on-lot/    # House design compatibility analysis
+│   ├── builder/          # Builder management
+│   └── geo/              # Geographic data services
+├── prisma/
+│   ├── schema.prisma     # Database schema with PostGIS support
+│   ├── seed.ts           # Database seeding
+│   └── data/             # GeoJSON and CSV data files
+├── config/               # Application configuration
+└── shared/               # Shared utilities, decorators, and types
 ```
 
-## Compile and run the project
+## 🗄️ Database Schema
 
+### Core Models
+
+- **Lot**: Land parcels with geospatial data, zoning info, and estate relationships
+- **Estate**: Property development projects containing multiple lots
+- **HouseDesign**: House designs with dimensions and lot requirements
+- **ZoningRule**: Land use regulations and building restrictions
+- **DesignOnLot**: Compatibility analysis results
+- **Builder**: Construction company information
+- **Enquiry**: User inquiries and property assessments
+
+### Key Features
+
+- PostGIS geometry columns for spatial operations
+- GeoJSON backup storage with lot dimensions
+- Spatial indexing for performance
+- UUID-based primary keys
+- Comprehensive audit trails (createdAt, updatedAt)
+
+## 🛠️ Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL with PostGIS extension
+- npm package manager
+- Docker & Docker Compose (for containerized development)
+
+## 📦 Installation
+
+### Option 1: Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd LotLogic-Be
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   Create a `.env` file in the root directory:
+   ```env
+   DATABASE_URL="postgresql://postgres:lotlogic123@localhost:5432/lotlogic?schema=public"
+   PORT=3000
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run database migrations
+   npx prisma migrate dev
+   
+   # Seed the database (optional)
+   npx prisma db seed
+   ```
+
+### Option 2: Docker Development (Recommended)
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd LotLogic-Be
+   ```
+
+2. **Start with Docker Compose**
+   ```bash
+   # Build and start all services
+   docker-compose up --build -d
+   
+   # Run database migrations
+   docker exec lotlogic-backend npx prisma migrate deploy
+   
+   # Seed the database
+   docker exec lotlogic-backend npx prisma db seed
+   ```
+
+## 🚀 Running the Application
+
+### Local Development
 ```bash
-# development
-$ pnpm run start
+# Start in development mode with hot reload
+npm run start:dev
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Start in debug mode
+npm run start:debug
 ```
 
-## Run tests
-
+### Docker Development
 ```bash
-# unit tests
-$ pnpm run test
+# Start all services
+docker-compose up -d
 
-# e2e tests
-$ pnpm run test:e2e
+# View logs
+docker-compose logs -f backend
 
-# test coverage
-$ pnpm run test:cov
+# Stop services
+docker-compose down
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### Production
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Build the application
+npm run build
+
+# Start in production mode
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-## Resources
 
-Check out a few resources that may come in handy when working with NestJS:
+## 📊 Data Management
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+The project includes comprehensive data seeding:
+- **Sample Lots**: Land parcels with geospatial data and zoning information
+- **Zoning Rules**: RZ1-RZ5 zoning regulations with building restrictions
+- **House Designs**: Sample house designs with dimensions and requirements
+- **Compatibility Analysis**: Automated matching of house designs to lots
 
-## Support
+### Importing Data
+```bash
+# Run the seed script to import sample data
+npx prisma db seed
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🔧 Development Tools
 
-## Stay in touch
+### Code Quality
+```bash
+# Format code
+npm run format
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Lint code
+npm run lint
+```
 
-## License
+### Database Management
+```bash
+# Open Prisma Studio
+npx prisma studio
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Reset database
+npx prisma migrate reset
+
+# Deploy migrations to production
+npx prisma migrate deploy
+```
+
+## 🌐 API Endpoints
+
+The application provides RESTful APIs for:
+
+- **Lots**: CRUD operations for land parcels
+- **Estates**: Property development management
+- **Zoning**: Land use regulation queries
+- **House Designs**: House design management
+- **Design-on-Lot**: Compatibility analysis
+- **Enquiries**: User inquiry handling
+- **Plans**: Development plan management
+- **Facades**: Building facade data
+- **Builders**: Construction company management
+- **Geo**: Geographic data services
+
+### Key Endpoints
+
+#### Design-on-Lot Compatibility
+```http
+GET /design-on-lot/calculate?lotId={lotId}
+```
+
+**Response Example:**
+```json
+{
+  "lotId": "23d5cee7-f1fd-454c-a1c7-c932d6c41ec5",
+  "zoning": "RZ1",
+  "matches": [
+    {
+      "houseDesignId": "design-1",
+      "floorplanUrl": "/floorplans/floorplan.png",
+      "spacing": {"front": 4, "rear": 3, "side": 3},
+      "maxCoverageArea": 250,
+      "houseArea": 150,
+      "lotDimensions": {"width": 20, "depth": 35}
+    }
+  ]
+}
+```
+
+## 🐳 Docker Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Backend API | 3000 | NestJS application |
+| PostgreSQL | 5432 | Database with PostGIS |
+| pgAdmin | 5050 | Database management UI |
+
+### Accessing Services
+- **Backend API**: http://localhost:3000
+- **pgAdmin**: http://localhost:5050 (admin@lotlogic.com / admin123)
+- **PostgreSQL**: localhost:5432
+
+## 🔒 Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `PORT` | Application port | 3000 |
+| `NODE_ENV` | Environment mode | development |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is private and unlicensed. All rights reserved.
+
+## 🆘 Support
+
+For support and questions, please contact the development team or create an issue in the repository.
+
+---
+
+**Last Updated**: August 2025
+**Status**: ✅ Fully functional with npm package manager and Docker support
+

@@ -1,15 +1,172 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model Estate {
+  id         String   @id @default(uuid())
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  address    String?
+  email      String?
+  logoUrl    String?
+  phone      String?
+  themeColor String?
+  lots       Lot[]
+}
+
+model Lot {
+  id             String                   @id @default(uuid())
+  blockKey       String                   @unique
+  blockNumber    Int?
+  sectionNumber  Int?
+  areaSqm        Float
+  zoning         String
+  address        String?
+  district       String?
+  division       String?
+  lifecycleStage String?
+  geojson        Json?
+  geometry       Unsupported("geometry")?
+  estateId       String?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  overlays       String[]
+  designOnLots   DesignOnLot[]
+  enquiries      Enquiry[]
+  estate         Estate?                  @relation(fields: [estateId], references: [id])
+  lotZoningRules LotZoningRule[]
+
+  @@index([geometry], map: "geometry_index")
+}
+
+model ZoningRule {
+  id                    String          @id @default(uuid())
+  code                  String          @unique
+  name                  String
+  type                  String
+  isOverlay             Boolean         @default(false)
+  maxBuildingHeight_m   Float?
+  maxStoreys            Int?
+  minLotArea_sqm        Float?
+  minLotWidth_m         Float?
+  minLotDepth_m         Float?
+  minFrontageStandard_m Float?
+  minFrontageCorner_m   Float?
+  minFSR                Float?
+  maxFSR                Float?
+  minFrontSetback_m     Float?
+  minRearSetback_m      Float?
+  minSideSetback_m      Float?
+  appliesToZones        String[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  lotZoningRules        LotZoningRule[]
+}
+
+model LotZoningRule {
+  lotId        String
+  zoningRuleId String
+  isOverlay    Boolean    @default(false)
+  lot          Lot        @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  zoningRule   ZoningRule @relation(fields: [zoningRuleId], references: [id], onDelete: Cascade)
+
+  @@id([lotId, zoningRuleId])
+}
+
+model HouseDesign {
+  id           String        @id @default(uuid())
+  name         String
+  floorplanUrl String?
+  bedrooms     Int
+  bathrooms    Int
+  garages      Int
+  areaSqm      Float
+  minLotWidth  Float
+  minLotDepth  Float
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  rumpus       Boolean
+  alfresco     Boolean
+  pergola      Boolean
+  designOnLots DesignOnLot[]
+  enquiries    Enquiry[]
+  facades      Facade[]
+}
+
+model Facade {
+  id            String      @id @default(uuid())
+  label         String
+  imageUrl      String
+  houseDesignId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  enquiries     Enquiry[]
+  houseDesign   HouseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+}
+
+model DesignOnLot {
+  id             String      @id @default(uuid())
+  lotId          String
+  houseDesignId  String
+  isCompatible   Boolean
+  matchedFilters Json?
+  createdAt      DateTime    @default(now())
+  houseDesign    HouseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+  lot            Lot         @relation(fields: [lotId], references: [id], onDelete: Cascade)
+
+  @@unique([lotId, houseDesignId])
+}
+
+model Builder {
+  id              String           @id @default(uuid())
+  name            String
+  email           String
+  phone           String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  enquiryBuilders EnquiryBuilder[]
+}
+
+model Enquiry {
+  id              String           @id @default(uuid())
+  name            String
+  email           String
+  phone           String
+  comments        String?
+  lotId           String?
+  houseDesignId   String?
+  facadeId        String?
+  createdAt       DateTime         @default(now())
+  facade          Facade?          @relation(fields: [facadeId], references: [id])
+  houseDesign     HouseDesign?     @relation(fields: [houseDesignId], references: [id])
+  lot             Lot?             @relation(fields: [lotId], references: [id])
+  enquiryBuilders EnquiryBuilder[]
+}
+
+model EnquiryBuilder {
+  id        String   @id @default(uuid())
+  enquiryId String
+  builderId String
+  createdAt DateTime @default(now())
+  builder   Builder  @relation(fields: [builderId], references: [id], onDelete: Cascade)
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  @@unique([enquiryId, builderId])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
 }

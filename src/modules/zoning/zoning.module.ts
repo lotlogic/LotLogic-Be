@@ -3,5 +3,6 @@ import { ZoningService } from './zoning.service';
 
 @Module({
   providers: [ZoningService],
+  exports: [ZoningService],
 })
 export class ZoningModule {}
