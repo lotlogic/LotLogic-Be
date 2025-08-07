@@ -3,7 +3,7 @@ name: Deploy to ECR -> App Runner
 on:
   push:
     branches:
-      - staging
+      - stage
   workflow_dispatch:
 
 env:
