@@ -1,4 +1,4 @@
-name: Build Docker Image
+name: Deploy to ECR -> App Runner
 
 on:
   workflow_dispatch:
