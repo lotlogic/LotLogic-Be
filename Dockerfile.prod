@@ -1,0 +1,53 @@
+# ----------------------
+# Stage 1: Build the app
+# ----------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies (dev + prod)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy the entire source code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the NestJS app
+RUN npm run build
+
+# Remove dev dependencies for production
+RUN npm prune --omit=dev
+
+
+# -------------------------------
+# Stage 2: Final production image
+# -------------------------------
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy production node_modules
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy built app
+COPY --from=builder /app/dist ./dist
+
+# Copy scripts and Prisma schema
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/prisma ./prisma
+
+# Optional: add .env or config files here if required
+# COPY --from=builder /app/.env .env
+
+# Set environment variables
+ENV PORT=3000
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+# Run migrations, seed, and start the app
+CMD ["sh", "./scripts/entrypoint.sh"]
+    
