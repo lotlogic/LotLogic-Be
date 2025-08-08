@@ -13,7 +13,7 @@ export class HouseDesignController {
 
     @Get(":lot_id")
     async filterHouseDesign(
-        @Param('lot_id') lot_id: string,
+        @Param('lot_id') lot_id: number,
         @Body('bedroom') bedroom: number[],
         @Body('bathroom') bathroom: number[],
         @Body('car') car: number[],

@@ -21,7 +21,7 @@ export class EnquiryController {
         @Body('number') number: string,
         @Body('builders') builders: string[],
         @Body('comments') comments: string,
-        @Body('lot_id') lot_id: string,
+        @Body('lot_id') lot_id: number,
         @Body('house_design_id') house_design_id: string,
         @Body('facade_id') facade_id: string
     ) {
