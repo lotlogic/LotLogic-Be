@@ -12,13 +12,20 @@ async function main() {
   for(const lot of lots.features)
   {
     if(lot.type === "lot") {
-      let properties: { [key: string]: number }[] = [];
-      for(let i = 0; i < lot.geometry.coordinates[0].length - 1; i++)
-      {
-        const distance = calculateDistance(lot.geometry.coordinates[0][i], lot.geometry.coordinates[0][i+1]);
-        properties.push({ [`s${i + 1}`]: distance });
-      }
-      let data = {
+      let data: {
+        blockKey,
+        blockNumber,
+        sectionNumber,
+        areaSqm,
+        zoning,
+        address,
+        district,
+        division,
+        lifecycleStage,
+        estateId,
+        geojson,
+        geometry,
+      } = {
         blockKey: lot.blockKey + i,
         blockNumber: lot.blockNumber,
         sectionNumber: lot.sectionNumber,
@@ -29,13 +36,16 @@ async function main() {
         division: lot.division,
         lifecycleStage: lot.lifecycleArea,
         estateId: lot.estateId,
-        geojson: { properties },
-        geometry: toPolygon(lot.geometry.coordinates[0].map((c) => c.join(' ')).toString()),
-        // overlays: lot.overlays,
-        // createdAt: lot.createdAt,
-        // updatedAt: lot.updatedAt,
+        geojson: { },
+        geometry: toPolygon(lot.geometry.coordinates[0].map((c) => c.join(' ')).toString())
       };
-      // console.log(data);
+      let properties: { [key: string]: number }[] = [];
+      for(let i = 0; i < lot.geometry.coordinates[0].length - 1; i++)
+      {
+        const distance = calculateDistance(lot.geometry.coordinates[0][i], lot.geometry.coordinates[0][i+1]);
+        properties.push({ [`s${i + 1}`]: distance });
+      }
+      data.geojson = { properties};
       try {
         const sql = `
           INSERT INTO lot (
