@@ -56,11 +56,18 @@ export class LotService {
   }
 
   async findLot(lotId: string) {
-    // Use raw query to bypass Prisma's type limitations
-    return this.prisma.lot.findUnique({
+    const lot = await this.prisma.lot.findUnique({
       where: {
-        id: lotId
+        id: BigInt(lotId)
       }
     });
+    if (lot) {
+      return {
+        ...lot,
+        id: lot.id.toString(),
+        estateId: lot.estateId?.toString()
+      };
+    }
+    return lot;
   }
 }

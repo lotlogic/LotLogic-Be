@@ -25,7 +25,7 @@ async function main(): Promise<void> {
       maxBuildingHeight_m: 8.5,
       appliesToZones: ['RZ1']
     }
-  }) as any;
+  });
 
   const zoningRule2 = await prisma.zoningRule.upsert({
     where: { code: 'RZ2' },
@@ -43,7 +43,7 @@ async function main(): Promise<void> {
       maxBuildingHeight_m: 9.0,
       appliesToZones: ['RZ2']
     }
-  }) as any;
+  });
 
   const zoningRule3 = await prisma.zoningRule.upsert({
     where: { code: 'RZ3' },
@@ -61,14 +61,11 @@ async function main(): Promise<void> {
       maxBuildingHeight_m: 8.8,
       appliesToZones: ['RZ3']
     }
-  }) as any;
+  });
 
   // Create sample estate
-  const estate = await prisma.estate.upsert({
-    where: { id: 'estate-1' },
-    update: {},
-    create: {
-      id: 'estate-1',
+  const estate = await prisma.estate.create({
+    data: {
       name: 'Canberra Heights Estate',
       logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
       themeColor: '#2F5D62',
@@ -76,13 +73,11 @@ async function main(): Promise<void> {
       phone: '+61 2 6123 4567',
       address: 'Canberra Heights, ACT 2600'
     }
-  }) as any;
+  });
 
   // Create sample lots with estate relationship
-  const lot1 = await prisma.lot.upsert({
-    where: { blockKey: 'BLOCK123' },
-    update: {},
-    create: {
+  const lot1 = await prisma.lot.create({
+    data: {
       blockKey: 'BLOCK123',
       blockNumber: 101,
       sectionNumber: 202,
@@ -101,12 +96,10 @@ async function main(): Promise<void> {
         }
       }
     }
-  }) as any;
+  });
 
-  const lot2 = await prisma.lot.upsert({
-    where: { blockKey: 'BLOCK456' },
-    update: {},
-    create: {
+  const lot2 = await prisma.lot.create({
+    data: {
       blockKey: 'BLOCK456',
       blockNumber: 102,
       sectionNumber: 203,
@@ -125,12 +118,10 @@ async function main(): Promise<void> {
         }
       }
     }
-  }) as any;
+  });
 
-  const lot3 = await prisma.lot.upsert({
-    where: { blockKey: 'BLOCK789' },
-    update: {},
-    create: {
+  const lot3 = await prisma.lot.create({
+    data: {
       blockKey: 'BLOCK789',
       blockNumber: 103,
       sectionNumber: 204,
@@ -149,14 +140,11 @@ async function main(): Promise<void> {
         }
       }
     }
-  }) as any;
+  });
 
   // Create sample house designs
-  const houseDesign1 = await prisma.houseDesign.upsert({
-    where: { id: 'design-1' },
-    update: {},
-    create: {
-      id: 'design-1',
+  const houseDesign1 = await prisma.houseDesign.create({
+    data: {
       name: 'Modern 3BR House',
       floorplanUrl: '/floorplans/floorplan.png',
       bedrooms: 3,
@@ -169,13 +157,10 @@ async function main(): Promise<void> {
       alfresco: true,
       pergola: false
     }
-  }) as any;
+  });
 
-  const houseDesign2 = await prisma.houseDesign.upsert({
-    where: { id: 'design-2' },
-    update: {},
-    create: {
-      id: 'design-2',
+  const houseDesign2 = await prisma.houseDesign.create({
+    data: {
       name: 'Compact 2BR House',
       floorplanUrl: '/floorplans/floorplan.png',
       bedrooms: 2,
@@ -188,13 +173,10 @@ async function main(): Promise<void> {
       alfresco: false,
       pergola: true
     }
-  }) as any;
+  });
 
-  const houseDesign3 = await prisma.houseDesign.upsert({
-    where: { id: 'design-3' },
-    update: {},
-    create: {
-      id: 'design-3',
+  const houseDesign3 = await prisma.houseDesign.create({
+    data: {
       name: 'Luxury 4BR House',
       floorplanUrl: '/floorplans/floorplan.png',
       bedrooms: 4,
@@ -207,45 +189,36 @@ async function main(): Promise<void> {
       alfresco: true,
       pergola: true
     }
-  }) as any;
+  });
 
   // Create sample builder
-  const builder = await prisma.builder.upsert({
-    where: { id: 'builder-1' },
-    update: {},
-    create: {
-      id: 'builder-1',
+  const builder = await prisma.builder.create({
+    data: {
       name: 'Canberra Builders Pty Ltd',
       email: 'info@canberrabuilders.com.au',
       phone: '+61 2 6123 4567'
     }
-  }) as any;
+  });
 
   // Link lots to zoning rules
-  await prisma.lotZoningRule.upsert({
-    where: { lotId_zoningRuleId: { lotId: lot1.id, zoningRuleId: zoningRule1.id } },
-    update: {},
-    create: {
+  await prisma.lotZoningRule.create({
+    data: {
       lotId: lot1.id,
       zoningRuleId: zoningRule1.id,
       isOverlay: false
     }
   });
 
-  await prisma.lotZoningRule.upsert({
-    where: { lotId_zoningRuleId: { lotId: lot2.id, zoningRuleId: zoningRule2.id } },
-    update: {},
-    create: {
+  await prisma.lotZoningRule.create({
+    data: {
       lotId: lot2.id,
       zoningRuleId: zoningRule2.id,
       isOverlay: false
     }
   });
 
-  await prisma.lotZoningRule.upsert({
-    where: { lotId_zoningRuleId: { lotId: lot3.id, zoningRuleId: zoningRule3.id } },
-    update: {},
-    create: {
+  await prisma.lotZoningRule.create({
+    data: {
       lotId: lot3.id,
       zoningRuleId: zoningRule3.id,
       isOverlay: false
@@ -253,11 +226,8 @@ async function main(): Promise<void> {
   });
 
   // Create sample enquiries
-  const enquiry1 = await prisma.enquiry.upsert({
-    where: { id: 'enquiry-1' },
-    update: {},
-    create: {
-      id: 'enquiry-1',
+  const enquiry1 = await prisma.enquiry.create({
+    data: {
       name: 'John Doe',
       email: 'john.doe@email.com',
       phone: '+61 412 345 678',
@@ -265,13 +235,10 @@ async function main(): Promise<void> {
       lotId: lot1.id,
       houseDesignId: houseDesign1.id
     }
-  }) as any;
+  });
 
-  const enquiry2 = await prisma.enquiry.upsert({
-    where: { id: 'enquiry-2' },
-    update: {},
-    create: {
-      id: 'enquiry-2',
+  const enquiry2 = await prisma.enquiry.create({
+    data: {
       name: 'Jane Smith',
       email: 'jane.smith@email.com',
       phone: '+61 423 456 789',
@@ -279,44 +246,34 @@ async function main(): Promise<void> {
       lotId: lot2.id,
       houseDesignId: houseDesign2.id
     }
-  }) as any;
+  });
 
   // Link enquiries to builders
-  await prisma.enquiryBuilder.upsert({
-    where: { enquiryId_builderId: { enquiryId: enquiry1.id, builderId: builder.id } },
-    update: {},
-    create: {
+  await prisma.enquiryBuilder.create({
+    data: {
       enquiryId: enquiry1.id,
       builderId: builder.id
     }
   });
 
-  await prisma.enquiryBuilder.upsert({
-    where: { enquiryId_builderId: { enquiryId: enquiry2.id, builderId: builder.id } },
-    update: {},
-    create: {
+  await prisma.enquiryBuilder.create({
+    data: {
       enquiryId: enquiry2.id,
       builderId: builder.id
     }
   });
 
   // Create sample facades
-  await prisma.facade.upsert({
-    where: { id: 'facade-1' },
-    update: {},
-    create: {
-      id: 'facade-1',
+  await prisma.facade.create({
+    data: {
       label: 'Modern Facade',
       imageUrl: '/facades/modern-facade.jpg',
       houseDesignId: houseDesign1.id
     }
   });
 
-  await prisma.facade.upsert({
-    where: { id: 'facade-2' },
-    update: {},
-    create: {
-      id: 'facade-2',
+  await prisma.facade.create({
+    data: {
       label: 'Traditional Facade',
       imageUrl: '/facades/traditional-facade.jpg',
       houseDesignId: houseDesign2.id
@@ -342,14 +299,14 @@ async function main(): Promise<void> {
   console.log('📋 Database Query Examples:');
   console.log('   • Get lot with relationships:');
   console.log(`     SELECT l.*, e.name as estate_name, zr.code as zoning_code`);
-  console.log(`     FROM "Lot" l`);
-  console.log(`     LEFT JOIN "Estate" e ON l."estateId" = e.id`);
-  console.log(`     LEFT JOIN "ZoningRule" zr ON l.zoning = zr.code`);
+  console.log(`     FROM "lot" l`);
+  console.log(`     LEFT JOIN "estate" e ON l."estateId" = e.id`);
+  console.log(`     LEFT JOIN "zoningRule" zr ON l.zoning = zr.code`);
   console.log(`     WHERE l.id = '${lot1.id}';`);
   console.log('');
   console.log('   • Get house designs compatible with a lot:');
   console.log(`     SELECT hd.*, l."blockKey", l.zoning`);
-  console.log(`     FROM "HouseDesign" hd, "Lot" l`);
+  console.log(`     FROM "houseDesign" hd, "lot" l`);
   console.log(`     WHERE l.id = '${lot1.id}'`);
   console.log(`     AND hd."minLotWidth" <= (l.geojson->>'properties'->>'width')::float`);
   console.log(`     AND hd."minLotDepth" <= (l.geojson->>'properties'->>'depth')::float;`);

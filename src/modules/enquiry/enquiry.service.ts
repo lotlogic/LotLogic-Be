@@ -23,14 +23,14 @@ export class EnquiryService {
                         email: email,
                         phone: number,
                         comments: comments,
-                        lotId: lot_id,
-                        houseDesignId: house_design_id,
-                        facadeId: facade_id
+                        lotId: lot_id ? BigInt(lot_id) : null,
+                        houseDesignId: house_design_id ? BigInt(house_design_id) : null,
+                        facadeId: facade_id ? BigInt(facade_id) : null
                     }
                 });
                 const builders = builder.map((b: string) => {
                     return {
-                        builderId: b,
+                        builderId: BigInt(b),
                         enquiryId: enquiry.id
                     }})
                 await tx.enquiryBuilder.createMany({ data: builders });;

@@ -38,7 +38,7 @@ async function main() {
       // console.log(data);
       try {
         const sql = `
-          INSERT INTO "Lot" (
+          INSERT INTO lot (
             "id", "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
             "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
           ) VALUES (
@@ -64,7 +64,7 @@ async function main() {
           data.geometry
         );
       } catch (error) {
-        console.error('Error: ' + data);
+        console.error('Error: ' + error);
       }
       
       i++;
