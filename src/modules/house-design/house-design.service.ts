@@ -86,11 +86,11 @@ export class HouseDesignService {
     async getHouseDesignById(house_design_id: string) {
         return await this.prisma.houseDesign.findUnique({
             where: {
-                id: house_design_id
+                id: BigInt(house_design_id)
             },
             include: {
                 facades: true
             }
-        }) as any;
+        });
     }
 }

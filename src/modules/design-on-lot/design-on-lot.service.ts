@@ -38,7 +38,7 @@ export class DesignOnLotService {
 
   async calculateCompatibility(lotId: string): Promise<DesignOnLotResult> {
     const lot = await this.prisma.lot.findUnique({
-      where: { id: lotId },
+      where: { id: BigInt(lotId) },
       include: { lotZoningRules: { include: { zoningRule: true } } }
     });
 
@@ -59,7 +59,7 @@ export class DesignOnLotService {
             ? (lot.geojson as LotGeoJson).properties ?? {}
             : {};
         result.push({
-          houseDesignId: design.id,
+          houseDesignId: design.id.toString(),
           floorplanUrl: design.floorplanUrl,
           spacing: {
             front: zoningRule.minFrontSetback_m ?? null,
@@ -75,15 +75,15 @@ export class DesignOnLotService {
         });
 
         await this.prisma.designOnLot.upsert({
-          where: { lotId_houseDesignId: { lotId, houseDesignId: design.id } },
-          create: { lotId, houseDesignId: design.id, isCompatible: true, matchedFilters: {} },
+          where: { lotId_houseDesignId: { lotId: BigInt(lotId), houseDesignId: design.id } },
+          create: { lotId: BigInt(lotId), houseDesignId: design.id, isCompatible: true, matchedFilters: {} },
           update: { isCompatible: true, matchedFilters: {} }
         });
       }
     }
 
     return {
-      lotId: lot.id,
+      lotId: lot.id.toString(),
       zoning: zoningRule.code,
       matches: result
     };

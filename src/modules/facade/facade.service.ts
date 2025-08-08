@@ -8,7 +8,7 @@ export class FacadeService {
     async findFacade(facadeId: string) {
         return this.prisma.facade.findUnique({
         where: {
-            id: facadeId
+            id: BigInt(facadeId)
         }
         });
     }
