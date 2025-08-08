@@ -8,7 +8,7 @@ async function main() {
   const filePath = path.join(__dirname, '../public/data/data.json')
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const lots = JSON.parse(fileContent)
-  let i = 1;
+  let id = 1;
   await prisma.$executeRawUnsafe("DELETE FROM lot");
   for(const lot of lots.features)
   {
@@ -27,7 +27,7 @@ async function main() {
         geojson,
         geometry,
       } = {
-        blockKey: lot.blockKey + i,
+        blockKey: lot.blockKey + id,
         blockNumber: lot.blockNumber,
         sectionNumber: lot.sectionNumber,
         areaSqm: calculateArea(lot.geometry.coordinates[0]),
@@ -41,9 +41,10 @@ async function main() {
         geometry: toPolygon(lot.geometry.coordinates[0].map((c) => c.join(' ')).toString())
       };
       let properties: { [key: string]: number }[] = [];
-      for(let i = 0; i < lot.geometry.coordinates[0].length - 1; i++)
+      const coordinates = lot.geometry.coordinates[0];
+      for(let i = 0; i < coordinates.length - 1; i++)
       {
-        const distance = calculateDistance(lot.geometry.coordinates[0][i], lot.geometry.coordinates[0][i+1]);
+        const distance = calculateDistance(coordinates[i], coordinates[i+1]);
         properties.push({ [`s${i + 1}`]: distance });
       }
       data.geojson = { properties};
@@ -60,7 +61,7 @@ async function main() {
         `;
 
         await prisma.$executeRawUnsafe(sql,
-          i,
+          id,
           data.blockKey,
           data.blockNumber,
           data.sectionNumber,
@@ -78,10 +79,9 @@ async function main() {
         console.error('Error: ' + error);
       }
       
-      i++;
+      id++;
     }
   }
-  console.log(i);
   // await prisma.lot.createMany({ data: lotData })
   console.log('Lots added successfully.')
 }
@@ -98,44 +98,50 @@ function toPolygon(coordString) {
   return `POLYGON((${coords.join(', ')}))`;
 }
 
-const calculateArea = (data) => {
-  const R = 6378;
-  const toRadians = deg => deg * Math.PI / 180;
+const calculateArea = (coordinates) => {
+  const R = 6378137;
+  const toRadians = deg => (deg * Math.PI) / 180;
 
-  let area = 0;
+  if (coordinates.length < 3) return 0; // not a polygon
 
-  for (let i = 0; i < data.length - 1; i++) {
-    const [lon1, lat1] = data[i];
-    const [lon2, lat2] = data[i + 1];
+  let total = 0;
 
-    area += toRadians(lon2 - lon1) * (
-      2 + Math.sin(toRadians(lat1)) + Math.sin(toRadians(lat2))
-    );
+  for (let i = 0; i < coordinates.length - 1; i++) {
+    const [lon1, lat1] = coordinates[i];
+    const [lon2, lat2] = coordinates[i + 1];
+
+    const lon1Rad = toRadians(lon1);
+    const lat1Rad = toRadians(lat1);
+    const lon2Rad = toRadians(lon2);
+    const lat2Rad = toRadians(lat2);
+
+    total += (lon2Rad - lon1Rad) * (2 + Math.sin(lat1Rad) + Math.sin(lat2Rad));
   }
 
-  area = Math.abs(area * R * R / 2);
-  return Math.round(area * R * 10000) / 10;
-}
-const calculateDistance = (start, end) => {
-  start[1] = (start[1] * Math.PI) / 180;
-  end[1] = (end[1] * Math.PI) / 180;
-  start[0] = (start[0] * Math.PI) / 180;
-  end[0] = (end[0] * Math.PI) / 180;
+  const area = Math.abs(total * R * R / 2);
+  return Math.round(area); // in square meters
+};
 
-  // Haversine formula
-  const dlon = end[1] - start[1];
-  const dlat = end[0] - start[0];
+const calculateDistance = (start, end) => {
+  const toRadians = (deg) => (deg * Math.PI) / 180;
+
+  const lat1 = toRadians(start[1]);
+  const lon1 = toRadians(start[0]);
+  const lat2 = toRadians(end[1]);
+  const lon2 = toRadians(end[0]);
+
+  const dlat = lat2 - lat1;
+  const dlon = lon2 - lon1;
+
   const a =
-    Math.pow(Math.sin(dlat / 2), 2) +
-    Math.cos(start[0]) *
-      Math.cos(end[0]) *
-      Math.pow(Math.sin(dlon / 2), 2);
+    Math.sin(dlat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) *
+    Math.sin(dlon / 2) ** 2;
 
   const c = 2 * Math.asin(Math.sqrt(a));
+  const radius = 6378; // Earth radius in km
 
-  const radius = 6378;
-
-  return Math.round(c * radius * 10000) / 10;
+  return Math.round(c * radius * 10000) / 10; // to meters
 };
 
 main()
