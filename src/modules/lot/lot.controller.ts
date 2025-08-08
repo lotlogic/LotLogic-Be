@@ -6,7 +6,7 @@ export class LotController {
   constructor(private readonly lotService: LotService) {}
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     return await this.lotService.findLot(id);
   }
 }
