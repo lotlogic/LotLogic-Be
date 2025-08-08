@@ -55,10 +55,10 @@ export class LotService {
     `;
   }
 
-  async findLot(lotId: string) {
+  async findLot(lotId: number) {
     const lot = await this.prisma.lot.findUnique({
       where: {
-        id: BigInt(lotId)
+        id: lotId
       }
     });
     if (lot) {
