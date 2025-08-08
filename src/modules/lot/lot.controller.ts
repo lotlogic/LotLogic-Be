@@ -5,6 +5,11 @@ import { LotService } from './lot.service';
 export class LotController {
   constructor(private readonly lotService: LotService) {}
 
+  @Get()
+  async findAll() {
+    return await this.lotService.findAllLots();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.lotService.findLot(id);
