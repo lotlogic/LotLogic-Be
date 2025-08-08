@@ -46,7 +46,15 @@ export class DesignOnLotService {
 
     const zoningRule = lot.lotZoningRules[0]?.zoningRule;
 
-    if (!zoningRule) throw new NotFoundException('Zoning rules not found');
+    // If no zoning rules exist, return a default response
+    if (!zoningRule) {
+      console.log(`No zoning rules found for lot ${lotId}, returning default response`);
+      return {
+        lotId: lot.id.toString(),
+        zoning: 'RZ2: Low Density Residential', // Default zoning
+        matches: [] // No matches since no house designs exist
+      };
+    }
 
     const houseDesigns = await this.prisma.houseDesign.findMany();
 

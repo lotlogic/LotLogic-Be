@@ -28,37 +28,79 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 // import { Prisma } from 'generated/prisma';
+
+interface DatabaseLot {
+  id: bigint;
+  blockKey: string;
+  blockNumber: number | null;
+  sectionNumber: number | null;
+  areaSqm: number;
+  zoning: string;
+  address: string | null;
+  district: string | null;
+  division: string | null;
+  lifecycleStage: string | null;
+  estateId: bigint | null;
+  geojson: any;
+  geometry: string; // This will be the GeoJSON string from ST_AsGeoJSON
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Injectable()
 export class LotService {
   constructor(private prisma: PrismaService) {}
 
   async createLot(data: {
     blockKey: string;
-    geojson: object;
+    geojson: any;
     estateId?: string;
   }) {
-    // Use raw query to bypass Prisma's type limitations
-    return this.prisma.$executeRaw`
-      INSERT INTO "Lot" (
-        "blockKey", 
-        geometry, 
-        geojson,
-        ${data.estateId ? '"estateId"' : ''}
-      )
-      VALUES (
-        ${data.blockKey},
-        ST_GeomFromGeoJSON(${JSON.stringify(data.geojson)}),
-        ${JSON.stringify(data.geojson)}::jsonb
-        ${data.estateId ? `, ${data.estateId}` : ''}
-      )
-      RETURNING *;
-    `;
+    return await this.prisma.lot.create({
+      data: {
+        blockKey: data.blockKey,
+        geojson: data.geojson,
+        estateId: data.estateId ? BigInt(data.estateId) : null,
+        areaSqm: 0, // You might want to calculate this
+        zoning: '', // You might want to set this
+      },
+    });
   }
 
-  async findLot(lotId: string) {
+  async findAllLots() {
+    const lots = await this.prisma.$queryRaw<DatabaseLot[]>`
+      SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "estateId",
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        "createdAt",
+        "updatedAt"
+      FROM lot
+      ORDER BY id
+    `;
+
+    return lots.map((lot) => ({
+      ...lot,
+      id: lot.id.toString(),
+      estateId: lot.estateId?.toString(),
+      geometry: JSON.parse(lot.geometry)
+    }));
+  }
+
+  async findLot(lotId: number) {
     const lot = await this.prisma.lot.findUnique({
       where: {
-        id: BigInt(lotId)
+        id: lotId
       }
     });
     if (lot) {
@@ -69,5 +111,39 @@ export class LotService {
       };
     }
     return lot;
+  }
+  
+    // const lots = await this.prisma.$queryRaw<DatabaseLot[]>`
+    //   SELECT
+    //     id,
+    //     "blockKey",
+    //     "blockNumber",
+    //     "sectionNumber",
+    //     "areaSqm",
+    //     zoning,
+    //     address,
+    //     district,
+    //     division,
+    //     "lifecycleStage",
+    //     "estateId",
+    //     geojson,
+    //     ST_AsGeoJSON(geometry) as geometry,
+    //     "createdAt",
+    //     "updatedAt"
+    //   FROM lot
+    //   WHERE id = ${BigInt(id)}
+    // `;
+
+    // if (lots.length === 0) {
+    //   return null;
+    // }
+
+    // const lot = lots[0];
+    // return {
+    //   ...lot,
+    //   id: lot.id.toString(),
+    //   estateId: lot.estateId?.toString(),
+    //   geometry: JSON.parse(lot.geometry)
+    // };
   }
 }
