@@ -9,6 +9,7 @@ async function main() {
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const lots = JSON.parse(fileContent)
   let i = 1;
+  await prisma.$executeRawUnsafe("DELETE FROM lot");
   for(const lot of lots.features)
   {
     if(lot.type === "lot") {
