@@ -5,14 +5,14 @@ import * as path from 'path'
 const prisma = new PrismaClient()
 
 async function main() {
-  const filePath = path.join(__dirname, '../public/data/data.json')
+  const filePath = path.join(__dirname, '../public/data/mitchell.json')
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const lots = JSON.parse(fileContent)
   let id = 1;
   await prisma.$executeRawUnsafe("DELETE FROM lot");
   for(const lot of lots.features)
   {
-    if(lot.type === "lot") {
+    if(lot.geo_type === "lot") {
       let data: {
         blockKey,
         blockNumber,
@@ -27,7 +27,7 @@ async function main() {
         geojson,
         geometry,
       } = {
-        blockKey: lot.blockKey + id,
+        blockKey: lot.blockKey,
         blockNumber: lot.blockNumber,
         sectionNumber: lot.sectionNumber,
         areaSqm: calculateArea(lot.geometry.coordinates[0]),
