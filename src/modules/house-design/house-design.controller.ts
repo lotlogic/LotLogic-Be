@@ -23,9 +23,22 @@ export class HouseDesignController {
         @Query('alfresco') alfresco?: string,
         @Query('pergola') pergola?: string
     ) : Promise<HouseDesignFilterResult[] | []> {
-        const bedroomArray = JSON.parse(bedroom || '[]');
-        const bathroomArray = JSON.parse(bathroom || '[]');
-        const carArray = JSON.parse(car || '[]');
+        // Parse bedroom, bathroom, car arrays - handle both JSON strings and comma-separated values
+        const parseArrayParam = (param: string): number[] => {
+            if (!param) return [];
+            try {
+                // Try to parse as JSON first
+                const parsed = JSON.parse(param);
+                return Array.isArray(parsed) ? parsed.filter(val => typeof val === 'number') : [];
+            } catch {
+                // If JSON parsing fails, try comma-separated values
+                return param.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+            }
+        };
+
+        const bedroomArray = parseArrayParam(bedroom);
+        const bathroomArray = parseArrayParam(bathroom);
+        const carArray = parseArrayParam(car);
         const minSize = min_size ? parseInt(min_size) : undefined;
         const maxSize = max_size ? parseInt(max_size) : undefined;
         const rumpusBool = rumpus === 'true' ? true : rumpus === 'false' ? false : undefined;
@@ -46,10 +59,12 @@ export class HouseDesignController {
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning : "");
         if(lotDetail && zoningDetail) {
             // For now, use a default build area 
-            const defaultBuildArea = 1000; // Default build area in sqm
-            return houseDesigns.filter(design => design.area <= defaultBuildArea);
-            // const buildArea = (lotDetail.geojson) ? (lotDetail.geojson['properties'].width - (zoningDetail.minFrontSetback_m || 0) - (zoningDetail.minRearSetback_m || 0)) * (lotDetail.geojson['properties'].depth - (2 * (zoningDetail.minSideSetback_m || 0))) : 0;
-            // return houseDesigns.filter(design => design.area <= buildArea)
+            const geojson = lotDetail.geojson as any;
+            const buildArea = (geojson && geojson.properties) ? 
+                (geojson.properties.width - (zoningDetail.minFrontSetback_m || 0) - (zoningDetail.minRearSetback_m || 0)) * 
+                (geojson.properties.depth - (2 * (zoningDetail.minSideSetback_m || 0))) : 0;
+            // const defaultBuildArea = 1000; // Default build area in sqm
+            return houseDesigns.filter(design => design.area <= buildArea);
         }
         return [];
     }
