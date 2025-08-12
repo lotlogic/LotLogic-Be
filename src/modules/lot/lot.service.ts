@@ -146,4 +146,3 @@ export class LotService {
     //   geometry: JSON.parse(lot.geometry)
     // };
   }
-}

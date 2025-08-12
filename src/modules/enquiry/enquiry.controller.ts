@@ -35,7 +35,7 @@ export class EnquiryController {
             facade_id,
             builders
         );
-        const lotData = await this.lotService.findLot(lot_id);
+        const lotData = await this.lotService.findLot(parseInt(lot_id));
         const houseDesignData = await this.houseDesignService.getHouseDesignById(house_design_id);
         const builderData = await this.builderService.findByIds(builders);
         if(lotData && houseDesignData && builderData.length) {
