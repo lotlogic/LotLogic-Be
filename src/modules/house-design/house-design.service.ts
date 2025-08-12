@@ -73,7 +73,7 @@ export class HouseDesignService {
                 };
             }) || [];
             return {
-                id: house.id,
+                id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
