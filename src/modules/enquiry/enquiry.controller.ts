@@ -21,7 +21,7 @@ export class EnquiryController {
         @Body('number') number: string,
         @Body('builders') builders: string[],
         @Body('comments') comments: string,
-        @Body('lot_id') lot_id: string,
+        @Body('lot_id') lot_id: number,
         @Body('house_design_id') house_design_id: string,
         @Body('facade_id') facade_id: string
     ) {
@@ -35,7 +35,7 @@ export class EnquiryController {
             facade_id,
             builders
         );
-        const lotData = await this.lotService.findLot(parseInt(lot_id));
+        const lotData = await this.lotService.findLot(lot_id);
         const houseDesignData = await this.houseDesignService.getHouseDesignById(house_design_id);
         const builderData = await this.builderService.findByIds(builders);
         if(lotData && houseDesignData && builderData.length) {
