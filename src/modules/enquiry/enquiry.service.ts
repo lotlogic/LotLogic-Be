@@ -10,7 +10,7 @@ export class EnquiryService {
         email: string,
         number: string,
         comments: string,
-        lot_id: string,
+        lot_id: number,
         house_design_id: string,
         facade_id: string,
         builder: string[]

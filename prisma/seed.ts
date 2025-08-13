@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -8,8 +6,20 @@ const prisma = new PrismaClient();
 async function main(): Promise<void> {
   console.log('🌱 Starting database seeding...');
 
-  // Create sample zoning rules
-  const zoningRule1 = await prisma.zoningRule.upsert({
+  // Create sample estate
+  await prisma.estate.create({
+    data: {
+      id: 3,
+      name: 'Canberra Heights Estate',
+      logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
+      themeColor: '#2F5D62',
+      email: 'info@canberraheights.com',
+      phone: '+61 2 6123 4567',
+      address: 'Canberra Heights, ACT 2600'
+    }
+  });
+
+    await prisma.zoningRule.upsert({
     where: { code: 'RZ1' },
     update: {},
     create: {
@@ -27,7 +37,7 @@ async function main(): Promise<void> {
     }
   });
 
-  const zoningRule2 = await prisma.zoningRule.upsert({
+  await prisma.zoningRule.upsert({
     where: { code: 'RZ2' },
     update: {},
     create: {
@@ -45,7 +55,7 @@ async function main(): Promise<void> {
     }
   });
 
-  const zoningRule3 = await prisma.zoningRule.upsert({
+  await prisma.zoningRule.upsert({
     where: { code: 'RZ3' },
     update: {},
     create: {
@@ -63,82 +73,39 @@ async function main(): Promise<void> {
     }
   });
 
-  // Create sample estate
-  const estate = await prisma.estate.create({
-    data: {
-      name: 'Canberra Heights Estate',
-      logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
-      themeColor: '#2F5D62',
-      email: 'info@canberraheights.com',
-      phone: '+61 2 6123 4567',
-      address: 'Canberra Heights, ACT 2600'
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ4' },
+    update: {},
+    create: {
+      code: 'RZ4',
+      name: 'Residential Zone 4',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.8,
+      maxFSR: 0.8,
+      maxBuildingHeight_m: 12.5,
+      appliesToZones: ['RZ4']
     }
   });
 
-  // Create sample lots with estate relationship
-  const lot1 = await prisma.lot.create({
-    data: {
-      blockKey: 'BLOCK123',
-      blockNumber: 101,
-      sectionNumber: 202,
-      areaSqm: 500.0,
-      zoning: 'RZ1',
-      address: '101 Block Street, Canberra',
-      district: 'Gungahlin',
-      division: 'Division A',
-      lifecycleStage: 'Available',
-      overlays: ['BPA'],
-      estateId: estate.id,
-      geojson: {
-        properties: {
-          width: 20,
-          depth: 35
-        }
-      }
-    }
-  });
-
-  const lot2 = await prisma.lot.create({
-    data: {
-      blockKey: 'BLOCK456',
-      blockNumber: 102,
-      sectionNumber: 203,
-      areaSqm: 600.0,
-      zoning: 'RZ2',
-      address: '102 Block Street, Canberra',
-      district: 'Belconnen',
-      division: 'Division B',
-      lifecycleStage: 'Available',
-      overlays: ['BPA'],
-      estateId: estate.id,
-      geojson: {
-        properties: {
-          width: 25,
-          depth: 40
-        }
-      }
-    }
-  });
-
-  const lot3 = await prisma.lot.create({
-    data: {
-      blockKey: 'BLOCK789',
-      blockNumber: 103,
-      sectionNumber: 204,
-      areaSqm: 450.0,
-      zoning: 'RZ3',
-      address: '103 Block Street, Canberra',
-      district: 'Woden',
-      division: 'Division C',
-      lifecycleStage: 'Available',
-      overlays: ['BPA'],
-      estateId: estate.id,
-      geojson: {
-        properties: {
-          width: 18,
-          depth: 30
-        }
-      }
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ5' },
+    update: {},
+    create: {
+      code: 'RZ5',
+      name: 'Residential Zone 5',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minSideSetback_m: 3,
+      minRearSetback_m: 3,
+      minFSR: 0.8,
+      maxFSR: 0.8,
+      maxBuildingHeight_m: 21.5,
+      appliesToZones: ['RZ5']
     }
   });
 
@@ -175,91 +142,12 @@ async function main(): Promise<void> {
     }
   });
 
-  const houseDesign3 = await prisma.houseDesign.create({
-    data: {
-      name: 'Luxury 4BR House',
-      floorplanUrl: '/floorplans/floorplan.png',
-      bedrooms: 4,
-      bathrooms: 3,
-      garages: 2,
-      areaSqm: 200.0,
-      minLotWidth: 15.0,
-      minLotDepth: 20.0,
-      rumpus: true,
-      alfresco: true,
-      pergola: true
-    }
-  });
-
   // Create sample builder
-  const builder = await prisma.builder.create({
+  await prisma.builder.create({
     data: {
       name: 'Canberra Builders Pty Ltd',
       email: 'info@canberrabuilders.com.au',
       phone: '+61 2 6123 4567'
-    }
-  });
-
-  // Link lots to zoning rules
-  await prisma.lotZoningRule.create({
-    data: {
-      lotId: lot1.id,
-      zoningRuleId: zoningRule1.id,
-      isOverlay: false
-    }
-  });
-
-  await prisma.lotZoningRule.create({
-    data: {
-      lotId: lot2.id,
-      zoningRuleId: zoningRule2.id,
-      isOverlay: false
-    }
-  });
-
-  await prisma.lotZoningRule.create({
-    data: {
-      lotId: lot3.id,
-      zoningRuleId: zoningRule3.id,
-      isOverlay: false
-    }
-  });
-
-  // Create sample enquiries
-  const enquiry1 = await prisma.enquiry.create({
-    data: {
-      name: 'John Doe',
-      email: 'john.doe@email.com',
-      phone: '+61 412 345 678',
-      comments: 'Interested in lot BLOCK123 for a 3-bedroom house',
-      lotId: lot1.id,
-      houseDesignId: houseDesign1.id
-    }
-  });
-
-  const enquiry2 = await prisma.enquiry.create({
-    data: {
-      name: 'Jane Smith',
-      email: 'jane.smith@email.com',
-      phone: '+61 423 456 789',
-      comments: 'Looking for a compact house on lot BLOCK456',
-      lotId: lot2.id,
-      houseDesignId: houseDesign2.id
-    }
-  });
-
-  // Link enquiries to builders
-  await prisma.enquiryBuilder.create({
-    data: {
-      enquiryId: enquiry1.id,
-      builderId: builder.id
-    }
-  });
-
-  await prisma.enquiryBuilder.create({
-    data: {
-      enquiryId: enquiry2.id,
-      builderId: builder.id
     }
   });
 
@@ -281,35 +169,74 @@ async function main(): Promise<void> {
   });
 
   console.log('✅ Sample data created successfully!');
-  console.log('');
-  console.log('📊 Database Summary:');
-  console.log(`   • Lots: 3 (${lot1.id}, ${lot2.id}, ${lot3.id})`);
-  console.log(`   • Zoning Rules: 3 (RZ1, RZ2, RZ3)`);
-  console.log(`   • House Designs: 3 (${houseDesign1.id}, ${houseDesign2.id}, ${houseDesign3.id})`);
-  console.log(`   • Estate: 1 (${estate.id})`);
-  console.log(`   • Builder: 1 (${builder.id})`);
-  console.log(`   • Enquiries: 2 (${enquiry1.id}, ${enquiry2.id})`);
-  console.log('');
-  console.log('🔗 Sample API Endpoints:');
-  console.log(`   • GET /design-on-lot/calculate?lotId=${lot1.id}`);
-  console.log(`   • GET /lot/${lot1.id}`);
-  console.log(`   • GET /estate/${estate.id}`);
-  console.log(`   • GET /house-design/${houseDesign1.id}`);
-  console.log('');
-  console.log('📋 Database Query Examples:');
-  console.log('   • Get lot with relationships:');
-  console.log(`     SELECT l.*, e.name as estate_name, zr.code as zoning_code`);
-  console.log(`     FROM "lot" l`);
-  console.log(`     LEFT JOIN "estate" e ON l."estateId" = e.id`);
-  console.log(`     LEFT JOIN "zoningRule" zr ON l.zoning = zr.code`);
-  console.log(`     WHERE l.id = '${lot1.id}';`);
-  console.log('');
-  console.log('   • Get house designs compatible with a lot:');
-  console.log(`     SELECT hd.*, l."blockKey", l.zoning`);
-  console.log(`     FROM "houseDesign" hd, "lot" l`);
-  console.log(`     WHERE l.id = '${lot1.id}'`);
-  console.log(`     AND hd."minLotWidth" <= (l.geojson->>'properties'->>'width')::float`);
-  console.log(`     AND hd."minLotDepth" <= (l.geojson->>'properties'->>'depth')::float;`);
+  
+  console.log('✅ Created possible houseDesigns');
+  
+  const bedrooms = [3, 4];
+  const bathrooms = [1, 2, 3];
+  const garages = [1, 2, 3];
+  const rumpusOptions = [true, false];
+  const alfrescoOptions = [true, false];
+  const pergolaOptions = [true, false];
+
+  for (const br of bedrooms) {
+    for (const ba of bathrooms) {
+      for (const ga of garages) {
+        for (const rumpus of rumpusOptions) {
+          for (const alfresco of alfrescoOptions) {
+            for (const pergola of pergolaOptions) {
+              await prisma.houseDesign.create({
+                data: {
+                  name: `${br}BR ${ba}BA ${ga}GA House`,
+                  floorplanUrl: '/floorplans/floorplan.png',
+                  bedrooms: br,
+                  bathrooms: ba,
+                  garages: ga,
+                  areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
+                  minLotWidth: 12.0,
+                  minLotDepth: 15.0,
+                  rumpus,
+                  alfresco,
+                  pergola
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const br of bedrooms) {
+    for (const ba of bathrooms) {
+      for (const ga of garages) {
+        for (const rumpus of rumpusOptions) {
+          for (const alfresco of alfrescoOptions) {
+            for (const pergola of pergolaOptions) {
+              await prisma.houseDesign.create({
+                data: {
+                  name: `${br}BR ${ba}BA ${ga}GA House`,
+                  floorplanUrl: '/floorplans/floorplan.png',
+                  bedrooms: br,
+                  bathrooms: ba,
+                  garages: ga,
+                  areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
+                  minLotWidth: 12.0,
+                  minLotDepth: 15.0,
+                  rumpus,
+                  alfresco,
+                  pergola
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  console.log('✅ Sample data created successfully!');
+
 }
 
 main()

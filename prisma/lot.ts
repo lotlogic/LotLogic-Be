@@ -1,154 +1,238 @@
-import { PrismaClient } from '@prisma/client'
-import * as fs from 'fs'
-import * as path from 'path'
 
-const prisma = new PrismaClient()
+import { PrismaClient } from '@prisma/client';
 
-async function main() {
-  const filePath = path.join(__dirname, '../public/data/mitchell.json')
-  const fileContent = fs.readFileSync(filePath, 'utf-8')
-  const lots = JSON.parse(fileContent)
-  let id = 1;
-  await prisma.$executeRawUnsafe("DELETE FROM lot");
-  for(const lot of lots.features)
-  {
-    if(lot.geo_type === "lot") {
-      let data: {
-        blockKey,
-        blockNumber,
-        sectionNumber,
-        areaSqm,
-        zoning,
-        address,
-        district,
-        division,
-        lifecycleStage,
-        estateId,
-        geojson,
-        geometry,
-      } = {
-        blockKey: lot.blockKey,
-        blockNumber: lot.blockNumber,
-        sectionNumber: lot.sectionNumber,
-        areaSqm: calculateArea(lot.geometry.coordinates[0]),
-        zoning: lot.zoning,
-        address: lot.address,
-        district: lot.district,
-        division: lot.division,
-        lifecycleStage: lot.lifecycleArea,
-        estateId: lot.estateId,
-        geojson: { },
-        geometry: toPolygon(lot.geometry.coordinates[0].map((c) => c.join(' ')).toString())
-      };
-      let properties: { [key: string]: number }[] = [];
-      const coordinates = lot.geometry.coordinates[0];
-      for(let i = 0; i < coordinates.length - 1; i++)
-      {
-        const distance = calculateDistance(coordinates[i], coordinates[i+1]);
-        properties.push({ [`s${i + 1}`]: distance });
+const prisma = new PrismaClient();
+
+async function main(): Promise<void> {
+  console.log('🌱 Starting database seeding...');
+
+  // Create sample estate
+  await prisma.estate.create({
+    data: {
+      id: 3,
+      name: 'Canberra Heights Estate',
+      logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
+      themeColor: '#2F5D62',
+      email: 'info@canberraheights.com',
+      phone: '+61 2 6123 4567',
+      address: 'Canberra Heights, ACT 2600'
+    }
+  });
+
+    await prisma.zoningRule.upsert({
+    where: { code: 'RZ1' },
+    update: {},
+    create: {
+      code: 'RZ1',
+      name: 'Residential Zone 1',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 4,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.5,
+      maxBuildingHeight_m: 8.5,
+      appliesToZones: ['RZ1']
+    }
+  });
+
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ2' },
+    update: {},
+    create: {
+      code: 'RZ2',
+      name: 'Residential Zone 2',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minRearSetback_m: 4,
+      minSideSetback_m: 4,
+      minFSR: 0.4,
+      maxFSR: 0.6,
+      maxBuildingHeight_m: 9.0,
+      appliesToZones: ['RZ2']
+    }
+  });
+
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ3' },
+    update: {},
+    create: {
+      code: 'RZ3',
+      name: 'Residential Zone 3',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 4.5,
+      minRearSetback_m: 3.5,
+      minSideSetback_m: 3.5,
+      minFSR: 0.45,
+      maxFSR: 0.55,
+      maxBuildingHeight_m: 8.8,
+      appliesToZones: ['RZ3']
+    }
+  });
+
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ4' },
+    update: {},
+    create: {
+      code: 'RZ4',
+      name: 'Residential Zone 4',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.8,
+      maxFSR: 0.8,
+      maxBuildingHeight_m: 12.5,
+      appliesToZones: ['RZ4']
+    }
+  });
+
+  await prisma.zoningRule.upsert({
+    where: { code: 'RZ5' },
+    update: {},
+    create: {
+      code: 'RZ5',
+      name: 'Residential Zone 5',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minSideSetback_m: 3,
+      minRearSetback_m: 3,
+      minFSR: 0.8,
+      maxFSR: 0.8,
+      maxBuildingHeight_m: 21.5,
+      appliesToZones: ['RZ5']
+    }
+  });
+
+  // Create sample house designs
+  const houseDesign1 = await prisma.houseDesign.create({
+    data: {
+      name: 'Modern 3BR House',
+      floorplanUrl: '/floorplans/floorplan.png',
+      bedrooms: 3,
+      bathrooms: 2,
+      garages: 1,
+      areaSqm: 150.0,
+      minLotWidth: 12.0,
+      minLotDepth: 15.0,
+      rumpus: false,
+      alfresco: true,
+      pergola: false
+    }
+  });
+
+  const houseDesign2 = await prisma.houseDesign.create({
+    data: {
+      name: 'Compact 2BR House',
+      floorplanUrl: '/floorplans/floorplan.png',
+      bedrooms: 2,
+      bathrooms: 1,
+      garages: 1,
+      areaSqm: 100.0,
+      minLotWidth: 10.0,
+      minLotDepth: 12.0,
+      rumpus: false,
+      alfresco: false,
+      pergola: true
+    }
+  });
+
+  // const houseDesign3 = await prisma.houseDesign.create({
+  //   data: {
+  //     name: 'Luxury 4BR House',
+  //     floorplanUrl: '/floorplans/floorplan.png',
+  //     bedrooms: 4,
+  //     bathrooms: 3,
+  //     garages: 2,
+  //     areaSqm: 200.0,
+  //     minLotWidth: 15.0,
+  //     minLotDepth: 20.0,
+  //     rumpus: true,
+  //     alfresco: true,
+  //     pergola: true
+  //   }
+  // });
+
+
+  // Create sample builder
+  await prisma.builder.create({
+    data: {
+      name: 'Canberra Builders Pty Ltd',
+      email: 'info@canberrabuilders.com.au',
+      phone: '+61 2 6123 4567'
+    }
+  });
+
+  // Create sample facades
+  await prisma.facade.create({
+    data: {
+      label: 'Modern Facade',
+      imageUrl: '/facades/modern-facade.jpg',
+      houseDesignId: houseDesign1.id
+    }
+  });
+
+  await prisma.facade.create({
+    data: {
+      label: 'Traditional Facade',
+      imageUrl: '/facades/traditional-facade.jpg',
+      houseDesignId: houseDesign2.id
+    }
+  });
+
+  console.log('✅ Sample data created successfully!');
+  
+  console.log('✅ Created possible houseDesigns');
+  
+  const bedrooms = [3, 4];
+  const bathrooms = [1, 2, 3];
+  const garages = [1, 2, 3];
+  const rumpusOptions = [true, false];
+  const alfrescoOptions = [true, false];
+  const pergolaOptions = [true, false];
+
+  for (const br of bedrooms) {
+    for (const ba of bathrooms) {
+      for (const ga of garages) {
+        for (const rumpus of rumpusOptions) {
+          for (const alfresco of alfrescoOptions) {
+            for (const pergola of pergolaOptions) {
+              await prisma.houseDesign.create({
+                data: {
+                  name: `${br}BR ${ba}BA ${ga}GA House`,
+                  floorplanUrl: '/floorplans/floorplan.png',
+                  bedrooms: br,
+                  bathrooms: ba,
+                  garages: ga,
+                  areaSqm: Math.floor(Math.random() * (1600 - 500 + 1)) + 500,
+                  minLotWidth: 12.0,
+                  minLotDepth: 15.0,
+                  rumpus,
+                  alfresco,
+                  pergola
+                }
+              });
+            }
+          }
+        }
       }
-      data.geojson = { properties};
-      try {
-        const sql = `
-          INSERT INTO lot (
-            "id", "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
-            "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
-          ) VALUES (
-            $1, $2, $3, $4, $5, $6,
-            $7, $8, $9, $10, $11, $12,
-            ST_GeomFromText($13, 4326), now(), now()
-          )
-        `;
-
-        await prisma.$executeRawUnsafe(sql,
-          id,
-          data.blockKey,
-          data.blockNumber,
-          data.sectionNumber,
-          data.areaSqm,
-          data.zoning,
-          data.address,
-          data.district,
-          data.division,
-          data.lifecycleStage,
-          data.estateId,
-          data.geojson,
-          data.geometry
-        );
-      } catch (error) {
-        console.error('Error: ' + error);
-      }
-      
-      id++;
     }
   }
-  // await prisma.lot.createMany({ data: lotData })
-  console.log('Lots added successfully.')
+  
+  console.log('✅ Sample data created successfully!');
+
 }
-
-function toPolygon(coordString) {
-  // split into coordinates
-  const coords = coordString.trim().split(',').map(p => p.trim());
-
-  // ensure first point is repeated at end to close polygon
-  if (coords[0] !== coords[coords.length - 1]) {
-    coords.push(coords[0]);
-  }
-
-  return `POLYGON((${coords.join(', ')}))`;
-}
-
-const calculateArea = (coordinates) => {
-  const R = 6378137;
-  const toRadians = deg => (deg * Math.PI) / 180;
-
-  if (coordinates.length < 3) return 0; // not a polygon
-
-  let total = 0;
-
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const [lon1, lat1] = coordinates[i];
-    const [lon2, lat2] = coordinates[i + 1];
-
-    const lon1Rad = toRadians(lon1);
-    const lat1Rad = toRadians(lat1);
-    const lon2Rad = toRadians(lon2);
-    const lat2Rad = toRadians(lat2);
-
-    total += (lon2Rad - lon1Rad) * (2 + Math.sin(lat1Rad) + Math.sin(lat2Rad));
-  }
-
-  const area = Math.abs(total * R * R / 2);
-  return Math.round(area); // in square meters
-};
-
-const calculateDistance = (start, end) => {
-  const toRadians = (deg) => (deg * Math.PI) / 180;
-
-  const lat1 = toRadians(start[1]);
-  const lon1 = toRadians(start[0]);
-  const lat2 = toRadians(end[1]);
-  const lon2 = toRadians(end[0]);
-
-  const dlat = lat2 - lat1;
-  const dlon = lon2 - lon1;
-
-  const a =
-    Math.sin(dlat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) *
-    Math.sin(dlon / 2) ** 2;
-
-  const c = 2 * Math.asin(Math.sqrt(a));
-  const radius = 6378; // Earth radius in km
-
-  return Math.round(c * radius * 10000) / 10; // to meters
-};
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
+  .catch((err) => {
+    console.error('❌ Seeding failed:', err);
+    process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+  .finally(() => {
+    prisma.$disconnect();
+  });
