@@ -58,9 +58,8 @@ export class HouseDesignController {
         const lotDetail  = await this.lotService.findLot(parseInt(lot_id));
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
         if(lotDetail && zoningDetail && zoningDetail?.minFSR && zoningDetail?.maxFSR) {
-            const minBuildArea = zoningDetail?.minFSR * lotDetail?.areaSqm;
             const maxBuildArea = zoningDetail?.maxFSR * lotDetail?.areaSqm;
-            const designs = houseDesigns.filter(design => design.area <= maxBuildArea && design.area >= minBuildArea);
+            const designs = houseDesigns.filter(design => design.area <= maxBuildArea );
             if(designs.length)
                 return {
                     houseDesigns: designs,
