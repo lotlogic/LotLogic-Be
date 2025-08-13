@@ -11,7 +11,7 @@ export class LotController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.lotService.findLot(parseInt(id));
+  async findOne(@Param('id') id: number) {
+    return await this.lotService.findLot(id);
   }
 }

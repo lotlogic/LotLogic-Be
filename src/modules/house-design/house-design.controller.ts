@@ -22,7 +22,7 @@ export class HouseDesignController {
         @Query('rumpus') rumpus?: string,
         @Query('alfresco') alfresco?: string,
         @Query('pergola') pergola?: string
-    ) : Promise<HouseDesignFilterResult[] | []> {
+    ) {
         // Parse bedroom, bathroom, car arrays - handle both JSON strings and comma-separated values
         const parseArrayParam = (param: string): number[] => {
             if (!param) return [];
@@ -56,15 +56,21 @@ export class HouseDesignController {
             pergolaBool
         );
         const lotDetail  = await this.lotService.findLot(parseInt(lot_id));
-        const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning : "");
-        if(lotDetail && zoningDetail) {
-            // For now, use a default build area 
-            const geojson = lotDetail.geojson as any;
-            const buildArea = (geojson && geojson.properties) ? 
-                (geojson.properties.width - (zoningDetail.minFrontSetback_m || 0) - (zoningDetail.minRearSetback_m || 0)) * 
-                (geojson.properties.depth - (2 * (zoningDetail.minSideSetback_m || 0))) : 0;
-            // const defaultBuildArea = 1000; // Default build area in sqm
-            return houseDesigns.filter(design => design.area <= buildArea);
+        const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
+        if(lotDetail && zoningDetail && zoningDetail?.minFSR && zoningDetail?.maxFSR) {
+            const minBuildArea = zoningDetail?.minFSR * lotDetail?.areaSqm;
+            const maxBuildArea = zoningDetail?.maxFSR * lotDetail?.areaSqm;
+            const designs = houseDesigns.filter(design => design.area <= maxBuildArea && design.area >= minBuildArea);
+            if(designs.length)
+                return {
+                    houseDesigns: designs,
+                    zoning: {
+                        fsr: maxBuildArea,
+                        frontSetback: zoningDetail?.minFrontSetback_m,
+                        rearSetback: zoningDetail?.minRearSetback_m,
+                        sideSetback: zoningDetail?.minSideSetback_m
+                    }
+                };
         }
         return [];
     }
