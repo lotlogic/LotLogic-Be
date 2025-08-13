@@ -17,8 +17,8 @@ export class HouseDesignController {
         @Query('bedroom') bedroom: string,
         @Query('bathroom') bathroom: string,
         @Query('car') car: string,
-        @Query('min_size') min_size?: string,
-        @Query('max_size') max_size?: string,
+        @Query('min_size') min_size: string,
+        @Query('max_size') max_size: string,
         @Query('rumpus') rumpus?: string,
         @Query('alfresco') alfresco?: string,
         @Query('pergola') pergola?: string
