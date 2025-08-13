@@ -7,8 +7,10 @@ async function main(): Promise<void> {
   console.log('🌱 Starting database seeding...');
 
   // Create sample estate
-  await prisma.estate.create({
-    data: {
+  await prisma.estate.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
       id: 3,
       name: 'Canberra Heights Estate',
       logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
@@ -21,7 +23,19 @@ async function main(): Promise<void> {
 
     await prisma.zoningRule.upsert({
     where: { code: 'RZ1' },
-    update: {},
+    update: {
+      name: 'Residential Zone 1',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 4,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.65,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 8.5,
+      appliesToZones: ['RZ1']
+    },
     create: {
       code: 'RZ1',
       name: 'Residential Zone 1',
@@ -31,7 +45,8 @@ async function main(): Promise<void> {
       minRearSetback_m: 3,
       minSideSetback_m: 3,
       minFSR: 0.5,
-      maxFSR: 0.5,
+      maxFSR: 0.65,
+      maxStoreys: 2,
       maxBuildingHeight_m: 8.5,
       appliesToZones: ['RZ1']
     }
@@ -39,43 +54,81 @@ async function main(): Promise<void> {
 
   await prisma.zoningRule.upsert({
     where: { code: 'RZ2' },
-    update: {},
+    update: {
+      name: 'Residential Zone 2',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 4,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.5,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 8.5,
+      appliesToZones: ['RZ2']
+    },
     create: {
       code: 'RZ2',
       name: 'Residential Zone 2',
       type: 'Residential',
       isOverlay: false,
-      minFrontSetback_m: 6,
-      minRearSetback_m: 4,
-      minSideSetback_m: 4,
-      minFSR: 0.4,
-      maxFSR: 0.6,
-      maxBuildingHeight_m: 9.0,
+      minFrontSetback_m: 4,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.5,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 8.5,
       appliesToZones: ['RZ2']
     }
   });
 
   await prisma.zoningRule.upsert({
     where: { code: 'RZ3' },
-    update: {},
+    update: {
+      name: 'Residential Zone 3',
+      type: 'Residential',
+      isOverlay: false,
+      minFrontSetback_m: 10,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.65,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 9.5,
+      appliesToZones: ['RZ3']
+    },
     create: {
       code: 'RZ3',
       name: 'Residential Zone 3',
       type: 'Residential',
       isOverlay: false,
-      minFrontSetback_m: 4.5,
-      minRearSetback_m: 3.5,
-      minSideSetback_m: 3.5,
-      minFSR: 0.45,
-      maxFSR: 0.55,
-      maxBuildingHeight_m: 8.8,
+      minFrontSetback_m: 10,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.65,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 9.5,
       appliesToZones: ['RZ3']
     }
   });
 
   await prisma.zoningRule.upsert({
     where: { code: 'RZ4' },
-    update: {},
+    update: {
+      name: 'Residential Zone 4',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minRearSetback_m: 3,
+      minSideSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.8,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 12.5,
+      appliesToZones: ['RZ4']
+    },
     create: {
       code: 'RZ4',
       name: 'Residential Zone 4',
@@ -84,8 +137,9 @@ async function main(): Promise<void> {
       minFrontSetback_m: 6,
       minRearSetback_m: 3,
       minSideSetback_m: 3,
-      minFSR: 0.8,
+      minFSR: 0.5,
       maxFSR: 0.8,
+      maxStoreys: 2,
       maxBuildingHeight_m: 12.5,
       appliesToZones: ['RZ4']
     }
@@ -93,7 +147,19 @@ async function main(): Promise<void> {
 
   await prisma.zoningRule.upsert({
     where: { code: 'RZ5' },
-    update: {},
+    update: {
+      name: 'Residential Zone 5',
+      type: 'ZONE',
+      isOverlay: false,
+      minFrontSetback_m: 6,
+      minSideSetback_m: 3,
+      minRearSetback_m: 3,
+      minFSR: 0.5,
+      maxFSR: 0.8,
+      maxStoreys: 2,
+      maxBuildingHeight_m: 21.5,
+      appliesToZones: ['RZ5']
+    },
     create: {
       code: 'RZ5',
       name: 'Residential Zone 5',
@@ -102,8 +168,9 @@ async function main(): Promise<void> {
       minFrontSetback_m: 6,
       minSideSetback_m: 3,
       minRearSetback_m: 3,
-      minFSR: 0.8,
+      minFSR: 0.5,
       maxFSR: 0.8,
+      maxStoreys: 2,
       maxBuildingHeight_m: 21.5,
       appliesToZones: ['RZ5']
     }
