@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { HouseDesignService, HouseDesignFilterResult } from './house-design.service';
+import { HouseDesignService } from './house-design.service';
 import { LotService } from '../lot/lot.service';
 import { ZoningService } from '../zoning/zoning.service';
 
@@ -46,31 +46,44 @@ export class HouseDesignController {
         const pergolaBool = pergola === 'true' ? true : pergola === 'false' ? false : undefined;
         
         const houseDesigns = await this.houseDesignService.getFilteredHouseDesigns(
-            bedroomArray,
-            bathroomArray,
-            carArray,
+            bedroomArray || [],
+            bathroomArray || [],
+            carArray || [],
             minSize,
             maxSize,
             rumpusBool,
             alfrescoBool,
             pergolaBool
         );
-        const lotDetail  = await this.lotService.findLot(parseInt(lot_id));
+        
+        const lotDetail = await this.lotService.findLot(parseInt(lot_id));
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
-        if(lotDetail && zoningDetail && zoningDetail?.minFSR && zoningDetail?.maxFSR) {
-            const maxBuildArea = zoningDetail?.maxFSR * lotDetail?.areaSqm;
-            const designs = houseDesigns.filter(design => design.area <= maxBuildArea );
-            if(designs.length)
-                return {
-                    houseDesigns: designs,
-                    zoning: {
-                        fsr: maxBuildArea,
-                        frontSetback: zoningDetail?.minFrontSetback_m,
-                        rearSetback: zoningDetail?.minRearSetback_m,
-                        sideSetback: zoningDetail?.minSideSetback_m
-                    }
-                };
+        
+        // Always return the actual zoning data if available, even if some fields are null
+        if (lotDetail && zoningDetail) {
+            const maxBuildArea = zoningDetail.maxFSR ? zoningDetail.maxFSR * lotDetail.areaSqm : 300;
+            const designs = houseDesigns.filter(design => design.area <= maxBuildArea);
+            
+            return {
+                houseDesigns: designs,
+                zoning: {
+                    fsr: maxBuildArea,
+                    frontSetback: zoningDetail.minFrontSetback_m || 4,
+                    rearSetback: zoningDetail.minRearSetback_m || 3,
+                    sideSetback: zoningDetail.minSideSetback_m || 3
+                }
+            };
         }
-        return [];
+        
+        // Return empty result with default zoning only when lot or zoning data is completely missing
+        return {
+            houseDesigns: [],
+            zoning: {
+                // fsr: 300,
+                // frontSetback: 4,
+                // rearSetback: 3,
+                // sideSetback: 3
+            }
+        };
     }
 }
