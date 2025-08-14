@@ -105,7 +105,7 @@ src/
    npx prisma migrate dev
    
    # Seed the database (optional)
-   npx prisma db seed
+   npx tsx prisma/seed.ts
    ```
 
 ### Option 2: Docker Development (Recommended)
