@@ -31,31 +31,36 @@ export class HouseDesignService {
         bedroom: number[],
         bathroom: number[],
         car: number[],
-        min_size: number,
-        max_size: number,
-        rumpus: boolean,
-        alfresco: boolean,
-        pergola: boolean
+        min_size?: number,
+        max_size?: number,
+        rumpus?: boolean,
+        alfresco?: boolean,
+        pergola?: boolean
     ): Promise<HouseDesignFilterResult[]> {
-        const houseDesigns = await this.prisma.houseDesign.findMany({
-            where: {
-                rumpus,
-                alfresco,
-                pergola,
-                bedrooms: {
-                    in: bedroom
-                },
-                bathrooms: {
-                    in: bathroom
-                },
-                garages: {
-                    in: car
-                },
-                areaSqm: {
-                    gte: min_size,
-                    lte: max_size
-                }
+        const whereClause: any = {
+            bedrooms: {
+                in: bedroom
             },
+            bathrooms: {
+                in: bathroom
+            },
+            garages: {
+                in: car
+            }
+        };
+
+        // Add optional filters only if they are provided
+        if (rumpus !== undefined) whereClause.rumpus = rumpus;
+        if (alfresco !== undefined) whereClause.alfresco = alfresco;
+        if (pergola !== undefined) whereClause.pergola = pergola;
+        if (min_size !== undefined || max_size !== undefined) {
+            whereClause.areaSqm = {};
+            if (min_size !== undefined) whereClause.areaSqm.gte = min_size;
+            if (max_size !== undefined) whereClause.areaSqm.lte = max_size;
+        }
+
+        const houseDesigns = await this.prisma.houseDesign.findMany({
+            where: whereClause,
             include: {
                 facades: true
             }
@@ -68,7 +73,7 @@ export class HouseDesignService {
                 };
             }) || [];
             return {
-                id: house.id,
+                id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
@@ -86,11 +91,11 @@ export class HouseDesignService {
     async getHouseDesignById(house_design_id: string) {
         return await this.prisma.houseDesign.findUnique({
             where: {
-                id: house_design_id
+                id: BigInt(house_design_id)
             },
             include: {
                 facades: true
             }
-        }) as any;
+        });
     }
 }
