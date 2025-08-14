@@ -9,8 +9,8 @@ datasource db {
   extensions = [postgis]
 }
 
-model Estate {
-  id         String   @id @default(uuid())
+model estate {
+  id         BigInt   @id @default(autoincrement())
   name       String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -19,11 +19,11 @@ model Estate {
   logoUrl    String?
   phone      String?
   themeColor String?
-  lots       Lot[]
+  lots       lot[]
 }
 
-model Lot {
-  id             String                   @id @default(uuid())
+model lot {
+  id             BigInt                   @id @default(autoincrement())
   blockKey       String                   @unique
   blockNumber    Int?
   sectionNumber  Int?
@@ -35,20 +35,20 @@ model Lot {
   lifecycleStage String?
   geojson        Json?
   geometry       Unsupported("geometry")?
-  estateId       String?
+  estateId       BigInt?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
   overlays       String[]
-  designOnLots   DesignOnLot[]
-  enquiries      Enquiry[]
-  estate         Estate?                  @relation(fields: [estateId], references: [id])
-  lotZoningRules LotZoningRule[]
+  designOnLots   designOnLot[]
+  enquiries      enquiry[]
+  estate         estate?                  @relation(fields: [estateId], references: [id])
+  lotZoningRules lotZoningRule[]
 
   @@index([geometry], map: "geometry_index")
 }
 
-model ZoningRule {
-  id                    String          @id @default(uuid())
+model zoningRule {
+  id                    BigInt          @id @default(autoincrement())
   code                  String          @unique
   name                  String
   type                  String
@@ -68,21 +68,21 @@ model ZoningRule {
   appliesToZones        String[]
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
-  lotZoningRules        LotZoningRule[]
+  lotZoningRules        lotZoningRule[]
 }
 
-model LotZoningRule {
-  lotId        String
-  zoningRuleId String
+model lotZoningRule {
+  lotId        BigInt
+  zoningRuleId BigInt
   isOverlay    Boolean    @default(false)
-  lot          Lot        @relation(fields: [lotId], references: [id], onDelete: Cascade)
-  zoningRule   ZoningRule @relation(fields: [zoningRuleId], references: [id], onDelete: Cascade)
+  lot          lot        @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  zoningRule   zoningRule @relation(fields: [zoningRuleId], references: [id], onDelete: Cascade)
 
   @@id([lotId, zoningRuleId])
 }
 
-model HouseDesign {
-  id           String        @id @default(uuid())
+model houseDesign {
+  id           BigInt        @id @default(autoincrement())
   name         String
   floorplanUrl String?
   bedrooms     Int
@@ -96,68 +96,68 @@ model HouseDesign {
   rumpus       Boolean
   alfresco     Boolean
   pergola      Boolean
-  designOnLots DesignOnLot[]
-  enquiries    Enquiry[]
-  facades      Facade[]
+  designOnLots designOnLot[]
+  enquiries    enquiry[]
+  facades      facade[]
 }
 
-model Facade {
-  id            String      @id @default(uuid())
+model facade {
+  id            BigInt      @id @default(autoincrement())
   label         String
   imageUrl      String
-  houseDesignId String
+  houseDesignId BigInt
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  enquiries     Enquiry[]
-  houseDesign   HouseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+  enquiries     enquiry[]
+  houseDesign   houseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
 }
 
-model DesignOnLot {
-  id             String      @id @default(uuid())
-  lotId          String
-  houseDesignId  String
+model designOnLot {
+  id             BigInt      @id @default(autoincrement())
+  lotId          BigInt
+  houseDesignId  BigInt
   isCompatible   Boolean
   matchedFilters Json?
   createdAt      DateTime    @default(now())
-  houseDesign    HouseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
-  lot            Lot         @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  houseDesign    houseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+  lot            lot         @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
   @@unique([lotId, houseDesignId])
 }
 
-model Builder {
-  id              String           @id @default(uuid())
+model builder {
+  id              BigInt           @id @default(autoincrement())
   name            String
   email           String
   phone           String
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  enquiryBuilders EnquiryBuilder[]
+  enquiryBuilders enquiryBuilder[]
 }
 
-model Enquiry {
-  id              String           @id @default(uuid())
+model enquiry {
+  id              BigInt           @id @default(autoincrement())
   name            String
   email           String
   phone           String
   comments        String?
-  lotId           String?
-  houseDesignId   String?
-  facadeId        String?
+  lotId           BigInt?
+  houseDesignId   BigInt?
+  facadeId        BigInt?
   createdAt       DateTime         @default(now())
-  facade          Facade?          @relation(fields: [facadeId], references: [id])
-  houseDesign     HouseDesign?     @relation(fields: [houseDesignId], references: [id])
-  lot             Lot?             @relation(fields: [lotId], references: [id])
-  enquiryBuilders EnquiryBuilder[]
+  facade          facade?          @relation(fields: [facadeId], references: [id])
+  houseDesign     houseDesign?     @relation(fields: [houseDesignId], references: [id])
+  lot             lot?             @relation(fields: [lotId], references: [id])
+  enquiryBuilders enquiryBuilder[]
 }
 
-model EnquiryBuilder {
-  id        String   @id @default(uuid())
-  enquiryId String
-  builderId String
+model enquiryBuilder {
+  id        BigInt   @id @default(autoincrement())
+  enquiryId BigInt
+  builderId BigInt
   createdAt DateTime @default(now())
-  builder   Builder  @relation(fields: [builderId], references: [id], onDelete: Cascade)
-  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  builder   builder  @relation(fields: [builderId], references: [id], onDelete: Cascade)
+  enquiry   enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
 
   @@unique([enquiryId, builderId])
 }
