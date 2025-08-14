@@ -21,7 +21,7 @@ export class EnquiryController {
         @Body('number') number: string,
         @Body('builders') builders: string[],
         @Body('comments') comments: string,
-        @Body('lot_id') lot_id: string,
+        @Body('lot_id') lot_id: number,
         @Body('house_design_id') house_design_id: string,
         @Body('facade_id') facade_id: string
     ) {
@@ -51,7 +51,7 @@ export class EnquiryController {
                     lotStatus: "Available",
                     imageUrl: houseDesignData.floorplanUrl
                 },
-                emailsList: builderData.map((builder: { email }) => { return builder.email }).toString(),
+                emailsList: builderData.map((builder: { email: string }) => { return builder.email }).toString(),
             });
         }
         return { message: "Posted"};

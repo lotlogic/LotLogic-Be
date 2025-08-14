@@ -7,7 +7,7 @@ export class BuilderController {
   constructor(private readonly builderService: BuilderService) {}
 
   @Post()
-  create(@Body() createBuilderDto: Prisma.BuilderCreateInput) {
+  create(@Body() createBuilderDto: Prisma.builderCreateInput) {
     return this.builderService.create(createBuilderDto);
   }
 
@@ -22,7 +22,7 @@ export class BuilderController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBuilderDto: Prisma.BuilderUpdateInput) {
+  update(@Param('id') id: string, @Body() updateBuilderDto: Prisma.builderUpdateInput) {
     return this.builderService.update(id, updateBuilderDto);
   }
 
