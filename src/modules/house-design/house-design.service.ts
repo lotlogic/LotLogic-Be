@@ -28,28 +28,21 @@ export class HouseDesignService {
     constructor(private prisma: PrismaService) {}
 
     async getFilteredHouseDesigns(
-        bedroom: number[],
-        bathroom: number[],
-        car: number[],
+        bedroom?: number[],
+        bathroom?: number[],
+        car?: number[],
         min_size?: number,
         max_size?: number,
         rumpus?: boolean,
         alfresco?: boolean,
         pergola?: boolean
     ): Promise<HouseDesignFilterResult[]> {
-        const whereClause: any = {
-            bedrooms: {
-                in: bedroom
-            },
-            bathrooms: {
-                in: bathroom
-            },
-            garages: {
-                in: car
-            }
-        };
+        const whereClause: any = { };
 
         // Add optional filters only if they are provided
+        if (bedroom !== undefined) whereClause.bedrooms = { in: bedroom };
+        if (bathroom !== undefined) whereClause.bathrooms = { in: bathroom };
+        if (car !== undefined) whereClause.garages = { in: car };
         if (rumpus !== undefined) whereClause.rumpus = rumpus;
         if (alfresco !== undefined) whereClause.alfresco = alfresco;
         if (pergola !== undefined) whereClause.pergola = pergola;
