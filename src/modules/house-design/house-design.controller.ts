@@ -68,9 +68,9 @@ export class HouseDesignController {
                 houseDesigns: designs,
                 zoning: {
                     fsr: maxBuildArea,
-                    frontSetback: zoningDetail.minFrontSetback_m || 4,
-                    rearSetback: zoningDetail.minRearSetback_m || 3,
-                    sideSetback: zoningDetail.minSideSetback_m || 3
+                    frontSetback: zoningDetail?.minFrontSetback_m ,
+                    rearSetback: zoningDetail?.minRearSetback_m ,
+                    sideSetback: zoningDetail?.minSideSetback_m 
                 }
             };
         }
