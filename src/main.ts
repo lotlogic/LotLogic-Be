@@ -3,11 +3,13 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { BigIntInterceptor } from './interceptors/bigint.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors();
+  app.useGlobalInterceptors(new BigIntInterceptor());
   
   app.useStaticAssets(join(__dirname, '..', '..', 'public'), {
     setHeaders: (res: Response) => {

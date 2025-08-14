@@ -8,6 +8,8 @@ import { EnquiryModule } from './modules/enquiry/enquiry.module';
 import { DesignOnLotModule } from './modules/design-on-lot/design-on-lot.module';
 import { HouseDesignModule } from './modules/house-design/house-design.module';
 import { MailModule } from './modules/mail/mail.module';
+import { BuilderModule } from './modules/builder/builder.module';
+import { FacadeModule } from './modules/facade/facade.module';
 
 @Module({
   imports: [
@@ -17,7 +19,9 @@ import { MailModule } from './modules/mail/mail.module';
       DesignOnLotModule,
       HouseDesignModule,
       EnquiryModule,
-      MailModule
+      MailModule,
+      BuilderModule,
+      FacadeModule
     ],
   controllers: [AppController],
   providers: [AppService],
