@@ -46,16 +46,15 @@ export class HouseDesignController {
         const pergolaBool = pergola === 'true' ? true : pergola === 'false' ? false : undefined;
         
         const houseDesigns = await this.houseDesignService.getFilteredHouseDesigns(
-            bedroomArray || [],
-            bathroomArray || [],
-            carArray || [],
+            bedroomArray,
+            bathroomArray,
+            carArray,
             minSize,
             maxSize,
             rumpusBool,
             alfrescoBool,
             pergolaBool
         );
-        
         const lotDetail = await this.lotService.findLot(parseInt(lot_id));
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
         
