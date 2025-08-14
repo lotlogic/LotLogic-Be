@@ -14,11 +14,11 @@ export class HouseDesignController {
     @Get(":lot_id")
     async filterHouseDesign(
         @Param('lot_id') lot_id: string,
-        @Query('bedroom') bedroom: string,
-        @Query('bathroom') bathroom: string,
-        @Query('car') car: string,
-        @Query('min_size') min_size: string,
-        @Query('max_size') max_size: string,
+        @Query('bedroom') bedroom?: string,
+        @Query('bathroom') bathroom?: string,
+        @Query('car') car?: string,
+        @Query('min_size') min_size?: string,
+        @Query('max_size') max_size?: string,
         @Query('rumpus') rumpus?: string,
         @Query('alfresco') alfresco?: string,
         @Query('pergola') pergola?: string
@@ -36,9 +36,9 @@ export class HouseDesignController {
             }
         };
 
-        const bedroomArray = parseArrayParam(bedroom);
-        const bathroomArray = parseArrayParam(bathroom);
-        const carArray = parseArrayParam(car);
+        const bedroomArray = bedroom ? parseArrayParam(bedroom): undefined;
+        const bathroomArray = bathroom ? parseArrayParam(bathroom): undefined;
+        const carArray = car ? parseArrayParam(car): undefined;
         const minSize = min_size ? parseInt(min_size) : undefined;
         const maxSize = max_size ? parseInt(max_size) : undefined;
         const rumpusBool = rumpus === 'true' ? true : rumpus === 'false' ? false : undefined;

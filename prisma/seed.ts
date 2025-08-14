@@ -8,10 +8,10 @@ async function main(): Promise<void> {
 
   // Create sample estate
   await prisma.estate.upsert({
-    where: { id: "1" },
+    where: { id: 3 },
     update: {},
     create: {
-      id: "1",
+      id: 3,
       name: 'Canberra Heights Estate',
       logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
       themeColor: '#2F5D62',
