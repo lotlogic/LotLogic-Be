@@ -48,7 +48,7 @@ export class DesignOnLotService {
 
     // If no zoning rules exist, return a default response
     if (!zoningRule) {
-      console.log(`No zoning rules found for lot ${lotId}, returning default response`);
+      // console.log(`No zoning rules found for lot ${lotId}, returning default response`);
       return {
         lotId: lot.id.toString(),
         zoning: 'RZ2: Low Density Residential', // Default zoning
