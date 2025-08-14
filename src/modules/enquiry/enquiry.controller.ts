@@ -51,7 +51,7 @@ export class EnquiryController {
                     lotStatus: "Available",
                     imageUrl: houseDesignData.floorplanUrl
                 },
-                emailsList: builderData.map((builder: { email }) => { return builder.email }).toString(),
+                emailsList: builderData.map((builder: { email: string }) => { return builder.email }).toString(),
             });
         }
         return { message: "Posted"};
