@@ -173,7 +173,7 @@ The project includes comprehensive data seeding:
 ### Importing Data
 ```bash
 # Run the seed script to import sample data
-npx prisma db seed
+npx tsx prisma/seed.ts
 ```
 
 ## 🔧 Development Tools
