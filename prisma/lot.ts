@@ -71,7 +71,6 @@ async function main() {
               )
               ON CONFLICT ("blockKey")
               DO UPDATE SET 
-                "id" = EXCLUDED."id",
                 "blockNumber" = $2,
                 "sectionNumber" = $3,
                 "areaSqm" = $4,
