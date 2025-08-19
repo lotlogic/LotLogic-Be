@@ -6,7 +6,7 @@ CREATE TABLE "public"."estate" (
     "id" BIGSERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "address" TEXT,
     "email" TEXT,
     "logoUrl" TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE "public"."lot" (
     "geometry" geometry,
     "estateId" BIGINT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "overlays" TEXT[],
 
     CONSTRAINT "lot_pkey" PRIMARY KEY ("id")
@@ -59,7 +59,7 @@ CREATE TABLE "public"."zoningRule" (
     "minSideSetback_m" DOUBLE PRECISION,
     "appliesToZones" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "zoningRule_pkey" PRIMARY KEY ("id")
 );
@@ -85,7 +85,7 @@ CREATE TABLE "public"."houseDesign" (
     "minLotWidth" DOUBLE PRECISION NOT NULL,
     "minLotDepth" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "rumpus" BOOLEAN NOT NULL,
     "alfresco" BOOLEAN NOT NULL,
     "pergola" BOOLEAN NOT NULL,
@@ -100,7 +100,7 @@ CREATE TABLE "public"."facade" (
     "imageUrl" TEXT NOT NULL,
     "houseDesignId" BIGINT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "facade_pkey" PRIMARY KEY ("id")
 );
@@ -124,7 +124,7 @@ CREATE TABLE "public"."builder" (
     "email" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "builder_pkey" PRIMARY KEY ("id")
 );
