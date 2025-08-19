@@ -41,6 +41,7 @@ interface DatabaseLot {
   division: string | null;
   lifecycleStage: string | null;
   estateId: bigint | null;
+  overlays: string[];
   geojson: any;
   geometry: string; // This will be the GeoJSON string from ST_AsGeoJSON
   createdAt: Date;
@@ -81,6 +82,7 @@ export class LotService {
         division,
         "lifecycleStage",
         "estateId",
+        overlays,
         geojson,
         ST_AsGeoJSON(geometry) as geometry,
         "createdAt",
