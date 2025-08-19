@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: lotlogic123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -35,12 +35,15 @@ services:
   backend:
     build: .
     container_name: lotlogic-backend
-    env_file:
-      - .env
     environment:
-      DATABASE_URL: postgresql://postgres:lotlogic123@postgres:5432/lotlogic
+      DATABASE_URL: postgresql://lotlogic_user:lotlogic_password@postgres:5432/lotlogic
       NODE_ENV: development
       PORT: 3000
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: lakpa.lama4433@gmail.com
+      SMTP_PASS: "opyp dybj noyx apcg "
+      SMTP_FROM: lotlogic@gmail.com
     ports:
       - "3000:3000"
     volumes:
