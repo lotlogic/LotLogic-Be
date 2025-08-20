@@ -11,7 +11,7 @@ interface LotGeoJson {
 }
 
 interface DesignOnLotMatch {
-  houseDesignId: string;
+  floorPlanId: string;
   floorplanUrl: string | null;
   spacing: {
     front: number | null;
@@ -56,7 +56,7 @@ export class DesignOnLotService {
       };
     }
 
-    const houseDesigns = await this.prisma.houseDesign.findMany();
+    const houseDesigns = await this.prisma.floorPlan.findMany();
 
     const result: DesignOnLotMatch[] = [];
     for (const design of houseDesigns) {
@@ -67,7 +67,7 @@ export class DesignOnLotService {
             ? (lot.geojson as LotGeoJson).properties ?? {}
             : {};
         result.push({
-          houseDesignId: design.id.toString(),
+          floorPlanId: design.id.toString(),
           floorplanUrl: design.floorplanUrl,
           spacing: {
             front: zoningRule.minFrontSetback_m ?? null,
@@ -83,8 +83,8 @@ export class DesignOnLotService {
         });
 
         await this.prisma.designOnLot.upsert({
-          where: { lotId_houseDesignId: { lotId: BigInt(lotId), houseDesignId: design.id } },
-          create: { lotId: BigInt(lotId), houseDesignId: design.id, isCompatible: true, matchedFilters: {} },
+          where: { lotId_floorPlanId: { lotId: BigInt(lotId), floorPlanId: design.id } },
+          create: { lotId: BigInt(lotId), floorPlanId: design.id, isCompatible: true, matchedFilters: {} },
           update: { isCompatible: true, matchedFilters: {} }
         });
       }
