@@ -177,7 +177,7 @@ async function main(): Promise<void> {
   });
 
   // Create sample house designs
-  const houseDesign1 = await prisma.houseDesign.create({
+  const houseDesign1 = await prisma.floorPlan.create({
     data: {
       name: 'Modern 3BR House',
       floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan1.jpeg',
@@ -193,7 +193,7 @@ async function main(): Promise<void> {
     }
   });
 
-  const houseDesign2 = await prisma.houseDesign.create({
+  const houseDesign2 = await prisma.floorPlan.create({
     data: {
       name: 'Compact 2BR House',
       floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan2.jpeg',
@@ -223,7 +223,7 @@ async function main(): Promise<void> {
     data: {
       label: 'Modern Facade',
       imageUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/brick.jpg',
-      houseDesignId: houseDesign1.id
+      floorPlanId: houseDesign1.id
     }
   });
 
@@ -231,7 +231,7 @@ async function main(): Promise<void> {
     data: {
       label: 'Traditional Facade',
       imageUrl: '/facades/traditional-facade.jpg',
-      houseDesignId: houseDesign2.id
+      floorPlanId: houseDesign2.id
     }
   });
 
@@ -253,7 +253,7 @@ async function main(): Promise<void> {
   //       for (const rumpus of rumpusOptions) {
   //         for (const alfresco of alfrescoOptions) {
   //           for (const pergola of pergolaOptions) {
-  //             await prisma.houseDesign.create({
+  //             await prisma.floorPlan.create({
   //               data: {
   //                 name: `${br}BR ${ba}BA ${ga}GA House`,
   //                 floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan1.jpeg',
@@ -281,7 +281,7 @@ async function main(): Promise<void> {
   //       for (const rumpus of rumpusOptions) {
   //         for (const alfresco of alfrescoOptions) {
   //           for (const pergola of pergolaOptions) {
-  //             await prisma.houseDesign.create({
+  //             await prisma.floorPlan.create({
   //               data: {
   //                 name: `${br}BR ${ba}BA ${ga}GA House`,
   //                 floorplanUrl: '/floorplans/floorplan.png',

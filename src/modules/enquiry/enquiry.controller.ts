@@ -3,14 +3,14 @@ import { EnquiryService } from './enquiry.service';
 import { MailService } from '../mail/mail.service';
 import { BuilderService } from '../builder/builder.service';
 import { LotService } from '../lot/lot.service';
-import { HouseDesignService } from '../house-design/house-design.service';
+import { FloorPlanService } from '../floor-plan/floor-plan.service';
 @Controller('enquiry')
 export class EnquiryController {
     constructor(
         private readonly enquiryService: EnquiryService,
         private readonly builderService: BuilderService,
         private readonly lotService: LotService,
-        private readonly houseDesignService: HouseDesignService,
+        private readonly FloorPlanService: FloorPlanService,
         private readonly mailService: MailService
     ) { }
 
@@ -36,7 +36,7 @@ export class EnquiryController {
             builders
         );
         const lotData = await this.lotService.findLot(lot_id);
-        const houseDesignData = await this.houseDesignService.getHouseDesignById(house_design_id);
+        const houseDesignData = await this.FloorPlanService.getHouseDesignById(house_design_id);
         const builderData = await this.builderService.findByIds(builders);
         if(lotData && houseDesignData && builderData.length) {
             await this.mailService.sendEmail({

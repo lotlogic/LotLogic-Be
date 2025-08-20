@@ -24,7 +24,7 @@ export interface Images   {
 }
 
 @Injectable()
-export class HouseDesignService {
+export class FloorPlanService {
     constructor(private prisma: PrismaService) {}
 
     async getFilteredHouseDesigns(
@@ -52,7 +52,7 @@ export class HouseDesignService {
             if (max_size !== undefined) whereClause.areaSqm.lte = max_size;
         }
 
-        const houseDesigns = await this.prisma.houseDesign.findMany({
+        const houseDesigns = await this.prisma.floorPlan.findMany({
             where: whereClause,
             include: {
                 facades: true
@@ -82,7 +82,7 @@ export class HouseDesignService {
     }
 
     async getHouseDesignById(house_design_id: string) {
-        return await this.prisma.houseDesign.findUnique({
+        return await this.prisma.floorPlan.findUnique({
             where: {
                 id: BigInt(house_design_id)
             },
