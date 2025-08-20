@@ -17,3 +17,5 @@ ALTER TABLE "public"."builder" ALTER COLUMN "updatedAt" SET DEFAULT NOW();
 ALTER TABLE "public"."facade" RENAME COLUMN "houseDesignId" TO "floorPlanId";
 
 ALTER TABLE "public"."enquiry" RENAME COLUMN "houseDesignId" TO "floorPlanId";
+
+ALTER TABLE "public"."designOnLot" RENAME COLUMN "houseDesignId" TO "floorPlanId";
