@@ -35,7 +35,9 @@ export class FloorPlanService {
         max_size?: number,
         rumpus?: boolean,
         alfresco?: boolean,
-        pergola?: boolean
+        pergola?: boolean,
+        depth?: number | null,
+        width?: number | null
     ): Promise<HouseDesignFilterResult[]> {
         const whereClause: any = { };
 
@@ -48,9 +50,11 @@ export class FloorPlanService {
         if (pergola !== undefined) whereClause.pergola = pergola;
         if (min_size !== undefined || max_size !== undefined) {
             whereClause.areaSqm = {};
-            if (min_size !== undefined) whereClause.areaSqm.gte = min_size;
-            if (max_size !== undefined) whereClause.areaSqm.lte = max_size;
+            if (min_size !== undefined) whereClause.areaSqm = { gte: min_size };
+            if (max_size !== undefined) whereClause.areaSqm = { lte: max_size };
         }
+        if (width !== undefined) whereClause.minLotWidth = {lt: width };
+        if (depth !== undefined) whereClause.minLotDepth = {lt: depth };
 
         const houseDesigns = await this.prisma.floorPlan.findMany({
             where: whereClause,
@@ -61,6 +65,7 @@ export class FloorPlanService {
         const filteredDesign = houseDesigns.map((house: any) => {
             const images = house.facades?.map((facade: any) => {
                 return {
+                    facadeId: facade.id,
                     src: facade.imageUrl,
                     faced: facade.label
                 };
