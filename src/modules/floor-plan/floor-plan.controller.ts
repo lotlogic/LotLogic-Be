@@ -35,6 +35,7 @@ export class FloorPlanController {
                 return param.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
             }
         };
+        const lotDetail = await this.lotService.findLot(parseInt(lot_id));
 
         const bedroomArray = bedroom ? parseArrayParam(bedroom): undefined;
         const bathroomArray = bathroom ? parseArrayParam(bathroom): undefined;
@@ -53,9 +54,10 @@ export class FloorPlanController {
             maxSize,
             rumpusBool,
             alfrescoBool,
-            pergolaBool
+            pergolaBool,
+            (lotDetail?.geojson as any)?.width ?? null,
+            (lotDetail?.geojson as any)?.depth ?? null,
         );
-        const lotDetail = await this.lotService.findLot(parseInt(lot_id));
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
         
         // Always return the actual zoning data if available, even if some fields are null
