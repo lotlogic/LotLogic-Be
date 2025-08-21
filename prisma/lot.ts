@@ -5,7 +5,7 @@ import * as path from 'path'
 const prisma = new PrismaClient()
 
 async function main() {
-  const filePath = path.join(__dirname, '../src/data/mitchell.json')
+  const filePath = path.join(__dirname, '../src/data/hamiltonRiseMitchell.json')
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const lots = JSON.parse(fileContent)
   for(const lot of lots.features)
