@@ -8,7 +8,7 @@ npx prisma migrate deploy
 echo "✅ Migrations complete."
 
 # echo "➡️ Running Prisma Seed..."
-# npx tsx prisma/seed.ts
+npx tsx prisma/seed.ts
 
 echo "✅ Seeding complete."
 
