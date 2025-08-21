@@ -6,7 +6,7 @@ async function main() {
   console.log('Seeding house designs...');
 
   // Clear existing house designs
-  await prisma.houseDesign.deleteMany();
+  await prisma.floorPlan.deleteMany();
 
   // Create house designs
   const houseDesigns = [
@@ -52,7 +52,7 @@ async function main() {
   ];
 
   for (const design of houseDesigns) {
-    await prisma.houseDesign.create({
+    await prisma.floorPlan.create({
       data: design,
     });
   }
