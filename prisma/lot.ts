@@ -5,11 +5,9 @@ import * as path from 'path'
 const prisma = new PrismaClient()
 
 async function main() {
-  const filePath = path.join(__dirname, '../public/data/mitchell.json')
+  const filePath = path.join(__dirname, '../src/data/mitchell.json')
   const fileContent = fs.readFileSync(filePath, 'utf-8')
   const lots = JSON.parse(fileContent)
-  let id = 1;
-  await prisma.$executeRawUnsafe("DELETE FROM lot");
   for(const lot of lots.features)
   {
     if(lot.geo_type === "lot") {
@@ -47,21 +45,47 @@ async function main() {
         const distance = calculateDistance(coordinates[i], coordinates[i+1]);
         properties.push({ [`s${i + 1}`]: distance });
       }
-      data.geojson = { properties};
+
+      let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+
+      lot.geometry.coordinates[0].forEach(([lon, lat]) => {
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+      });
+      const midLat = (minLat + maxLat) / 2;
+      const width = calculateDistance([ minLon, midLat ], [ maxLon, midLat ]);
+      const depth = calculateDistance([ minLon, minLat ], [ minLon, maxLat ]);
+
+      data.geojson = { properties, width, depth };
       try {
         const sql = `
-          INSERT INTO lot (
-            "id", "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
-            "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
-          ) VALUES (
-            $1, $2, $3, $4, $5, $6,
-            $7, $8, $9, $10, $11, $12,
-            ST_GeomFromText($13, 4326), now(), now()
-          )
+              INSERT INTO lot (
+                "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
+                "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
+              ) VALUES (
+                $1, $2, $3, $4, $5, $6,
+                $7, $8, $9, $10, $11,
+                ST_GeomFromText($12, 4326), now(), now()
+              )
+              ON CONFLICT ("blockKey")
+              DO UPDATE SET 
+                "blockNumber" = $2,
+                "sectionNumber" = $3,
+                "areaSqm" = $4,
+                "zoning" = $5,
+                "address" = $6,
+                "district" = $7,
+                "division" = $8,
+                "lifecycleStage" = $9,
+                "estateId" = $10,
+                "geojson" = $11,
+                "geometry" = ST_GeomFromText($12, 4326),
+                "updatedAt" = now()
         `;
 
         await prisma.$executeRawUnsafe(sql,
-          id,
           data.blockKey,
           data.blockNumber,
           data.sectionNumber,
@@ -78,8 +102,6 @@ async function main() {
       } catch (error) {
         console.error('Error: ' + error);
       }
-      
-      id++;
     }
   }
   // await prisma.lot.createMany({ data: lotData })

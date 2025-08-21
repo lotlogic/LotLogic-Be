@@ -177,10 +177,10 @@ async function main(): Promise<void> {
   });
 
   // Create sample house designs
-  const houseDesign1 = await prisma.houseDesign.create({
+  const houseDesign1 = await prisma.floorPlan.create({
     data: {
       name: 'Modern 3BR House',
-      floorplanUrl: '/floorplans/floorplan.png',
+      floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan1.jpeg',
       bedrooms: 3,
       bathrooms: 2,
       garages: 1,
@@ -193,10 +193,10 @@ async function main(): Promise<void> {
     }
   });
 
-  const houseDesign2 = await prisma.houseDesign.create({
+  const houseDesign2 = await prisma.floorPlan.create({
     data: {
       name: 'Compact 2BR House',
-      floorplanUrl: '/floorplans/floorplan.png',
+      floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan2.jpeg',
       bedrooms: 2,
       bathrooms: 1,
       garages: 1,
@@ -222,8 +222,8 @@ async function main(): Promise<void> {
   await prisma.facade.create({
     data: {
       label: 'Modern Facade',
-      imageUrl: '/facades/modern-facade.jpg',
-      houseDesignId: houseDesign1.id
+      imageUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/brick.jpg',
+      floorPlanId: houseDesign1.id
     }
   });
 
@@ -231,7 +231,7 @@ async function main(): Promise<void> {
     data: {
       label: 'Traditional Facade',
       imageUrl: '/facades/traditional-facade.jpg',
-      houseDesignId: houseDesign2.id
+      floorPlanId: houseDesign2.id
     }
   });
 
@@ -239,68 +239,69 @@ async function main(): Promise<void> {
   
   console.log('✅ Created possible houseDesigns');
   
-  const bedrooms = [3, 4];
-  const bathrooms = [1, 2, 3];
-  const garages = [1, 2, 3];
-  const rumpusOptions = [true, false];
-  const alfrescoOptions = [true, false];
-  const pergolaOptions = [true, false];
+  // sample house designs
+  // const bedrooms = [3, 4];
+  // const bathrooms = [1, 2, 3];
+  // const garages = [1, 2, 3];
+  // const rumpusOptions = [true, false];
+  // const alfrescoOptions = [true, false];
+  // const pergolaOptions = [true, false];
 
-  for (const br of bedrooms) {
-    for (const ba of bathrooms) {
-      for (const ga of garages) {
-        for (const rumpus of rumpusOptions) {
-          for (const alfresco of alfrescoOptions) {
-            for (const pergola of pergolaOptions) {
-              await prisma.houseDesign.create({
-                data: {
-                  name: `${br}BR ${ba}BA ${ga}GA House`,
-                  floorplanUrl: '/floorplans/floorplan.png',
-                  bedrooms: br,
-                  bathrooms: ba,
-                  garages: ga,
-                  areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
-                  minLotWidth: 12.0,
-                  minLotDepth: 15.0,
-                  rumpus,
-                  alfresco,
-                  pergola
-                }
-              });
-            }
-          }
-        }
-      }
-    }
-  }
+  // for (const br of bedrooms) {
+  //   for (const ba of bathrooms) {
+  //     for (const ga of garages) {
+  //       for (const rumpus of rumpusOptions) {
+  //         for (const alfresco of alfrescoOptions) {
+  //           for (const pergola of pergolaOptions) {
+  //             await prisma.floorPlan.create({
+  //               data: {
+  //                 name: `${br}BR ${ba}BA ${ga}GA House`,
+  //                 floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan1.jpeg',
+  //                 bedrooms: br,
+  //                 bathrooms: ba,
+  //                 garages: ga,
+  //                 areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
+  //                 minLotWidth: 12.0,
+  //                 minLotDepth: 15.0,
+  //                 rumpus,
+  //                 alfresco,
+  //                 pergola
+  //               }
+  //             });
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
-  for (const br of bedrooms) {
-    for (const ba of bathrooms) {
-      for (const ga of garages) {
-        for (const rumpus of rumpusOptions) {
-          for (const alfresco of alfrescoOptions) {
-            for (const pergola of pergolaOptions) {
-              await prisma.houseDesign.create({
-                data: {
-                  name: `${br}BR ${ba}BA ${ga}GA House`,
-                  floorplanUrl: '/floorplans/floorplan.png',
-                  bedrooms: br,
-                  bathrooms: ba,
-                  garages: ga,
-                  areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
-                  minLotWidth: 12.0,
-                  minLotDepth: 15.0,
-                  rumpus,
-                  alfresco,
-                  pergola
-                }
-              });
-            }
-          }
-        }
-      }
-    }
-  }
+  // for (const br of bedrooms) {
+  //   for (const ba of bathrooms) {
+  //     for (const ga of garages) {
+  //       for (const rumpus of rumpusOptions) {
+  //         for (const alfresco of alfrescoOptions) {
+  //           for (const pergola of pergolaOptions) {
+  //             await prisma.floorPlan.create({
+  //               data: {
+  //                 name: `${br}BR ${ba}BA ${ga}GA House`,
+  //                 floorplanUrl: '/floorplans/floorplan.png',
+  //                 bedrooms: br,
+  //                 bathrooms: ba,
+  //                 garages: ga,
+  //                 areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
+  //                 minLotWidth: 12.0,
+  //                 minLotDepth: 15.0,
+  //                 rumpus,
+  //                 alfresco,
+  //                 pergola
+  //               }
+  //             });
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   
   console.log('✅ Sample data created successfully!');
 

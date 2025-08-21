@@ -12,5 +12,11 @@ echo "✅ Migrations complete."
 
 echo "✅ Seeding complete."
 
+echo "➡️ Running Prisma Generate..."
+npx tsx prisma/lot.ts
+
+
+echo "✅ Lot sync completed."
+
 echo "🚀 Starting NestJS app..."
 exec node dist/src/main.js

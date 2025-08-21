@@ -4,7 +4,7 @@ import { EnquiryService } from './enquiry.service';
 import { MailService } from '../mail/mail.service';
 import { BuilderService } from '../builder/builder.service';
 import { LotService } from '../lot/lot.service';
-import { HouseDesignService } from '../house-design/house-design.service';
+import { FloorPlanService } from '../floor-plan/floor-plan.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
@@ -14,7 +14,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     MailService,
     BuilderService,
     LotService,
-    HouseDesignService
+    FloorPlanService
   ],
 })
 export class EnquiryModule {}
