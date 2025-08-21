@@ -24,7 +24,7 @@ export class EnquiryService {
                         phone: number,
                         comments: comments,
                         lotId: lot_id ? BigInt(lot_id) : null,
-                        houseDesignId: house_design_id ? BigInt(house_design_id) : null,
+                        floorPlanId: house_design_id ? BigInt(house_design_id) : null,
                         facadeId: facade_id ? BigInt(facade_id) : null
                     }
                 });
