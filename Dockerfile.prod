@@ -39,6 +39,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/prisma ./prisma
 
+# Copy data folder
+COPY --from=builder /app/src/data ./src/data
+
 # Optional: add .env or config files here if required
 # COPY --from=builder /app/.env .env
 
