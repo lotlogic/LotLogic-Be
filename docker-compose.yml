@@ -46,6 +46,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/node_modules/.prisma
       - ./public:/app/public
     depends_on:
       - postgres

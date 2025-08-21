@@ -81,7 +81,7 @@ model lotZoningRule {
   @@id([lotId, zoningRuleId])
 }
 
-model houseDesign {
+model floorPlan {
   id           BigInt        @id @default(autoincrement())
   name         String
   floorplanUrl String?
@@ -105,24 +105,24 @@ model facade {
   id            BigInt      @id @default(autoincrement())
   label         String
   imageUrl      String
-  houseDesignId BigInt
+  floorPlanId   BigInt
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   enquiries     enquiry[]
-  houseDesign   houseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+  floorPlan     floorPlan   @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
 }
 
 model designOnLot {
   id             BigInt      @id @default(autoincrement())
   lotId          BigInt
-  houseDesignId  BigInt
+  floorPlanId    BigInt
   isCompatible   Boolean
   matchedFilters Json?
   createdAt      DateTime    @default(now())
-  houseDesign    houseDesign @relation(fields: [houseDesignId], references: [id], onDelete: Cascade)
+  floorPlan      floorPlan   @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
   lot            lot         @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
-  @@unique([lotId, houseDesignId])
+  @@unique([lotId, floorPlanId])
 }
 
 model builder {
@@ -142,11 +142,11 @@ model enquiry {
   phone           String
   comments        String?
   lotId           BigInt?
-  houseDesignId   BigInt?
+  floorPlanId     BigInt?
   facadeId        BigInt?
   createdAt       DateTime         @default(now())
   facade          facade?          @relation(fields: [facadeId], references: [id])
-  houseDesign     houseDesign?     @relation(fields: [houseDesignId], references: [id])
+  floorPlan       floorPlan?       @relation(fields: [floorPlanId], references: [id])
   lot             lot?             @relation(fields: [lotId], references: [id])
   enquiryBuilders enquiryBuilder[]
 }
@@ -160,6 +160,24 @@ model enquiryBuilder {
   enquiry   enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
 
   @@unique([enquiryId, builderId])
+}
+
+model brand {
+  id                    Int         @id @default(autoincrement())
+  name                  String
+  title                 String
+  domain                String      @unique
+  logoUrl               String
+  primaryColor          String?
+  secondaryColor        String?
+  bgPrimaryColor        String?
+  bgSecondaryColor      String?
+  textPrimaryColor      String?
+  textSecondaryColor    String?
+  fontFamilyPrimary     String?
+  fontFamilySecondary   String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now())
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
