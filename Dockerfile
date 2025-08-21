@@ -13,11 +13,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
 # Expose port
 EXPOSE 3000
 
-# Start the application in development mode
-CMD ["npm", "run", "start:dev"] 
+# Start the application in development mode with Prisma generate
+CMD ["sh", "-c", "npx prisma generate && npm run start:dev"] 
