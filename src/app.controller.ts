@@ -17,16 +17,10 @@ export class AppController {
     return this.appService.getHealth();
   }
 
-  // @Get('test-floorplan')
-  // serveFloorplan(@Res() res: Response) {
-  //   const imagePath = join(__dirname, '..', 'public', 'floorplans', 'floorplan.png');
-  //   res.sendFile(imagePath);
-  // }
-
   @Get('floorplans/:filename')
-  serveFloorplan(@Param('filename') filename: string, @Res() res: Response) {
-  const imagePath = join(__dirname, '..', '..', 'public', 'floorplans', filename);
-  res.set('Access-Control-Allow-Origin', '*');
-  res.sendFile(imagePath);
-}
+    serveFloorplan(@Param('filename') filename: string, @Res() res: Response) {
+    const imagePath = join(__dirname, '..', '..', 'public', 'floorplans', filename);
+    res.set('Access-Control-Allow-Origin', '*');
+    res.sendFile(imagePath);
+  }
 }
