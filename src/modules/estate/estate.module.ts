@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { EstateController } from './estate.controller';
-import { EstateService } from './estate.service';
-import { PrismaModule } from '../../prisma/prisma.module';
+import { EstateController } from '@modules/estate/estate.controller';
+import { EstateService } from '@modules/estate/estate.service';
+import { PrismaModule } from '@/prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],
