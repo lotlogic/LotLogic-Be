@@ -8,6 +8,9 @@ async function bootstrap() {
 
   app.enableCors();
   app.useGlobalInterceptors(new BigIntInterceptor());
+  
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api');
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port);
