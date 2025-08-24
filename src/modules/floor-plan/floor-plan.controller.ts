@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { FloorPlanService } from './floor-plan.service';
-import { LotService } from '../lot/lot.service';
-import { ZoningService } from '../zoning/zoning.service';
+import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
+import { LotService } from '@modules/lot/lot.service';
+import { ZoningService } from '@modules/zoning/zoning.service';
 
 @Controller('house-design')
 export class FloorPlanController {

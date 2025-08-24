@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { DesignOnLotService, DesignOnLotResult } from './design-on-lot.service';
+import { DesignOnLotService, DesignOnLotResult } from '@modules/design-on-lot/design-on-lot.service';
 
 @Controller('design-on-lot')
 export class DesignOnLotController {
