@@ -1,16 +1,18 @@
-import { PrismaClient } from '@prisma/client'
-import * as fs from 'fs'
-import * as path from 'path'
+import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  const filePath = path.join(__dirname, '../src/data/hamiltonRiseMitchell.json')
-  const fileContent = fs.readFileSync(filePath, 'utf-8')
-  const lots = JSON.parse(fileContent)
-  for(const lot of lots.features)
-  {
-    if(lot.geo_type === "lot") {
+  const filePath = path.join(
+    __dirname,
+    '../../src/data/hamiltonRiseMitchell.json',
+  );
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const lots = JSON.parse(fileContent);
+  for (const lot of lots.features) {
+    if (lot.geo_type === 'lot') {
       let data: {
         blockKey,
         blockNumber,
@@ -35,18 +37,22 @@ async function main() {
         division: lot.division,
         lifecycleStage: lot.lifecycleArea,
         estateId: lot.estateId,
-        geojson: { },
-        geometry: toPolygon(lot.geometry.coordinates[0].map((c) => c.join(' ')).toString())
+        geojson: {},
+        geometry: toPolygon(
+          lot.geometry.coordinates[0].map((c) => c.join(' ')).toString(),
+        ),
       };
       let properties: { [key: string]: number }[] = [];
       const coordinates = lot.geometry.coordinates[0];
-      for(let i = 0; i < coordinates.length - 1; i++)
-      {
-        const distance = calculateDistance(coordinates[i], coordinates[i+1]);
+      for (let i = 0; i < coordinates.length - 1; i++) {
+        const distance = calculateDistance(coordinates[i], coordinates[i + 1]);
         properties.push({ [`s${i + 1}`]: distance });
       }
 
-      let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+      let minLat = Infinity,
+        maxLat = -Infinity,
+        minLon = Infinity,
+        maxLon = -Infinity;
 
       lot.geometry.coordinates[0].forEach(([lon, lat]) => {
         if (lat < minLat) minLat = lat;
@@ -55,8 +61,8 @@ async function main() {
         if (lon > maxLon) maxLon = lon;
       });
       const midLat = (minLat + maxLat) / 2;
-      const width = calculateDistance([ minLon, midLat ], [ maxLon, midLat ]);
-      const depth = calculateDistance([ minLon, minLat ], [ minLon, maxLat ]);
+      const width = calculateDistance([minLon, midLat], [maxLon, midLat]);
+      const depth = calculateDistance([minLon, minLat], [minLon, maxLat]);
 
       data.geojson = { properties, width, depth };
       try {
@@ -85,7 +91,8 @@ async function main() {
                 "updatedAt" = now()
         `;
 
-        await prisma.$executeRawUnsafe(sql,
+        await prisma.$executeRawUnsafe(
+          sql,
           data.blockKey,
           data.blockNumber,
           data.sectionNumber,
@@ -97,7 +104,7 @@ async function main() {
           data.lifecycleStage,
           data.estateId,
           data.geojson,
-          data.geometry
+          data.geometry,
         );
       } catch (error) {
         console.error('Error: ' + error);
@@ -105,12 +112,15 @@ async function main() {
     }
   }
   // await prisma.lot.createMany({ data: lotData })
-  console.log('Lots added successfully.')
+  console.log('Lots added successfully.');
 }
 
 function toPolygon(coordString) {
   // split into coordinates
-  const coords = coordString.trim().split(',').map(p => p.trim());
+  const coords = coordString
+    .trim()
+    .split(',')
+    .map((p) => p.trim());
 
   // ensure first point is repeated at end to close polygon
   if (coords[0] !== coords[coords.length - 1]) {
@@ -120,28 +130,32 @@ function toPolygon(coordString) {
   return `POLYGON((${coords.join(', ')}))`;
 }
 
-const calculateArea = (coordinates) => {
-  const R = 6378137;
-  const toRadians = deg => (deg * Math.PI) / 180;
+// using the spherical “trapezoid” formula:
+const calculateArea = (coords: [number, number][]) => {
+  const R = 6378137; // WGS84 semi-major, meters
+  const toRad = (d: number) => (d * Math.PI) / 180;
 
-  if (coordinates.length < 3) return 0; // not a polygon
+  // In case the ring is not closed, close it
+  const ring =
+    coords[0][0] === coords[coords.length - 1][0] &&
+    coords[0][1] === coords[coords.length - 1][1]
+      ? coords
+      : [...coords, coords[0]];
 
-  let total = 0;
+  let sum = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [lon1, lat1] = ring[i];
+    const [lon2, lat2] = ring[i + 1];
+    let dLambda = toRad(lon2) - toRad(lon1);
 
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const [lon1, lat1] = coordinates[i];
-    const [lon2, lat2] = coordinates[i + 1];
+    // normalize Δλ into [-π, π] to be safe for rings that might cross 180°
+    if (dLambda > Math.PI) dLambda -= 2 * Math.PI;
+    else if (dLambda < -Math.PI) dLambda += 2 * Math.PI;
 
-    const lon1Rad = toRadians(lon1);
-    const lat1Rad = toRadians(lat1);
-    const lon2Rad = toRadians(lon2);
-    const lat2Rad = toRadians(lat2);
-
-    total += (lon2Rad - lon1Rad) * (2 + Math.sin(lat1Rad) + Math.sin(lat2Rad));
+    sum += dLambda * (Math.sin(toRad(lat1)) + Math.sin(toRad(lat2)));
   }
-
-  const area = Math.abs(total * R * R / 2);
-  return Math.round(area); // in square meters
+  const area = Math.abs(((R * R) / 2) * sum);
+  return Math.round(area * 100) / 100; // two decimals
 };
 
 const calculateDistance = (start, end) => {
@@ -157,8 +171,7 @@ const calculateDistance = (start, end) => {
 
   const a =
     Math.sin(dlat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) *
-    Math.sin(dlon / 2) ** 2;
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
 
   const c = 2 * Math.asin(Math.sqrt(a));
   const radius = 6378; // Earth radius in km
@@ -168,9 +181,9 @@ const calculateDistance = (start, end) => {
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

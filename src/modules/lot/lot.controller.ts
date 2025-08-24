@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { LotService } from './lot.service';
+import { LotService } from '@modules/lot/lot.service';
 
 @Controller('lot')
 export class LotController {
