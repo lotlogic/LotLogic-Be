@@ -18,6 +18,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@/*": ["src/*"],
+      "@modules/*": ["src/modules/*"],
       "generated/prisma": ["generated/prisma"],
       "generated/prisma/*": ["generated/prisma/*"]
     }
