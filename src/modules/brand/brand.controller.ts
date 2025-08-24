@@ -1,20 +1,20 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { BrandService } from './brand.service';
+// brand.controller.ts
+import { Body, Controller, Get, Post, BadRequestException } from '@nestjs/common';
+import { BrandService } from '@modules/brand/brand.service';
 
 @Controller('brand')
 export class BrandController {
-    constructor(private readonly brandService: BrandService) {}
-    
-    @Get(':domain')
-    async findOne(@Param('domain') domain: string) {
-        return await this.brandService.findBrand(domain);
-    }
-    
-    @Post()
-    async insertBrand(
+  constructor(private readonly brandService: BrandService) {}
+
+  @Get()
+  async getBrand() {
+    return this.brandService.get();
+  }
+
+  @Post()
+  async upsertBrand(
     @Body('name') name: string,
     @Body('title') title: string,
-    @Body('domain') domain: string,
     @Body('logoUrl') logoUrl: string,
     @Body('primaryColor') primaryColor?: string,
     @Body('secondaryColor') secondaryColor?: string,
@@ -23,22 +23,26 @@ export class BrandController {
     @Body('textPrimaryColor') textPrimaryColor?: string,
     @Body('textSecondaryColor') textSecondaryColor?: string,
     @Body('fontFamilyPrimary') fontFamilyPrimary?: string,
-    @Body('fontFamilySecondary') fontFamilySecondary?: string
-    ) {
-        await this.brandService.addBrand({
-            name,
-            title,
-            domain,
-            logoUrl,
-            primaryColor: primaryColor ?? null,
-            secondaryColor: secondaryColor ?? null,
-            bgPrimaryColor: bgPrimaryColor ?? null,
-            bgSecondaryColor: bgSecondaryColor ?? null,
-            textPrimaryColor: textPrimaryColor ?? null,
-            textSecondaryColor: textSecondaryColor ?? null,
-            fontFamilyPrimary: fontFamilyPrimary ?? null,
-            fontFamilySecondary: fontFamilySecondary ?? null
-        });
-        return { message: "Added" };
+    @Body('fontFamilySecondary') fontFamilySecondary?: string,
+  ) {
+    if (!name || !title || !logoUrl) {
+      throw new BadRequestException('name, title, and logoUrl are required');
     }
+
+    await this.brandService.upsert({
+      name,
+      title,
+      logoUrl,
+      primaryColor: primaryColor ?? null,
+      secondaryColor: secondaryColor ?? null,
+      bgPrimaryColor: bgPrimaryColor ?? null,
+      bgSecondaryColor: bgSecondaryColor ?? null,
+      textPrimaryColor: textPrimaryColor ?? null,
+      textSecondaryColor: textSecondaryColor ?? null,
+      fontFamilyPrimary: fontFamilyPrimary ?? null,
+      fontFamilySecondary: fontFamilySecondary ?? null,
+    });
+
+    return { message: 'Updated' };
+  }
 }

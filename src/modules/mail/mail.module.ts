@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
-import { MailService } from './mail.service';
-import { MailController } from './mail.controller';
+import { MailService } from '@modules/mail/mail.service';
+import { MailController } from '@modules/mail/mail.controller';
 import { join } from 'path';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
