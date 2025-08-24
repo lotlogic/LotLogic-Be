@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { EstateService } from './estate.service';
+import { EstateService } from '@modules/estate/estate.service';
 
 @Controller('estate')
 export class EstateController {
