@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -6,22 +5,24 @@ const prisma = new PrismaClient();
 async function main(): Promise<void> {
   console.log('🌱 Starting database seeding...');
 
-  // Create sample estate
+  console.log('🌱 Seeding estate...');
   await prisma.estate.upsert({
-    where: { id: 3 },
+    where: { id: 1 },
     update: {},
     create: {
-      id: 3,
-      name: 'Canberra Heights Estate',
-      logoUrl: 'http://localhost:3000/estates/canberra-heights-logo.png',
+      id: 1,
+      name: 'Hamilton Rise Yass',
+      logoUrl:
+        'https://www.hamiltonriseyass.com.au/wp-content/uploads/2021/10/logo-768x82.png',
       themeColor: '#2F5D62',
-      email: 'info@canberraheights.com',
-      phone: '+61 2 6123 4567',
-      address: 'Canberra Heights, ACT 2600'
-    }
+      email: 'info@hamiltonriseyass.com.au',
+      phone: '0417 710 772',
+      address: '14 Mitchell St YASS NSW 2582',
+    },
   });
 
-    await prisma.zoningRule.upsert({
+  console.log('🌱 Seeding zoning rules...');
+  await prisma.zoningRule.upsert({
     where: { code: 'RZ1' },
     update: {
       name: 'Residential Zone 1',
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
       maxFSR: 0.65,
       maxStoreys: 2,
       maxBuildingHeight_m: 8.5,
-      appliesToZones: ['RZ1']
+      appliesToZones: ['RZ1'],
     },
     create: {
       code: 'RZ1',
@@ -48,8 +49,8 @@ async function main(): Promise<void> {
       maxFSR: 0.65,
       maxStoreys: 2,
       maxBuildingHeight_m: 8.5,
-      appliesToZones: ['RZ1']
-    }
+      appliesToZones: ['RZ1'],
+    },
   });
 
   await prisma.zoningRule.upsert({
@@ -65,7 +66,7 @@ async function main(): Promise<void> {
       maxFSR: 0.5,
       maxStoreys: 2,
       maxBuildingHeight_m: 8.5,
-      appliesToZones: ['RZ2']
+      appliesToZones: ['RZ2'],
     },
     create: {
       code: 'RZ2',
@@ -79,8 +80,8 @@ async function main(): Promise<void> {
       maxFSR: 0.5,
       maxStoreys: 2,
       maxBuildingHeight_m: 8.5,
-      appliesToZones: ['RZ2']
-    }
+      appliesToZones: ['RZ2'],
+    },
   });
 
   await prisma.zoningRule.upsert({
@@ -96,7 +97,7 @@ async function main(): Promise<void> {
       maxFSR: 0.65,
       maxStoreys: 2,
       maxBuildingHeight_m: 9.5,
-      appliesToZones: ['RZ3']
+      appliesToZones: ['RZ3'],
     },
     create: {
       code: 'RZ3',
@@ -110,8 +111,8 @@ async function main(): Promise<void> {
       maxFSR: 0.65,
       maxStoreys: 2,
       maxBuildingHeight_m: 9.5,
-      appliesToZones: ['RZ3']
-    }
+      appliesToZones: ['RZ3'],
+    },
   });
 
   await prisma.zoningRule.upsert({
@@ -127,7 +128,7 @@ async function main(): Promise<void> {
       maxFSR: 0.8,
       maxStoreys: 2,
       maxBuildingHeight_m: 12.5,
-      appliesToZones: ['RZ4']
+      appliesToZones: ['RZ4'],
     },
     create: {
       code: 'RZ4',
@@ -141,8 +142,8 @@ async function main(): Promise<void> {
       maxFSR: 0.8,
       maxStoreys: 2,
       maxBuildingHeight_m: 12.5,
-      appliesToZones: ['RZ4']
-    }
+      appliesToZones: ['RZ4'],
+    },
   });
 
   await prisma.zoningRule.upsert({
@@ -158,7 +159,7 @@ async function main(): Promise<void> {
       maxFSR: 0.8,
       maxStoreys: 2,
       maxBuildingHeight_m: 21.5,
-      appliesToZones: ['RZ5']
+      appliesToZones: ['RZ5'],
     },
     create: {
       code: 'RZ5',
@@ -172,15 +173,16 @@ async function main(): Promise<void> {
       maxFSR: 0.8,
       maxStoreys: 2,
       maxBuildingHeight_m: 21.5,
-      appliesToZones: ['RZ5']
-    }
+      appliesToZones: ['RZ5'],
+    },
   });
 
-  // Create sample house designs
-  const houseDesign1 = await prisma.floorPlan.create({
+  console.log('🌱 Seeding floor plans...');
+  const floorPlan1 = await prisma.floorPlan.create({
     data: {
-      name: 'Modern 3BR House',
-      floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan1.jpeg',
+      name: 'Modern 3BR House - 1 bath',
+      floorplanUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/floorPlans/floorplan1.jpeg',
       bedrooms: 3,
       bathrooms: 2,
       garages: 1,
@@ -189,14 +191,15 @@ async function main(): Promise<void> {
       minLotDepth: 15.0,
       rumpus: false,
       alfresco: true,
-      pergola: false
-    }
+      pergola: false,
+    },
   });
 
-  const houseDesign2 = await prisma.floorPlan.create({
+  const floorPlan2 = await prisma.floorPlan.create({
     data: {
-      name: 'Compact 2BR House',
-      floorplanUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/floorplan2.jpeg',
+      name: 'Modern 3BR House - 2 bath',
+      floorplanUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/floorPlans/floorplan2.jpeg',
       bedrooms: 2,
       bathrooms: 1,
       garages: 1,
@@ -205,40 +208,66 @@ async function main(): Promise<void> {
       minLotDepth: 12.0,
       rumpus: false,
       alfresco: false,
-      pergola: true
-    }
+      pergola: true,
+    },
   });
 
-  // Create sample builder
+  const floorPlan3 = await prisma.floorPlan.create({
+    data: {
+      name: 'Compact 3BR House',
+      floorplanUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/floorPlans/floorplan3.jpeg',
+      bedrooms: 2,
+      bathrooms: 1,
+      garages: 1,
+      areaSqm: 100.0,
+      minLotWidth: 10.0,
+      minLotDepth: 12.0,
+      rumpus: false,
+      alfresco: false,
+      pergola: true,
+    },
+  });
+
+  console.log('🌱 Seeding facades...');
+  await prisma.facade.create({
+    data: {
+      label: 'Modern Facade 1',
+      imageUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/facade/facade1.png',
+      floorPlanId: floorPlan1.id,
+    },
+  });
+
+  await prisma.facade.create({
+    data: {
+      label: 'Modern Facade 2',
+      imageUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/facade/facade2.png',
+      floorPlanId: floorPlan2.id,
+    },
+  });
+
+  await prisma.facade.create({
+    data: {
+      label: 'Compact House Facade',
+      imageUrl:
+        'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/facade/facade3.png',
+      floorPlanId: floorPlan3.id,
+    },
+  });
+
+  console.log('🌱 Seeding builders...');
   await prisma.builder.create({
     data: {
-      name: 'Canberra Builders Pty Ltd',
-      email: 'info@canberrabuilders.com.au',
-      phone: '+61 2 6123 4567'
-    }
+      name: 'Beyond Himalaya Pty Ltd',
+      email: 'info@beyondhimalayatech.com.au',
+      phone: '+610435581311',
+    },
   });
 
-  // Create sample facades
-  await prisma.facade.create({
-    data: {
-      label: 'Modern Facade',
-      imageUrl: 'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/images/brick.jpg',
-      floorPlanId: houseDesign1.id
-    }
-  });
+  console.log('✅ Seeding completed successfully!');
 
-  await prisma.facade.create({
-    data: {
-      label: 'Traditional Facade',
-      imageUrl: '/facades/traditional-facade.jpg',
-      floorPlanId: houseDesign2.id
-    }
-  });
-
-  console.log('✅ Sample data created successfully!');
-  
-  console.log('✅ Created possible houseDesigns');
-  
   // sample house designs
   // const bedrooms = [3, 4];
   // const bathrooms = [1, 2, 3];
@@ -302,9 +331,8 @@ async function main(): Promise<void> {
   //     }
   //   }
   // }
-  
-  console.log('✅ Sample data created successfully!');
 
+  console.log('✅ Sample data created successfully!');
 }
 
 main()
