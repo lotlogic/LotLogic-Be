@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ZoningService } from './zoning.service';
+import { ZoningService } from '@modules/zoning/zoning.service';
 
 @Module({
   providers: [ZoningService],

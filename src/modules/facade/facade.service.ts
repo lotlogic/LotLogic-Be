@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 
 @Injectable()
 export class FacadeService {
@@ -8,7 +8,7 @@ export class FacadeService {
     async findFacade(facadeId: string) {
         return this.prisma.facade.findUnique({
         where: {
-            id: facadeId
+            id: BigInt(facadeId)
         }
         });
     }

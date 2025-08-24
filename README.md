@@ -41,7 +41,8 @@ src/
 │   └── geo/              # Geographic data services
 ├── prisma/
 │   ├── schema.prisma     # Database schema with PostGIS support
-│   ├── seed.ts           # Database seeding
+│   ├── seeds/
+│   │   └── seed.ts       # Database seeding
 │   └── data/             # GeoJSON and CSV data files
 ├── config/               # Application configuration
 └── shared/               # Shared utilities, decorators, and types
@@ -105,7 +106,8 @@ src/
    npx prisma migrate dev
    
    # Seed the database (optional)
-   npx prisma db seed
+   npx tsx prisma/seeds/seed.ts
+   npx tsx prisma/seeds/lot.ts
    ```
 
 ### Option 2: Docker Development (Recommended)
@@ -125,7 +127,8 @@ src/
    docker exec lotlogic-backend npx prisma migrate deploy
    
    # Seed the database
-   docker exec lotlogic-backend npx prisma db seed
+   docker exec lotlogic-backend npx tsx prisma/seeds/seed.ts
+   docker exec lotlogic-backend npx tsx prisma/seeds/lot.ts
    ```
 
 ## 🚀 Running the Application
@@ -173,7 +176,8 @@ The project includes comprehensive data seeding:
 ### Importing Data
 ```bash
 # Run the seed script to import sample data
-npx prisma db seed
+npx tsx prisma/seeds/seed.ts
+npx tsx prisma/seeds/lot.ts
 ```
 
 ## 🔧 Development Tools

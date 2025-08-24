@@ -35,6 +35,8 @@ services:
   backend:
     build: .
     container_name: lotlogic-backend
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:lotlogic123@postgres:5432/lotlogic
       NODE_ENV: development
@@ -44,12 +46,12 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/node_modules/.prisma
       - ./public:/app/public
     depends_on:
       - postgres
     networks:
       - lotlogic-network
-    command: npm run start:dev
 
 volumes:
   postgres_data:

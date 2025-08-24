@@ -1,0 +1,8561 @@
+{
+	"type": "FeatureCollection",
+	"features": 	[
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9239336,
+				-34.8506833
+			],
+			[
+				148.9242368,
+				-34.8507251
+			],
+			[
+				148.9243477,
+				-34.8504912
+			],
+			[
+				148.9243208,
+				-34.8504839
+			],
+			[
+				148.9243057,
+				-34.8504782
+			],
+			[
+				148.9242872,
+				-34.8504707
+			],
+			[
+				148.9242637,
+				-34.8504707
+			],
+			[
+				148.9239325,
+				-34.8506831
+			],
+			[
+				148.9239336,
+				-34.8506833
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0007",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9242546,
+				-34.8507378
+			],
+			[
+				148.9243943,
+				-34.8507968
+			],
+			[
+				148.9245731,
+				-34.8505073
+			],
+			[
+				148.9244757,
+				-34.8504701
+			],
+			[
+				148.9244238,
+				-34.8504917
+			],
+			[
+				148.9243759,
+				-34.8504926
+			],
+			[
+				148.9242546,
+				-34.8507378
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0008",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9245993,
+				-34.8505191
+			],
+			[
+				148.9244181,
+				-34.8508049
+			],
+			[
+				148.9245886,
+				-34.8508804
+			],
+			[
+				148.9247764,
+				-34.8505815
+			],
+			[
+				148.9245993,
+				-34.8505191
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0009",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9246128,
+				-34.8508843
+			],
+			[
+				148.9247729,
+				-34.8509537
+			],
+			[
+				148.9249774,
+				-34.850626
+			],
+			[
+				148.9247991,
+				-34.8505877
+			],
+			[
+				148.9246128,
+				-34.8508843
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0010",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9246019,
+				-34.8509052
+			],
+			[
+				148.9244056,
+				-34.8512107
+			],
+			[
+				148.9245696,
+				-34.8512795
+			],
+			[
+				148.9247595,
+				-34.8509882
+			],
+			[
+				148.9247599,
+				-34.8509749
+			],
+			[
+				148.9246019,
+				-34.8509052
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0011",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9243805,
+				-34.8508161
+			],
+			[
+				148.9241195,
+				-34.8507234
+			],
+			[
+				148.9240637,
+				-34.8510593
+			],
+			[
+				148.9241874,
+				-34.8511116
+			],
+			[
+				148.9243805,
+				-34.8508161
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0012",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9240496,
+				-34.8510454
+			],
+			[
+				148.9240957,
+				-34.8507249
+			],
+			[
+				148.9238419,
+				-34.8506977
+			],
+			[
+				148.9238012,
+				-34.8509374
+			],
+			[
+				148.9240496,
+				-34.8510454
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0013",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9252769,
+				-34.8511901
+			],
+			[
+				148.9255068,
+				-34.8512916
+			],
+			[
+				148.925677,
+				-34.8510438
+			],
+			[
+				148.9254998,
+				-34.85098
+			],
+			[
+				148.9254755,
+				-34.8509822
+			],
+			[
+				148.9254497,
+				-34.8509893
+			],
+			[
+				148.9254162,
+				-34.8510029
+			],
+			[
+				148.9252769,
+				-34.8511901
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0014",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9255283,
+				-34.8513018
+			],
+			[
+				148.9257134,
+				-34.8513872
+			],
+			[
+				148.9258949,
+				-34.8511143
+			],
+			[
+				148.9256936,
+				-34.8510493
+			],
+			[
+				148.9255283,
+				-34.8513018
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0015",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9257387,
+				-34.8513908
+			],
+			[
+				148.9259128,
+				-34.8514681
+			],
+			[
+				148.9261052,
+				-34.8511859
+			],
+			[
+				148.9259195,
+				-34.8511239
+			],
+			[
+				148.9257387,
+				-34.8513908
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0016",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9261317,
+				-34.8511958
+			],
+			[
+				148.9261246,
+				-34.851194
+			],
+			[
+				148.9259309,
+				-34.8514764
+			],
+			[
+				148.926092,
+				-34.8515502
+			],
+			[
+				148.9262972,
+				-34.8512538
+			],
+			[
+				148.9261317,
+				-34.8511958
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0017",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9261139,
+				-34.8515591
+			],
+			[
+				148.9263107,
+				-34.8516528
+			],
+			[
+				148.9264795,
+				-34.8512912
+			],
+			[
+				148.9263223,
+				-34.851258
+			],
+			[
+				148.9261139,
+				-34.8515591
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0018",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9263323,
+				-34.8516591
+			],
+			[
+				148.9265964,
+				-34.8517762
+			],
+			[
+				148.9266591,
+				-34.8513466
+			],
+			[
+				148.926615,
+				-34.8512993
+			],
+			[
+				148.9265023,
+				-34.8512943
+			],
+			[
+				148.9263323,
+				-34.8516591
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0019",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9265768,
+				-34.8518019
+			],
+			[
+				148.9264184,
+				-34.8517263
+			],
+			[
+				148.92618,
+				-34.8520774
+			],
+			[
+				148.9262949,
+				-34.8521399
+			],
+			[
+				148.9263668,
+				-34.8521267
+			],
+			[
+				148.9265768,
+				-34.8518019
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0020",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9261625,
+				-34.8520649
+			],
+			[
+				148.9263998,
+				-34.851715
+			],
+			[
+				148.926249,
+				-34.8516475
+			],
+			[
+				148.9260142,
+				-34.8519892
+			],
+			[
+				148.9261625,
+				-34.8520649
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0021",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9259899,
+				-34.8519701
+			],
+			[
+				148.9262233,
+				-34.8516357
+			],
+			[
+				148.9260573,
+				-34.8515597
+			],
+			[
+				148.9258338,
+				-34.8518871
+			],
+			[
+				148.9259899,
+				-34.8519701
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0022",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9260277,
+				-34.8515543
+			],
+			[
+				148.9258649,
+				-34.8514753
+			],
+			[
+				148.9256568,
+				-34.8517889
+			],
+			[
+				148.9258153,
+				-34.8518749
+			],
+			[
+				148.9260277,
+				-34.8515543
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0023",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9256817,
+				-34.8513918
+			],
+			[
+				148.9254653,
+				-34.8516876
+			],
+			[
+				148.9256342,
+				-34.8517764
+			],
+			[
+				148.9258428,
+				-34.851465
+			],
+			[
+				148.9256817,
+				-34.8513918
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0024",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9256489,
+				-34.8513801
+			],
+			[
+				148.9254883,
+				-34.8513069
+			],
+			[
+				148.9252728,
+				-34.8515962
+			],
+			[
+				148.925448,
+				-34.8516742
+			],
+			[
+				148.9256489,
+				-34.8513801
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0025",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9251974,
+				-34.8517687
+			],
+			[
+				148.9250063,
+				-34.8516764
+			],
+			[
+				148.9249374,
+				-34.8516942
+			],
+			[
+				148.9248092,
+				-34.8518759
+			],
+			[
+				148.9248117,
+				-34.8519121
+			],
+			[
+				148.9248467,
+				-34.8520024
+			],
+			[
+				148.9250022,
+				-34.8520714
+			],
+			[
+				148.9251974,
+				-34.8517687
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0026",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9250277,
+				-34.8520834
+			],
+			[
+				148.9252232,
+				-34.8521871
+			],
+			[
+				148.9254644,
+				-34.8519019
+			],
+			[
+				148.92523,
+				-34.8517842
+			],
+			[
+				148.9250277,
+				-34.8520834
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0027",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9252462,
+				-34.8522001
+			],
+			[
+				148.9254655,
+				-34.8523158
+			],
+			[
+				148.925696,
+				-34.852028
+			],
+			[
+				148.925486,
+				-34.8519157
+			],
+			[
+				148.9252462,
+				-34.8522001
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0028",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9257226,
+				-34.8520403
+			],
+			[
+				148.9254868,
+				-34.852324
+			],
+			[
+				148.9256982,
+				-34.8524385
+			],
+			[
+				148.9259298,
+				-34.8521531
+			],
+			[
+				148.9257226,
+				-34.8520403
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0029",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9257199,
+				-34.8524494
+			],
+			[
+				148.9259314,
+				-34.8525665
+			],
+			[
+				148.9261582,
+				-34.8522773
+			],
+			[
+				148.925948,
+				-34.8521656
+			],
+			[
+				148.9257199,
+				-34.8524494
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0030",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9259553,
+				-34.8525749
+			],
+			[
+				148.9261496,
+				-34.8526877
+			],
+			[
+				148.9263847,
+				-34.8524053
+			],
+			[
+				148.9261817,
+				-34.8522865
+			],
+			[
+				148.9259553,
+				-34.8525749
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0031",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9269463,
+				-34.8509482
+			],
+			[
+				148.9269211,
+				-34.8511085
+			],
+			[
+				148.9272639,
+				-34.8511484
+			],
+			[
+				148.9272959,
+				-34.8509374
+			],
+			[
+				148.9270073,
+				-34.8509044
+			],
+			[
+				148.9269463,
+				-34.8509482
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0032",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272559,
+				-34.8511768
+			],
+			[
+				148.9269172,
+				-34.8511328
+			],
+			[
+				148.9268864,
+				-34.8513075
+			],
+			[
+				148.9272318,
+				-34.851346
+			],
+			[
+				148.9272559,
+				-34.8511768
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0033",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272184,
+				-34.8513734
+			],
+			[
+				148.9268864,
+				-34.8513306
+			],
+			[
+				148.9268543,
+				-34.8514965
+			],
+			[
+				148.9271983,
+				-34.8515415
+			],
+			[
+				148.9272184,
+				-34.8513734
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0034",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271811,
+				-34.8515661
+			],
+			[
+				148.9268504,
+				-34.8515188
+			],
+			[
+				148.9268116,
+				-34.8516979
+			],
+			[
+				148.9271654,
+				-34.8517339
+			],
+			[
+				148.9271811,
+				-34.8515661
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0035",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271574,
+				-34.8517658
+			],
+			[
+				148.9268128,
+				-34.8517227
+			],
+			[
+				148.9267748,
+				-34.8518635
+			],
+			[
+				148.9271333,
+				-34.8519497
+			],
+			[
+				148.9271574,
+				-34.8517658
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0036",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9267116,
+				-34.8520018
+			],
+			[
+				148.9270077,
+				-34.8521445
+			],
+			[
+				148.9271158,
+				-34.8519748
+			],
+			[
+				148.9267633,
+				-34.8518886
+			],
+			[
+				148.9267116,
+				-34.8520018
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0037",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9268976,
+				-34.8521232
+			],
+			[
+				148.9266979,
+				-34.8520246
+			],
+			[
+				148.9265426,
+				-34.8522272
+			],
+			[
+				148.9265713,
+				-34.8522866
+			],
+			[
+				148.9267066,
+				-34.85236
+			],
+			[
+				148.9268976,
+				-34.8521232
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0038",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9224739,
+				-34.8505718
+			],
+			[
+				148.9223881,
+				-34.8511353
+			],
+			[
+				148.9229285,
+				-34.8512532
+			],
+			[
+				148.9230328,
+				-34.8509271
+			],
+			[
+				148.923032,
+				-34.8509171
+			],
+			[
+				148.9229899,
+				-34.8509176
+			],
+			[
+				148.9230536,
+				-34.8507073
+			],
+			[
+				148.9224739,
+				-34.8505718
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0039",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9229597,
+				-34.8512578
+			],
+			[
+				148.9232497,
+				-34.8513211
+			],
+			[
+				148.9233348,
+				-34.8510237
+			],
+			[
+				148.9232729,
+				-34.851032
+			],
+			[
+				148.9232169,
+				-34.8510303
+			],
+			[
+				148.9231815,
+				-34.8510164
+			],
+			[
+				148.923148,
+				-34.8510006
+			],
+			[
+				148.9231119,
+				-34.8509707
+			],
+			[
+				148.9230652,
+				-34.8509341
+			],
+			[
+				148.9229597,
+				-34.8512578
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0040",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9232741,
+				-34.8513247
+			],
+			[
+				148.9234685,
+				-34.8513717
+			],
+			[
+				148.9236619,
+				-34.8510821
+			],
+			[
+				148.9233785,
+				-34.850999
+			],
+			[
+				148.9232741,
+				-34.8513247
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0041",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.923495,
+				-34.8513878
+			],
+			[
+				148.9237096,
+				-34.8514804
+			],
+			[
+				148.9239117,
+				-34.8511901
+			],
+			[
+				148.9236959,
+				-34.8510913
+			],
+			[
+				148.923495,
+				-34.8513878
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0042",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.923734,
+				-34.851489
+			],
+			[
+				148.9239448,
+				-34.8516015
+			],
+			[
+				148.9241494,
+				-34.8513001
+			],
+			[
+				148.9239376,
+				-34.8511985
+			],
+			[
+				148.923734,
+				-34.851489
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0043",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9239775,
+				-34.8516032
+			],
+			[
+				148.9241966,
+				-34.8517042
+			],
+			[
+				148.9244052,
+				-34.8514024
+			],
+			[
+				148.924178,
+				-34.8513119
+			],
+			[
+				148.9239775,
+				-34.8516032
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0044",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9244285,
+				-34.8514186
+			],
+			[
+				148.9242252,
+				-34.8517146
+			],
+			[
+				148.9243802,
+				-34.851784
+			],
+			[
+				148.9244362,
+				-34.8517706
+			],
+			[
+				148.9245227,
+				-34.8517484
+			],
+			[
+				148.9246461,
+				-34.8515669
+			],
+			[
+				148.9246407,
+				-34.8515308
+			],
+			[
+				148.9246237,
+				-34.8515004
+			],
+			[
+				148.9244285,
+				-34.8514186
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0045",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9250924,
+				-34.85146
+			],
+			[
+				148.9251048,
+				-34.8515156
+			],
+			[
+				148.9252491,
+				-34.8515846
+			],
+			[
+				148.9254593,
+				-34.8512992
+			],
+			[
+				148.9252615,
+				-34.8512122
+			],
+			[
+				148.9250924,
+				-34.85146
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0145",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.923975,
+				-34.8498958
+			],
+			[
+				148.923927,
+				-34.8502064
+			],
+			[
+				148.9243158,
+				-34.8502374
+			],
+			[
+				148.9240341,
+				-34.8499
+			],
+			[
+				148.923975,
+				-34.8498958
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0001",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9240763,
+				-34.8499054
+			],
+			[
+				148.9243127,
+				-34.85019
+			],
+			[
+				148.9244035,
+				-34.8501865
+			],
+			[
+				148.9244377,
+				-34.849944
+			],
+			[
+				148.9240763,
+				-34.8499054
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0002",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9249171,
+				-34.8500073
+			],
+			[
+				148.9248452,
+				-34.8504127
+			],
+			[
+				148.9250307,
+				-34.8504549
+			],
+			[
+				148.9251011,
+				-34.8500297
+			],
+			[
+				148.9249171,
+				-34.8500073
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0004",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.923975,
+				-34.8498958
+			],
+			[
+				148.923927,
+				-34.8502064
+			],
+			[
+				148.9243158,
+				-34.8502374
+			],
+			[
+				148.9240341,
+				-34.8499
+			],
+			[
+				148.923975,
+				-34.8498958
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-004",
+		"blockNumber": 4,
+		"sectionNumber": 1,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "Lot 4, Eric Willmot Way",
+		"district": "Macnamara",
+		"division": "Macnamara",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9246968,
+				-34.8499769
+			],
+			[
+				148.9246407,
+				-34.8503355
+			],
+			[
+				148.924815,
+				-34.8504019
+			],
+			[
+				148.9248878,
+				-34.850004
+			],
+			[
+				148.9246968,
+				-34.8499769
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0003",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9251304,
+				-34.850033
+			],
+			[
+				148.9250552,
+				-34.8504633
+			],
+			[
+				148.9252476,
+				-34.8505005
+			],
+			[
+				148.9252967,
+				-34.8504765
+			],
+			[
+				148.9253718,
+				-34.850058
+			],
+			[
+				148.9251304,
+				-34.850033
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0005",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9238966,
+				-34.8503802
+			],
+			[
+				148.9238458,
+				-34.8506771
+			],
+			[
+				148.9238976,
+				-34.8506777
+			],
+			[
+				148.9242505,
+				-34.8504493
+			],
+			[
+				148.9242391,
+				-34.8504411
+			],
+			[
+				148.9242277,
+				-34.8504294
+			],
+			[
+				148.9242127,
+				-34.8504095
+			],
+			[
+				148.9238966,
+				-34.8503802
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0006",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9241977,
+				-34.849873
+			],
+			[
+				148.9242522,
+				-34.8495989
+			],
+			[
+				148.924077,
+				-34.8495792
+			],
+			[
+				148.9240199,
+				-34.8496159
+			],
+			[
+				148.9239827,
+				-34.849852
+			],
+			[
+				148.9241977,
+				-34.849873
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0046",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9242403,
+				-34.8498797
+			],
+			[
+				148.924446,
+				-34.8499069
+			],
+			[
+				148.9244916,
+				-34.8496258
+			],
+			[
+				148.9242912,
+				-34.8496089
+			],
+			[
+				148.9242403,
+				-34.8498797
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0047",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9244728,
+				-34.8499099
+			],
+			[
+				148.9246727,
+				-34.8499368
+			],
+			[
+				148.9247251,
+				-34.8496462
+			],
+			[
+				148.9245178,
+				-34.849634
+			],
+			[
+				148.9244728,
+				-34.8499099
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0048",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9247034,
+				-34.8499364
+			],
+			[
+				148.9248824,
+				-34.8499592
+			],
+			[
+				148.9249381,
+				-34.8496414
+			],
+			[
+				148.9247522,
+				-34.8496492
+			],
+			[
+				148.9247034,
+				-34.8499364
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0049",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.924919,
+				-34.849966
+			],
+			[
+				148.9251015,
+				-34.8499851
+			],
+			[
+				148.925159,
+				-34.8496353
+			],
+			[
+				148.924979,
+				-34.8496453
+			],
+			[
+				148.924919,
+				-34.849966
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0050",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9251333,
+				-34.8499897
+			],
+			[
+				148.9253648,
+				-34.8500249
+			],
+			[
+				148.9254494,
+				-34.849672
+			],
+			[
+				148.9254053,
+				-34.8496288
+			],
+			[
+				148.9251933,
+				-34.8496298
+			],
+			[
+				148.9251333,
+				-34.8499897
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0051",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9257412,
+				-34.8498941
+			],
+			[
+				148.9259772,
+				-34.8499028
+			],
+			[
+				148.9259881,
+				-34.8496032
+			],
+			[
+				148.9258393,
+				-34.8496075
+			],
+			[
+				148.9257775,
+				-34.8496572
+			],
+			[
+				148.9257412,
+				-34.8498941
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0052",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9260153,
+				-34.8499078
+			],
+			[
+				148.9261932,
+				-34.8499117
+			],
+			[
+				148.9262049,
+				-34.8495926
+			],
+			[
+				148.9260298,
+				-34.8495975
+			],
+			[
+				148.9260153,
+				-34.8499078
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0053",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9262354,
+				-34.8499149
+			],
+			[
+				148.9264212,
+				-34.8499193
+			],
+			[
+				148.9264281,
+				-34.8495818
+			],
+			[
+				148.9262578,
+				-34.8495875
+			],
+			[
+				148.9262354,
+				-34.8499149
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0054",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9264522,
+				-34.8499257
+			],
+			[
+				148.9266471,
+				-34.8499292
+			],
+			[
+				148.9266653,
+				-34.8495724
+			],
+			[
+				148.9264726,
+				-34.8495839
+			],
+			[
+				148.9264522,
+				-34.8499257
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0055",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9266793,
+				-34.8499339
+			],
+			[
+				148.9268901,
+				-34.8499371
+			],
+			[
+				148.9268941,
+				-34.8496016
+			],
+			[
+				148.9268535,
+				-34.8495683
+			],
+			[
+				148.9267001,
+				-34.8495732
+			],
+			[
+				148.9266793,
+				-34.8499339
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0056",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9257315,
+				-34.8499237
+			],
+			[
+				148.9256993,
+				-34.8501526
+			],
+			[
+				148.9257255,
+				-34.8501936
+			],
+			[
+				148.9259115,
+				-34.850216
+			],
+			[
+				148.9259546,
+				-34.8499302
+			],
+			[
+				148.9257315,
+				-34.8499237
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0057",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9259388,
+				-34.8502251
+			],
+			[
+				148.9261293,
+				-34.8502552
+			],
+			[
+				148.9261891,
+				-34.8499381
+			],
+			[
+				148.9259892,
+				-34.8499313
+			],
+			[
+				148.9259388,
+				-34.8502251
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0058",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9261634,
+				-34.8502568
+			],
+			[
+				148.9263493,
+				-34.8502774
+			],
+			[
+				148.9264057,
+				-34.8499496
+			],
+			[
+				148.926221,
+				-34.8499438
+			],
+			[
+				148.9261634,
+				-34.8502568
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0059",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9263737,
+				-34.850284
+			],
+			[
+				148.9265684,
+				-34.8503104
+			],
+			[
+				148.9266292,
+				-34.8499644
+			],
+			[
+				148.9264326,
+				-34.8499526
+			],
+			[
+				148.9263737,
+				-34.850284
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0060",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9266012,
+				-34.8503127
+			],
+			[
+				148.9267841,
+				-34.850338
+			],
+			[
+				148.9268463,
+				-34.8503069
+			],
+			[
+				148.9269022,
+				-34.8499738
+			],
+			[
+				148.9266661,
+				-34.849966
+			],
+			[
+				148.9266012,
+				-34.8503127
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0061",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271238,
+				-34.849731
+			],
+			[
+				148.9274572,
+				-34.8497277
+			],
+			[
+				148.92745,
+				-34.849547
+			],
+			[
+				148.9271751,
+				-34.8495527
+			],
+			[
+				148.9271232,
+				-34.849596
+			],
+			[
+				148.9271238,
+				-34.849731
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0062",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9274938,
+				-34.8495424
+			],
+			[
+				148.9275049,
+				-34.8497692
+			],
+			[
+				148.9278417,
+				-34.8497631
+			],
+			[
+				148.9278466,
+				-34.8495758
+			],
+			[
+				148.9277701,
+				-34.8495333
+			],
+			[
+				148.9274938,
+				-34.8495424
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0063",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.92713,
+				-34.8499109
+			],
+			[
+				148.9274607,
+				-34.849938
+			],
+			[
+				148.9274616,
+				-34.8497497
+			],
+			[
+				148.9271313,
+				-34.8497552
+			],
+			[
+				148.92713,
+				-34.8499109
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0064",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271297,
+				-34.8499413
+			],
+			[
+				148.9271217,
+				-34.8500157
+			],
+			[
+				148.927103,
+				-34.8501001
+			],
+			[
+				148.9274366,
+				-34.8501406
+			],
+			[
+				148.9274473,
+				-34.8500869
+			],
+			[
+				148.9274607,
+				-34.8499708
+			],
+			[
+				148.9271297,
+				-34.8499413
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0065",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271001,
+				-34.8501337
+			],
+			[
+				148.9270593,
+				-34.8503041
+			],
+			[
+				148.9274026,
+				-34.8503403
+			],
+			[
+				148.9274294,
+				-34.8501742
+			],
+			[
+				148.9271001,
+				-34.8501337
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0066",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9270601,
+				-34.8503328
+			],
+			[
+				148.927045,
+				-34.8504144
+			],
+			[
+				148.9270334,
+				-34.8505076
+			],
+			[
+				148.9273691,
+				-34.8505472
+			],
+			[
+				148.9273999,
+				-34.8503685
+			],
+			[
+				148.9270601,
+				-34.8503328
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0067",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9270353,
+				-34.8505357
+			],
+			[
+				148.9270166,
+				-34.8506664
+			],
+			[
+				148.9270541,
+				-34.8507208
+			],
+			[
+				148.9273346,
+				-34.8507498
+			],
+			[
+				148.9273648,
+				-34.850574
+			],
+			[
+				148.9270353,
+				-34.8505357
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0068",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9273648,
+				-34.8507558
+			],
+			[
+				148.9276375,
+				-34.8508003
+			],
+			[
+				148.927718,
+				-34.8507601
+			],
+			[
+				148.927732,
+				-34.8506194
+			],
+			[
+				148.927396,
+				-34.8505764
+			],
+			[
+				148.9273648,
+				-34.8507558
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0069",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9274037,
+				-34.8505498
+			],
+			[
+				148.9277407,
+				-34.8505965
+			],
+			[
+				148.9277783,
+				-34.8504171
+			],
+			[
+				148.9274307,
+				-34.8503771
+			],
+			[
+				148.9274037,
+				-34.8505498
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0070",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9274378,
+				-34.8503464
+			],
+			[
+				148.9277881,
+				-34.8503889
+			],
+			[
+				148.9277944,
+				-34.8503268
+			],
+			[
+				148.9278058,
+				-34.8502139
+			],
+			[
+				148.9274662,
+				-34.8501762
+			],
+			[
+				148.9274378,
+				-34.8503464
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0071",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9274706,
+				-34.8501465
+			],
+			[
+				148.9278164,
+				-34.8501869
+			],
+			[
+				148.9278417,
+				-34.8500118
+			],
+			[
+				148.9275022,
+				-34.8499828
+			],
+			[
+				148.927487,
+				-34.850074
+			],
+			[
+				148.9274706,
+				-34.8501465
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0072",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9275038,
+				-34.8499521
+			],
+			[
+				148.9278465,
+				-34.8499838
+			],
+			[
+				148.9278492,
+				-34.8497866
+			],
+			[
+				148.927506,
+				-34.8497975
+			],
+			[
+				148.9275038,
+				-34.8499521
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0073",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9273285,
+				-34.8509485
+			],
+			[
+				148.9272917,
+				-34.8511479
+			],
+			[
+				148.9276289,
+				-34.8511905
+			],
+			[
+				148.9276617,
+				-34.8510325
+			],
+			[
+				148.9276057,
+				-34.8509855
+			],
+			[
+				148.9273285,
+				-34.8509485
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0074",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272922,
+				-34.8511778
+			],
+			[
+				148.9272632,
+				-34.8513502
+			],
+			[
+				148.9275967,
+				-34.8513911
+			],
+			[
+				148.9276221,
+				-34.8512231
+			],
+			[
+				148.9272922,
+				-34.8511778
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0075",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272596,
+				-34.851381
+			],
+			[
+				148.9272313,
+				-34.8515436
+			],
+			[
+				148.9275634,
+				-34.8515766
+			],
+			[
+				148.9275895,
+				-34.8514079
+			],
+			[
+				148.9272596,
+				-34.851381
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0076",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272331,
+				-34.8515725
+			],
+			[
+				148.9272017,
+				-34.8517464
+			],
+			[
+				148.9275215,
+				-34.8517775
+			],
+			[
+				148.9275545,
+				-34.8516063
+			],
+			[
+				148.9272331,
+				-34.8515725
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0077",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272087,
+				-34.8517684
+			],
+			[
+				148.9271735,
+				-34.8519573
+			],
+			[
+				148.9274675,
+				-34.8520346
+			],
+			[
+				148.927517,
+				-34.8518012
+			],
+			[
+				148.9272087,
+				-34.8517684
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0078",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9271655,
+				-34.8519908
+			],
+			[
+				148.9270412,
+				-34.8521649
+			],
+			[
+				148.9273465,
+				-34.8523017
+			],
+			[
+				148.9274198,
+				-34.8521893
+			],
+			[
+				148.9274603,
+				-34.8520635
+			],
+			[
+				148.9271655,
+				-34.8519908
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0079",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9269246,
+				-34.8521592
+			],
+			[
+				148.9267407,
+				-34.8523821
+			],
+			[
+				148.9269037,
+				-34.8524624
+			],
+			[
+				148.9270902,
+				-34.8522234
+			],
+			[
+				148.9269246,
+				-34.8521592
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0080",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9269322,
+				-34.8524765
+			],
+			[
+				148.9270533,
+				-34.8525516
+			],
+			[
+				148.9271438,
+				-34.8525455
+			],
+			[
+				148.927321,
+				-34.8523304
+			],
+			[
+				148.9271221,
+				-34.8522422
+			],
+			[
+				148.9269322,
+				-34.8524765
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0081",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9273371,
+				-34.8527033
+			],
+			[
+				148.9275245,
+				-34.852804
+			],
+			[
+				148.9275955,
+				-34.8527975
+			],
+			[
+				148.927651,
+				-34.852801
+			],
+			[
+				148.9276995,
+				-34.8528078
+			],
+			[
+				148.9277977,
+				-34.8526937
+			],
+			[
+				148.9274229,
+				-34.8525266
+			],
+			[
+				148.9273263,
+				-34.8526413
+			],
+			[
+				148.9273371,
+				-34.8527033
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0082",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9277308,
+				-34.8528281
+			],
+			[
+				148.9277902,
+				-34.8529056
+			],
+			[
+				148.9277846,
+				-34.8530039
+			],
+			[
+				148.9280576,
+				-34.8531098
+			],
+			[
+				148.9281084,
+				-34.8528256
+			],
+			[
+				148.9278347,
+				-34.852707
+			],
+			[
+				148.9277308,
+				-34.8528281
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0083",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9280464,
+				-34.8531472
+			],
+			[
+				148.9277655,
+				-34.8530311
+			],
+			[
+				148.9277286,
+				-34.8530655
+			],
+			[
+				148.9277098,
+				-34.8530752
+			],
+			[
+				148.9276859,
+				-34.8530828
+			],
+			[
+				148.927663,
+				-34.8530908
+			],
+			[
+				148.9278431,
+				-34.8535992
+			],
+			[
+				148.927959,
+				-34.8536572
+			],
+			[
+				148.9280464,
+				-34.8531472
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0084",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9277995,
+				-34.8535767
+			],
+			[
+				148.9276333,
+				-34.8531059
+			],
+			[
+				148.9275354,
+				-34.8531002
+			],
+			[
+				148.9274124,
+				-34.853366
+			],
+			[
+				148.9277995,
+				-34.8535767
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0085",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9273858,
+				-34.85335
+			],
+			[
+				148.9275102,
+				-34.8530921
+			],
+			[
+				148.9274412,
+				-34.8530547
+			],
+			[
+				148.9274055,
+				-34.8530112
+			],
+			[
+				148.9274076,
+				-34.8529486
+			],
+			[
+				148.9273536,
+				-34.8529217
+			],
+			[
+				148.9271189,
+				-34.8532136
+			],
+			[
+				148.9273858,
+				-34.85335
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0086",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9270897,
+				-34.8531995
+			],
+			[
+				148.9273187,
+				-34.8529101
+			],
+			[
+				148.9271212,
+				-34.8527989
+			],
+			[
+				148.9268867,
+				-34.8530886
+			],
+			[
+				148.9270897,
+				-34.8531995
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0087",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9268888,
+				-34.8526747
+			],
+			[
+				148.9266508,
+				-34.8529598
+			],
+			[
+				148.9268601,
+				-34.8530707
+			],
+			[
+				148.9270903,
+				-34.852787
+			],
+			[
+				148.9268888,
+				-34.8526747
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0088",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9266276,
+				-34.8529395
+			],
+			[
+				148.9268592,
+				-34.8526604
+			],
+			[
+				148.9266527,
+				-34.8525474
+			],
+			[
+				148.926421,
+				-34.8528291
+			],
+			[
+				148.9266276,
+				-34.8529395
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0089",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9266217,
+				-34.852539
+			],
+			[
+				148.926412,
+				-34.8524414
+			],
+			[
+				148.9261986,
+				-34.8527131
+			],
+			[
+				148.9263933,
+				-34.8528144
+			],
+			[
+				148.9266217,
+				-34.852539
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0090",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9281116,
+				-34.8527795
+			],
+			[
+				148.9281349,
+				-34.8525901
+			],
+			[
+				148.9275299,
+				-34.8523985
+			],
+			[
+				148.927446,
+				-34.8525033
+			],
+			[
+				148.9281116,
+				-34.8527795
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0091",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9275488,
+				-34.8523725
+			],
+			[
+				148.9281451,
+				-34.8525662
+			],
+			[
+				148.9281608,
+				-34.8523704
+			],
+			[
+				148.927628,
+				-34.85224
+			],
+			[
+				148.927587,
+				-34.85231
+			],
+			[
+				148.9275488,
+				-34.8523725
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0092",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9276435,
+				-34.8522115
+			],
+			[
+				148.928184,
+				-34.8523452
+			],
+			[
+				148.9282195,
+				-34.8521496
+			],
+			[
+				148.9276915,
+				-34.8520825
+			],
+			[
+				148.92766,
+				-34.8521691
+			],
+			[
+				148.9276435,
+				-34.8522115
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0093",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.927697,
+				-34.852057
+			],
+			[
+				148.9282281,
+				-34.8521254
+			],
+			[
+				148.9282569,
+				-34.8519694
+			],
+			[
+				148.9277302,
+				-34.8519038
+			],
+			[
+				148.9277169,
+				-34.8519836
+			],
+			[
+				148.927697,
+				-34.852057
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0094",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9277374,
+				-34.8518739
+			],
+			[
+				148.9282594,
+				-34.8519412
+			],
+			[
+				148.9282831,
+				-34.8517869
+			],
+			[
+				148.9277637,
+				-34.8517244
+			],
+			[
+				148.9277374,
+				-34.8518739
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0095",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9277702,
+				-34.8516946
+			],
+			[
+				148.9282893,
+				-34.8517564
+			],
+			[
+				148.9283173,
+				-34.8516037
+			],
+			[
+				148.9277946,
+				-34.8515428
+			],
+			[
+				148.92778,
+				-34.8516355
+			],
+			[
+				148.9277702,
+				-34.8516946
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0096",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9278032,
+				-34.8515159
+			],
+			[
+				148.9283208,
+				-34.8515775
+			],
+			[
+				148.9283503,
+				-34.8514251
+			],
+			[
+				148.9278255,
+				-34.8513708
+			],
+			[
+				148.9278115,
+				-34.8514566
+			],
+			[
+				148.9278032,
+				-34.8515159
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0097",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9278289,
+				-34.8513355
+			],
+			[
+				148.9283562,
+				-34.8513964
+			],
+			[
+				148.9283852,
+				-34.851254
+			],
+			[
+				148.9278571,
+				-34.8511905
+			],
+			[
+				148.9278289,
+				-34.8513355
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0098",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9278656,
+				-34.8511676
+			],
+			[
+				148.9283845,
+				-34.8512305
+			],
+			[
+				148.9284178,
+				-34.8510739
+			],
+			[
+				148.9278929,
+				-34.8510118
+			],
+			[
+				148.9278656,
+				-34.8511676
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0099",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9279013,
+				-34.8509852
+			],
+			[
+				148.9284222,
+				-34.8510473
+			],
+			[
+				148.9284545,
+				-34.8508932
+			],
+			[
+				148.9279215,
+				-34.8508328
+			],
+			[
+				148.9279013,
+				-34.8509852
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0100",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9279301,
+				-34.8508066
+			],
+			[
+				148.9284519,
+				-34.8508689
+			],
+			[
+				148.9284761,
+				-34.8507094
+			],
+			[
+				148.9279588,
+				-34.8506524
+			],
+			[
+				148.9279427,
+				-34.8507233
+			],
+			[
+				148.9279301,
+				-34.8508066
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0101",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9279679,
+				-34.8506254
+			],
+			[
+				148.9284821,
+				-34.8506838
+			],
+			[
+				148.9285102,
+				-34.8505328
+			],
+			[
+				148.9279834,
+				-34.8504698
+			],
+			[
+				148.9279667,
+				-34.850584
+			],
+			[
+				148.9279663,
+				-34.8506233
+			],
+			[
+				148.9279679,
+				-34.8506254
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0102",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9279913,
+				-34.8504444
+			],
+			[
+				148.928513,
+				-34.8505097
+			],
+			[
+				148.9285408,
+				-34.8503536
+			],
+			[
+				148.928017,
+				-34.8502904
+			],
+			[
+				148.9280044,
+				-34.8503747
+			],
+			[
+				148.9279913,
+				-34.8504444
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0103",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9280268,
+				-34.8502652
+			],
+			[
+				148.9285446,
+				-34.8503283
+			],
+			[
+				148.9285732,
+				-34.8501749
+			],
+			[
+				148.9280515,
+				-34.8501116
+			],
+			[
+				148.9280268,
+				-34.8502652
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0104",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9280627,
+				-34.850087
+			],
+			[
+				148.9285758,
+				-34.8501481
+			],
+			[
+				148.9286039,
+				-34.8499983
+			],
+			[
+				148.9280737,
+				-34.849932
+			],
+			[
+				148.9280682,
+				-34.850014
+			],
+			[
+				148.9280627,
+				-34.850087
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0105",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9280846,
+				-34.8499044
+			],
+			[
+				148.9286148,
+				-34.8499685
+			],
+			[
+				148.9286543,
+				-34.8497738
+			],
+			[
+				148.9280789,
+				-34.8497951
+			],
+			[
+				148.9280811,
+				-34.8498989
+			],
+			[
+				148.9280846,
+				-34.8499044
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0106",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9280744,
+				-34.8497722
+			],
+			[
+				148.9283399,
+				-34.8497618
+			],
+			[
+				148.9283347,
+				-34.849564
+			],
+			[
+				148.9282961,
+				-34.8495494
+			],
+			[
+				148.9282749,
+				-34.8495385
+			],
+			[
+				148.9282645,
+				-34.8495272
+			],
+			[
+				148.928249,
+				-34.8495131
+			],
+			[
+				148.9281108,
+				-34.849517
+			],
+			[
+				148.9280663,
+				-34.8495584
+			],
+			[
+				148.9280744,
+				-34.8497722
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0107",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9283699,
+				-34.8495736
+			],
+			[
+				148.9283759,
+				-34.8497604
+			],
+			[
+				148.9286562,
+				-34.849748
+			],
+			[
+				148.9287143,
+				-34.8494421
+			],
+			[
+				148.9287136,
+				-34.8494292
+			],
+			[
+				148.9285923,
+				-34.8494281
+			],
+			[
+				148.9285801,
+				-34.8494679
+			],
+			[
+				148.9285659,
+				-34.8494995
+			],
+			[
+				148.9285499,
+				-34.8495124
+			],
+			[
+				148.9285276,
+				-34.849533
+			],
+			[
+				148.928508,
+				-34.8495456
+			],
+			[
+				148.9284807,
+				-34.849557
+			],
+			[
+				148.9284678,
+				-34.8495649
+			],
+			[
+				148.9284404,
+				-34.8495688
+			],
+			[
+				148.9283699,
+				-34.8495736
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0108",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9285883,
+				-34.8494052
+			],
+			[
+				148.9287207,
+				-34.8494049
+			],
+			[
+				148.9287911,
+				-34.8489702
+			],
+			[
+				148.9285225,
+				-34.848912
+			],
+			[
+				148.9284131,
+				-34.8492645
+			],
+			[
+				148.9284601,
+				-34.8492727
+			],
+			[
+				148.9285026,
+				-34.8492927
+			],
+			[
+				148.9285207,
+				-34.8493079
+			],
+			[
+				148.9285346,
+				-34.8493189
+			],
+			[
+				148.9285514,
+				-34.849333
+			],
+			[
+				148.9285648,
+				-34.8493493
+			],
+			[
+				148.9285802,
+				-34.849379
+			],
+			[
+				148.9285883,
+				-34.8494052
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0109",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9283798,
+				-34.8492647
+			],
+			[
+				148.9284868,
+				-34.8489182
+			],
+			[
+				148.928459,
+				-34.8488993
+			],
+			[
+				148.9281539,
+				-34.8489088
+			],
+			[
+				148.928167,
+				-34.8493456
+			],
+			[
+				148.9282521,
+				-34.8493429
+			],
+			[
+				148.9282573,
+				-34.8493234
+			],
+			[
+				148.9282771,
+				-34.849305
+			],
+			[
+				148.9282949,
+				-34.8492893
+			],
+			[
+				148.9283312,
+				-34.849272
+			],
+			[
+				148.9283798,
+				-34.8492647
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0110",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9279225,
+				-34.8489122
+			],
+			[
+				148.927941,
+				-34.8493505
+			],
+			[
+				148.9281251,
+				-34.8493464
+			],
+			[
+				148.9281105,
+				-34.8489057
+			],
+			[
+				148.9279225,
+				-34.8489122
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0111",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.927903,
+				-34.849354
+			],
+			[
+				148.927888,
+				-34.8489155
+			],
+			[
+				148.927687,
+				-34.8489231
+			],
+			[
+				148.927717,
+				-34.849357
+			],
+			[
+				148.927903,
+				-34.849354
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0112",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9276734,
+				-34.8493634
+			],
+			[
+				148.9276515,
+				-34.8489305
+			],
+			[
+				148.9274697,
+				-34.8489323
+			],
+			[
+				148.9274896,
+				-34.8493687
+			],
+			[
+				148.9276734,
+				-34.8493634
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0113",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9274433,
+				-34.8493699
+			],
+			[
+				148.9274284,
+				-34.8489393
+			],
+			[
+				148.9272453,
+				-34.8489393
+			],
+			[
+				148.9272601,
+				-34.849378
+			],
+			[
+				148.9274433,
+				-34.8493699
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0114",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9272255,
+				-34.849376
+			],
+			[
+				148.9272119,
+				-34.8489474
+			],
+			[
+				148.9270312,
+				-34.8489505
+			],
+			[
+				148.9270485,
+				-34.8493841
+			],
+			[
+				148.9272255,
+				-34.849376
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0115",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9270201,
+				-34.8493875
+			],
+			[
+				148.9270001,
+				-34.848956
+			],
+			[
+				148.9268071,
+				-34.8489621
+			],
+			[
+				148.9268256,
+				-34.8493917
+			],
+			[
+				148.9270201,
+				-34.8493875
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0116",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9267914,
+				-34.849391
+			],
+			[
+				148.9267711,
+				-34.8489655
+			],
+			[
+				148.9265872,
+				-34.8489679
+			],
+			[
+				148.9266031,
+				-34.8494053
+			],
+			[
+				148.9267914,
+				-34.849391
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0117",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.926564,
+				-34.8494029
+			],
+			[
+				148.9265481,
+				-34.848975
+			],
+			[
+				148.926354,
+				-34.8489762
+			],
+			[
+				148.9263772,
+				-34.8494136
+			],
+			[
+				148.926564,
+				-34.8494029
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0118",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9263422,
+				-34.8494132
+			],
+			[
+				148.9263185,
+				-34.8489833
+			],
+			[
+				148.9261304,
+				-34.8489847
+			],
+			[
+				148.9261524,
+				-34.8494159
+			],
+			[
+				148.9263422,
+				-34.8494132
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0119",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9261021,
+				-34.8494261
+			],
+			[
+				148.9260958,
+				-34.848989
+			],
+			[
+				148.9258953,
+				-34.8489928
+			],
+			[
+				148.9258238,
+				-34.8493898
+			],
+			[
+				148.9258725,
+				-34.849434
+			],
+			[
+				148.9261021,
+				-34.8494261
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0120",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9255546,
+				-34.849018
+			],
+			[
+				148.9253164,
+				-34.8490145
+			],
+			[
+				148.9252969,
+				-34.8494521
+			],
+			[
+				148.9254182,
+				-34.8494514
+			],
+			[
+				148.925502,
+				-34.8493974
+			],
+			[
+				148.9255546,
+				-34.849018
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0121",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9252596,
+				-34.8494544
+			],
+			[
+				148.9252749,
+				-34.849019
+			],
+			[
+				148.925063,
+				-34.8490273
+			],
+			[
+				148.925085,
+				-34.8494599
+			],
+			[
+				148.9252596,
+				-34.8494544
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0122",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9250368,
+				-34.8494662
+			],
+			[
+				148.9250331,
+				-34.849033
+			],
+			[
+				148.9248441,
+				-34.8490346
+			],
+			[
+				148.9248577,
+				-34.8494685
+			],
+			[
+				148.9250368,
+				-34.8494662
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0123",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9248211,
+				-34.8494743
+			],
+			[
+				148.9248124,
+				-34.8490436
+			],
+			[
+				148.9246681,
+				-34.8490415
+			],
+			[
+				148.9245909,
+				-34.8494654
+			],
+			[
+				148.9248211,
+				-34.8494743
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0124",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9246306,
+				-34.8490466
+			],
+			[
+				148.9244258,
+				-34.849049
+			],
+			[
+				148.9243529,
+				-34.8494365
+			],
+			[
+				148.9245549,
+				-34.8494564
+			],
+			[
+				148.9246306,
+				-34.8490466
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0125",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9243899,
+				-34.8490555
+			],
+			[
+				148.9238139,
+				-34.8490755
+			],
+			[
+				148.9238261,
+				-34.8493928
+			],
+			[
+				148.9239578,
+				-34.8493964
+			],
+			[
+				148.924315,
+				-34.8494252
+			],
+			[
+				148.9243899,
+				-34.8490555
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0126",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9237821,
+				-34.849079
+			],
+			[
+				148.9235851,
+				-34.8490822
+			],
+			[
+				148.9235899,
+				-34.8493593
+			],
+			[
+				148.923639,
+				-34.8493956
+			],
+			[
+				148.9237946,
+				-34.8493878
+			],
+			[
+				148.9237821,
+				-34.849079
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0127",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.923358,
+				-34.8490975
+			],
+			[
+				148.9231429,
+				-34.8491007
+			],
+			[
+				148.9231611,
+				-34.8494206
+			],
+			[
+				148.92331,
+				-34.8494153
+			],
+			[
+				148.9233722,
+				-34.8493653
+			],
+			[
+				148.923358,
+				-34.8490975
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0128",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9231159,
+				-34.8491036
+			],
+			[
+				148.9229101,
+				-34.8491113
+			],
+			[
+				148.922925,
+				-34.849418
+			],
+			[
+				148.9231344,
+				-34.8494256
+			],
+			[
+				148.9231159,
+				-34.8491036
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0129",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9228835,
+				-34.8491136
+			],
+			[
+				148.9227042,
+				-34.8491182
+			],
+			[
+				148.9226649,
+				-34.8493919
+			],
+			[
+				148.9228961,
+				-34.8494091
+			],
+			[
+				148.9228835,
+				-34.8491136
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "unavailable",
+		"lifecycleArea": "unavailable",
+		"blockKey": "lot-0130",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "unknown",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9242156,
+				-34.8511211
+			],
+			[
+				148.9243783,
+				-34.8511954
+			],
+			[
+				148.9245769,
+				-34.8508998
+			],
+			[
+				148.9244074,
+				-34.8508252
+			],
+			[
+				148.9242156,
+				-34.8511211
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0142",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9245935,
+				-34.8512923
+			],
+			[
+				148.9247354,
+				-34.8513595
+			],
+			[
+				148.9248091,
+				-34.8513405
+			],
+			[
+				148.9249873,
+				-34.8510785
+			],
+			[
+				148.924791,
+				-34.8509909
+			],
+			[
+				148.9245935,
+				-34.8512923
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0143",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	},
+	{
+		"geometry": {
+		"coordinates": [
+			[
+			[
+				148.9250012,
+				-34.8510566
+			],
+			[
+				148.9252237,
+				-34.8507364
+			],
+			[
+				148.9252242,
+				-34.8507155
+			],
+			[
+				148.9252044,
+				-34.8506834
+			],
+			[
+				148.9250076,
+				-34.8506355
+			],
+			[
+				148.9248026,
+				-34.8509721
+			],
+			[
+				148.9250012,
+				-34.8510566
+			]
+			]
+		],
+		"crs": {
+			"properties": {
+			"name": "EPSG:4326"
+			},
+			"type": "name"
+		},
+		"type": "Polygon"
+		},
+		"lifecycleStage": "available",
+		"lifecycleArea": "available",
+		"blockKey": "lot-0144",
+		"blockNumber": null,
+		"sectionNumber": null,
+		"zoning": "RZ2: Low Density Residential",
+		"address": "14 Mitchell St YASS NSW 2582",
+		"district": "Mitchell",
+		"division": "Mitchell",
+		"estateId": 1,
+		"typeCategory": "unknown",
+		"properties": {
+		"felt:color": "#C93535",
+		"felt:fillOpacity": 0.25,
+		"felt:id": "",
+		"felt:locked": false,
+		"felt:ordering": 0,
+		"felt:parentId": "",
+		"felt:showArea": false,
+		"felt:strokeOpacity": 1,
+		"felt:strokeStyle": "solid",
+		"felt:strokeWidth": 2,
+		"felt:type": "Polygon"
+		},
+		"geo_type": "lot"
+	}
+	]
+}
