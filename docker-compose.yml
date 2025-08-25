@@ -41,6 +41,11 @@ services:
       DATABASE_URL: postgresql://postgres:lotlogic123@postgres:5432/lotlogic
       NODE_ENV: development
       PORT: 3000
+      SMTP_HOST: smtp.titan.email
+      SMTP_PORT: 587
+      SMTP_USER: dev@beyondhimalayatech.com.au
+      SMTP_PASS: "ZqcG(1*tY5oE[ @"
+      SMTP_FROM: dev@beyondhimalayatech.com.au
     ports:
       - "3000:3000"
     volumes:
