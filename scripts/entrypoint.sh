@@ -4,19 +4,17 @@ set -e
 
 echo "➡️ Running Prisma Migrations..."
 npx prisma migrate deploy
-
 echo "✅ Migrations complete."
 
 echo "➡️ Running Prisma Seed..."
-npx tsx prisma/seed.ts
-
+# npx tsx prisma/seeds/seed.ts
+# npx tsx prisma/seeds/lot.ts
 echo "✅ Seeding complete."
 
-echo "➡️ Running Prisma Generate..."
-npx tsx prisma/lot.ts
-
-
-echo "✅ Lot sync completed."
+# If you want to reset the database, you can run the following commands:
+# npx prisma migrate reset --force
+# npx tsx prisma/seeds/seed.ts
+# npx tsx prisma/seeds/lot.ts
 
 echo "🚀 Starting NestJS app..."
 exec node dist/src/main.js
