@@ -1,6 +1,7 @@
+import { calculateArea, calculateDistance, getWidthHeight } from '../../src/helper/turf';
 import { PrismaClient } from '@prisma/client';
-import * as fs from 'fs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 const prisma = new PrismaClient();
 
@@ -48,23 +49,9 @@ async function main() {
         const distance = calculateDistance(coordinates[i], coordinates[i + 1]);
         properties.push({ [`s${i + 1}`]: distance });
       }
+      const { width, height } = getWidthHeight(lot.geometry.coordinates[0]);
 
-      let minLat = Infinity,
-        maxLat = -Infinity,
-        minLon = Infinity,
-        maxLon = -Infinity;
-
-      lot.geometry.coordinates[0].forEach(([lon, lat]) => {
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lon < minLon) minLon = lon;
-        if (lon > maxLon) maxLon = lon;
-      });
-      const midLat = (minLat + maxLat) / 2;
-      const width = calculateDistance([minLon, midLat], [maxLon, midLat]);
-      const depth = calculateDistance([minLon, minLat], [minLon, maxLat]);
-
-      data.geojson = { properties, width, depth };
+      data.geojson = { properties, width, depth: height };
       try {
         const sql = `
               INSERT INTO lot (
@@ -111,18 +98,15 @@ async function main() {
       }
     }
   }
-  // await prisma.lot.createMany({ data: lotData })
   console.log('Lots added successfully.');
 }
 
 function toPolygon(coordString) {
-  // split into coordinates
   const coords = coordString
     .trim()
     .split(',')
     .map((p) => p.trim());
 
-  // ensure first point is repeated at end to close polygon
   if (coords[0] !== coords[coords.length - 1]) {
     coords.push(coords[0]);
   }
@@ -130,54 +114,6 @@ function toPolygon(coordString) {
   return `POLYGON((${coords.join(', ')}))`;
 }
 
-// using the spherical “trapezoid” formula:
-const calculateArea = (coords: [number, number][]) => {
-  const R = 6378137; // WGS84 semi-major, meters
-  const toRad = (d: number) => (d * Math.PI) / 180;
-
-  // In case the ring is not closed, close it
-  const ring =
-    coords[0][0] === coords[coords.length - 1][0] &&
-    coords[0][1] === coords[coords.length - 1][1]
-      ? coords
-      : [...coords, coords[0]];
-
-  let sum = 0;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [lon1, lat1] = ring[i];
-    const [lon2, lat2] = ring[i + 1];
-    let dLambda = toRad(lon2) - toRad(lon1);
-
-    // normalize Δλ into [-π, π] to be safe for rings that might cross 180°
-    if (dLambda > Math.PI) dLambda -= 2 * Math.PI;
-    else if (dLambda < -Math.PI) dLambda += 2 * Math.PI;
-
-    sum += dLambda * (Math.sin(toRad(lat1)) + Math.sin(toRad(lat2)));
-  }
-  const area = Math.abs(((R * R) / 2) * sum);
-  return Math.round(area * 100) / 100; // two decimals
-};
-
-const calculateDistance = (start, end) => {
-  const toRadians = (deg) => (deg * Math.PI) / 180;
-
-  const lat1 = toRadians(start[1]);
-  const lon1 = toRadians(start[0]);
-  const lat2 = toRadians(end[1]);
-  const lon2 = toRadians(end[0]);
-
-  const dlat = lat2 - lat1;
-  const dlon = lon2 - lon1;
-
-  const a =
-    Math.sin(dlat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
-
-  const c = 2 * Math.asin(Math.sqrt(a));
-  const radius = 6378; // Earth radius in km
-
-  return Math.round(c * radius * 10000) / 10; // to meters
-};
 
 main()
   .catch((e) => {
