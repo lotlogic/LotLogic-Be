@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf';
+import { Feature, Polygon, LineString, Point } from "geojson";
 
 const toPolygon = (coords: number[][]) => {
     return turf.polygon([coords]);
@@ -29,3 +30,51 @@ export const getWidthHeight = (coords: number[][]) => {
     return { width, height };
 };
 
+const findClosestRoad = (
+    polygon: Feature<Polygon>,
+    roads: Feature<LineString>[]
+) => {
+    let closestRoad: Feature<LineString> | null = null;
+    let minDistance = Infinity;
+    let nearestPoint: Feature<Point> | null = null;
+
+    for (const road of roads) {
+        const centroid = turf.centroid(polygon);
+        const np = turf.nearestPointOnLine(road, centroid);
+        const dist = turf.distance(centroid, np, { units: "meters" });
+
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestRoad = road;
+            nearestPoint = np;
+        }
+    }
+
+    return { closestRoad, nearestPoint, distance: minDistance };
+};
+
+export const findFrontSideByRoad = (
+    polygon: Feature<Polygon>,
+    road: Feature<LineString>
+) => {
+    const coords = polygon.geometry.coordinates[0];
+
+    let closestEdge: [number[], number[]] = [coords[0], coords[1]];
+    let minDistance = Infinity;
+
+    for (let i = 0; i < coords.length - 1; i++) {
+        const from = turf.point(coords[i]);
+        const to = turf.point(coords[i + 1]);
+        
+        const midpoint = turf.midpoint(from, to);
+        const nearest = turf.nearestPointOnLine(road, midpoint);
+        const dist = turf.distance(midpoint, nearest, { units: "meters" });
+
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestEdge = [coords[i], coords[i + 1]];
+        }
+    }
+
+    return { frontSide: closestEdge, distanceToRoad: minDistance };
+};
