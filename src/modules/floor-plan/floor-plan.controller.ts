@@ -60,7 +60,6 @@ export class FloorPlanController {
         );
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
         
-        // Always return the actual zoning data if available, even if some fields are null
         if (lotDetail && zoningDetail) {
             const maxBuildArea = zoningDetail.maxFSR ? zoningDetail.maxFSR * lotDetail.areaSqm : 300;
             const designs = houseDesigns.filter(design => design.area <= maxBuildArea);
@@ -76,15 +75,9 @@ export class FloorPlanController {
             };
         }
         
-        // Return empty result with default zoning only when lot or zoning data is completely missing
         return {
             houseDesigns: [],
-            zoning: {
-                // fsr: 300,
-                // frontSetback: 4,
-                // rearSetback: 3,
-                // sideSetback: 3
-            }
+            zoning: {}
         };
     }
 }
