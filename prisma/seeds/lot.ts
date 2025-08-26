@@ -68,7 +68,7 @@ async function main() {
         data.frontageCoordinate = `LINESTRING(${frontSide.frontSide.map(c => c.join(' ')).join(', ')})`;
       }
       for (let i = 0; i < coordinates.length - 1; i++) {
-        const distance = calculateDistance(coordinates[i], coordinates[i + 1]);
+        const distance = Number(calculateDistance(coordinates[i], coordinates[i + 1]).toFixed(2));
         properties.push({ [`s${i + 1}`]: distance });
       }
       const { width, height } = getWidthHeight(lot.geometry.coordinates[0]);
