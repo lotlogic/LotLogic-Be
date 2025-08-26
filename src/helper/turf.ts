@@ -30,14 +30,16 @@ export const getWidthHeight = (coords: number[][]) => {
     return { width, height };
 };
 
-const findClosestRoad = (
-    polygon: Feature<Polygon>,
-    roads: Feature<LineString>[]
+export const findClosestRoad = (
+    polygonData: [number, number][],
+    roadsData: [number, number][][] 
 ) => {
     let closestRoad: Feature<LineString> | null = null;
     let minDistance = Infinity;
     let nearestPoint: Feature<Point> | null = null;
 
+    const polygon: Feature<Polygon> = turf.polygon([polygonData]);
+    const roads: Feature<LineString>[] = roadsData.map(coords => turf.lineString(coords));
     for (const road of roads) {
         const centroid = turf.centroid(polygon);
         const np = turf.nearestPointOnLine(road, centroid);
@@ -50,21 +52,21 @@ const findClosestRoad = (
         }
     }
 
-    return { closestRoad, nearestPoint, distance: minDistance };
+    return closestRoad ? (closestRoad.geometry.coordinates as [number, number][]) : null;
 };
 
 export const findFrontSideByRoad = (
-    polygon: Feature<Polygon>,
-    road: Feature<LineString>
+    polygon: [number, number][],
+    roadsData: [number, number][]
 ) => {
-    const coords = polygon.geometry.coordinates[0];
 
-    let closestEdge: [number[], number[]] = [coords[0], coords[1]];
+    let closestEdge: [number[], number[]] = [polygon[0], polygon[1]];
     let minDistance = Infinity;
+    const road: Feature<LineString> = turf.lineString(roadsData);
 
-    for (let i = 0; i < coords.length - 1; i++) {
-        const from = turf.point(coords[i]);
-        const to = turf.point(coords[i + 1]);
+    for (let i = 0; i < polygon.length - 1; i++) {
+        const from = turf.point(polygon[i]);
+        const to = turf.point(polygon[i + 1]);
         
         const midpoint = turf.midpoint(from, to);
         const nearest = turf.nearestPointOnLine(road, midpoint);
@@ -72,9 +74,9 @@ export const findFrontSideByRoad = (
 
         if (dist < minDistance) {
             minDistance = dist;
-            closestEdge = [coords[i], coords[i + 1]];
+            closestEdge = [polygon[i], polygon[i + 1]];
         }
     }
 
-    return { frontSide: closestEdge, distanceToRoad: minDistance };
+    return { frontSide: closestEdge };
 };
