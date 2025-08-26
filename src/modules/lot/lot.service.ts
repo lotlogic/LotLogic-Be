@@ -73,18 +73,34 @@ export class LotService {
   }
 
   async findLot(lotId: number) {
-    const lot = await this.prisma.lot.findUnique({
-      where: {
-        id: lotId
-      }
-    });
+    const lot: any = await this.prisma.$queryRawUnsafe(
+      `SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "estateId",
+        overlays,
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate"
+      FROM
+        lot
+      WHERE
+        id = $1`,lotId);
     if (lot) {
       return {
-        ...lot,
-        id: lot.id.toString(),
-        estateId: lot.estateId?.toString()
+        ...lot[0],
+        id: lot[0].id.toString(),
+        estateId: lot[0].estateId?.toString()
       };
     }
-    return lot;
+    return lot[0];
   }
 }
