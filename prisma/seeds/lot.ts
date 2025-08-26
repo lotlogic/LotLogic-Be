@@ -1,4 +1,4 @@
-import { calculateArea, calculateDistance, getWidthHeight } from '../../src/helper/turf';
+import { calculateArea, calculateDistance, findClosestRoad, findFrontSideByRoad, getWidthHeight } from '../../src/helper/turf';
 import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -12,6 +12,20 @@ async function main() {
   );
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const lots = JSON.parse(fileContent);
+  const geoData = await prisma.geoData.findMany({
+    where: {
+      geoType: "Road"
+    }
+  });
+  const roads = geoData.map((data)=> {
+    let coordinates: [number, number][] = [];
+    const arrayData = data.coordinates.split(',');
+    for(let coor = 0; coor < arrayData.length; coor += 2)
+    {
+      coordinates.push([Number(arrayData[coor]), Number(arrayData[coor+1])]);
+    }
+    return coordinates;
+  });
   for (const lot of lots.features) {
     if (lot.geo_type === 'lot') {
       let data: {
@@ -27,6 +41,7 @@ async function main() {
         estateId,
         geojson,
         geometry,
+        frontageCoordinate
       } = {
         blockKey: lot.blockKey,
         blockNumber: lot.blockNumber,
@@ -42,9 +57,16 @@ async function main() {
         geometry: toPolygon(
           lot.geometry.coordinates[0].map((c) => c.join(' ')).toString(),
         ),
+        frontageCoordinate: null
       };
       let properties: { [key: string]: number }[] = [];
       const coordinates = lot.geometry.coordinates[0];
+
+      const nearestRoad = findClosestRoad(coordinates, roads);
+      if(nearestRoad) {
+        const frontSide = findFrontSideByRoad(coordinates, nearestRoad); 
+        data.frontageCoordinate = `LINESTRING(${frontSide.frontSide.map(c => c.join(' ')).join(', ')})`;
+      }
       for (let i = 0; i < coordinates.length - 1; i++) {
         const distance = calculateDistance(coordinates[i], coordinates[i + 1]);
         properties.push({ [`s${i + 1}`]: distance });
@@ -56,11 +78,11 @@ async function main() {
         const sql = `
               INSERT INTO lot (
                 "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
-                "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
+                "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "frontageCoordinate", "createdAt", "updatedAt"
               ) VALUES (
                 $1, $2, $3, $4, $5, $6,
                 $7, $8, $9, $10, $11,
-                ST_GeomFromText($12, 4326), now(), now()
+                ST_GeomFromText($12, 4326), ST_GeomFromText($13, 4326), now(), now()
               )
               ON CONFLICT ("blockKey")
               DO UPDATE SET 
@@ -75,6 +97,7 @@ async function main() {
                 "estateId" = $10,
                 "geojson" = $11,
                 "geometry" = ST_GeomFromText($12, 4326),
+                "frontageCoordinate" = ST_GeomFromText($13, 4326),
                 "updatedAt" = now()
         `;
 
@@ -92,24 +115,26 @@ async function main() {
           data.estateId,
           data.geojson,
           data.geometry,
+          data.frontageCoordinate
         );
       } catch (error) {
         console.error('Error: ' + error);
       }
-    } else {
-      try {
-        await prisma.geoData.create({
-          data: {
-            name: lot.name,
-            color: lot.color,
-            coordinates: lot.coordinates.toString(),
-            geoType: lot.geo_type,
-          }
-        });
-      } catch (error) {
-        console.error(`Error in ${lot.toString()}: ${error}`);
-      }
-    }
+    } 
+    // else {
+    //   try {
+    //     await prisma.geoData.create({
+    //       data: {
+    //         name: lot.name,
+    //         color: lot.color,
+    //         coordinates: lot.coordinates.toString(),
+    //         geoType: lot.geo_type,
+    //       }
+    //     });
+    //   } catch (error) {
+    //     console.error(`Error in ${lot.toString()}: ${error}`);
+    //   }
+    // }
   }
   console.log('Lots added successfully.');
 }
