@@ -121,20 +121,20 @@ async function main() {
         console.error('Error: ' + error);
       }
     } 
-    // else {
-    //   try {
-    //     await prisma.geoData.create({
-    //       data: {
-    //         name: lot.name,
-    //         color: lot.color,
-    //         coordinates: lot.coordinates.toString(),
-    //         geoType: lot.geo_type,
-    //       }
-    //     });
-    //   } catch (error) {
-    //     console.error(`Error in ${lot.toString()}: ${error}`);
-    //   }
-    // }
+    else {
+      try {
+        await prisma.geoData.create({
+          data: {
+            name: lot.name,
+            color: lot.color,
+            coordinates: lot.coordinates.toString(),
+            geoType: lot.geo_type,
+          }
+        });
+      } catch (error) {
+        console.error(`Error in ${lot.toString()}: ${error}`);
+      }
+    }
   }
   console.log('Lots added successfully.');
 }
