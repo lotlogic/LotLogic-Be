@@ -1,4 +1,4 @@
-import { calculateArea, calculateDistance, findClosestRoad, findFrontSideByRoad, getWidthHeight } from '../../src/helper/turf';
+import { calculateArea, calculateDistance, findClosestRoad, findFrontSideByRoad, getWidthHeight } from '@/helper/turf';
 import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
 import * as fs from 'fs';
