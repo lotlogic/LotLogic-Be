@@ -41,6 +41,8 @@ COPY --from=builder /app/prisma ./prisma
 
 # Copy data folder
 COPY --from=builder /app/src/data ./src/data
+# Copy helper folder
+COPY --from=builder /app/src/helper ./src/helper
 
 # Optional: add .env or config files here if required
 # COPY --from=builder /app/.env .env
