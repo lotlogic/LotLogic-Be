@@ -14,12 +14,14 @@ export const calculateArea = (coords: number[][]) => {
     return Number(turf.area(polygon).toFixed(2));
 };
 
+
 export const getWidthHeight = (coords: number[][]) => {
-    const feature = toPolygon(coords)
+    const feature = turf.polygon([coords]);
     const bbox = turf.bbox(feature);
 
     const [minX, minY, maxX, maxY] = bbox;
 
+    // Correct reference points
     const west = turf.point([minX, minY]);
     const east = turf.point([maxX, minY]);
     const south = turf.point([minX, minY]);
@@ -27,6 +29,7 @@ export const getWidthHeight = (coords: number[][]) => {
 
     const width = Number(turf.distance(west, east, { units: "meters" }).toFixed(2));
     const height = Number(turf.distance(south, north, { units: "meters" }).toFixed(2));
+
     return { width, height };
 };
 
@@ -80,8 +83,6 @@ export const findFrontSideByRoad = (
 
     return { frontSide: closestEdge };
 };
-
-
 
 type Pt = [number, number];
 
@@ -162,12 +163,4 @@ export function insetQuadPerSideLL(
 		.geometry.coordinates[0] as Pt[];
 
 	return innerLL;
-}
-
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-	let timeout: NodeJS.Timeout;
-	return ((...args: any[]) => {
-		clearTimeout(timeout);
-		timeout = setTimeout(() => func(...args), wait);
-	}) as T;
 }
