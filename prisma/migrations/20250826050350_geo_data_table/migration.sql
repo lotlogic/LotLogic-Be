@@ -4,7 +4,7 @@ CREATE TABLE "public"."geoData" (
     "name" TEXT,
     "color" TEXT,
     "coordinates" TEXT,
-    "geoType" geometry(GEOMETRY, 4326),
+    "geoType" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
