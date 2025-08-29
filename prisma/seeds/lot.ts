@@ -14,7 +14,9 @@ async function main() {
   const lots = JSON.parse(fileContent);
   const geoData = await prisma.geoData.findMany({
     where: {
-      geoType: "Road"
+      geoType: {
+        in: ["Road"]
+      }
     }
   });
   const roads = geoData.map((data)=> {
@@ -65,7 +67,7 @@ async function main() {
       const nearestRoad = findClosestRoad(coordinates, roads);
       if(nearestRoad) {
         const frontSide = findFrontSideByRoad(coordinates, nearestRoad); 
-        data.frontageCoordinate = `LINESTRING(${frontSide.frontSide.map(c => c.join(' ')).join(', ')})`;
+        data.frontageCoordinate = frontSide ? (frontSide.frontSide ? `LINESTRING(${frontSide.frontSide.map(c => c.join(' ')).join(', ')})` : null) : null;
       }
       for (let i = 0; i < coordinates.length - 1; i++) {
         const distance = Number(calculateDistance(coordinates[i], coordinates[i + 1]).toFixed(2));
@@ -119,20 +121,6 @@ async function main() {
         );
       } catch (error) {
         console.error('Error: ' + error);
-      }
-    } 
-    else {
-      try {
-        await prisma.geoData.create({
-          data: {
-            name: lot.name,
-            color: lot.color,
-            coordinates: lot.coordinates.toString(),
-            geoType: lot.geo_type,
-          }
-        });
-      } catch (error) {
-        console.error(`Error in ${lot.toString()}: ${error}`);
       }
     }
   }
