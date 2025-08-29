@@ -10,20 +10,20 @@ async function main() {
         '../../src/data/hamiltonRiseMitchell.json',
     );
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const lots = JSON.parse(fileContent);
-    for (const lot of lots.features) {
-        if (lot.geo_type !== 'lot') {
+    const gepDatas = JSON.parse(fileContent);
+    for (const data of gepDatas.features) {
+        if (data.geo_type !== 'lot') {
             try {
                 await prisma.geoData.create({
                 data: {
-                    name: lot.name,
-                    color: lot.color,
-                    coordinates: lot.coordinates.toString(),
-                    geoType: lot.geo_type,
+                    name: data.name,
+                    color: data.color,
+                    coordinates: (data.coordinates).toString(),
+                    geoType: data.geo_type,
                 }
                 });
             } catch (error) {
-                console.error(`Error in ${lot.toString()}: ${error}`);
+                console.error(`Error in ${data.toString()}: ${error}`);
             }
         }
     }
