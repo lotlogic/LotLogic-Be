@@ -57,6 +57,7 @@ export class LotService {
         overlays,
         geojson,
         ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
         "createdAt",
         "updatedAt"
       FROM
