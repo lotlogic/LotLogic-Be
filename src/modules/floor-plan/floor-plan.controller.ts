@@ -2,6 +2,8 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
 import { LotService } from '@modules/lot/lot.service';
 import { ZoningService } from '@modules/zoning/zoning.service';
+import { reorderPolygonByFrontage } from '@/helper/polygonReorder';
+import { getWidthHeight, insetQuadPerSideLL } from '@/helper/turf';
 
 @Controller('house-design')
 export class FloorPlanController {
@@ -59,11 +61,19 @@ export class FloorPlanController {
             (lotDetail?.geojson as any)?.depth ?? null,
         );
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
+        const geometry = JSON.parse(lotDetail.geometry).coordinates;
+        const frontageCoordinate = JSON.parse(lotDetail?.frontageCoordinate).coordinates;
+        const reOrdered = reorderPolygonByFrontage(geometry[0], frontageCoordinate[0]);
         
-        // Always return the actual zoning data if available, even if some fields are null
         if (lotDetail && zoningDetail) {
+            const innerLL = insetQuadPerSideLL(reOrdered, {
+                front: zoningDetail?.minFrontSetback_m || 0,
+                side: zoningDetail?.minSideSetback_m || 0,
+                rear: zoningDetail?.minRearSetback_m || 0
+            }) || [];
+            const { width, height } = getWidthHeight(innerLL);
             const maxBuildArea = zoningDetail.maxFSR ? zoningDetail.maxFSR * lotDetail.areaSqm : 300;
-            const designs = houseDesigns.filter(design => design.area <= maxBuildArea);
+            const designs = houseDesigns.filter(design => (design.area <= maxBuildArea && design.minLotWidth <= width && design.minLotDepth <= height));
             
             return {
                 houseDesigns: designs,
@@ -76,15 +86,9 @@ export class FloorPlanController {
             };
         }
         
-        // Return empty result with default zoning only when lot or zoning data is completely missing
         return {
             houseDesigns: [],
-            zoning: {
-                // fsr: 300,
-                // frontSetback: 4,
-                // rearSetback: 3,
-                // sideSetback: 3
-            }
+            zoning: {}
         };
     }
 }

@@ -23,26 +23,27 @@ model estate {
 }
 
 model lot {
-  id             BigInt                   @id @default(autoincrement())
-  blockKey       String                   @unique
-  blockNumber    Int?
-  sectionNumber  Int?
-  areaSqm        Float
-  zoning         String
-  address        String?
-  district       String?
-  division       String?
-  lifecycleStage String?
-  geojson        Json?
-  geometry       Unsupported("geometry")?
-  estateId       BigInt?
-  createdAt      DateTime                 @default(now())
-  updatedAt      DateTime                 @updatedAt
-  overlays       String[]
-  designOnLots   designOnLot[]
-  enquiries      enquiry[]
-  estate         estate?                  @relation(fields: [estateId], references: [id])
-  lotZoningRules lotZoningRule[]
+  id                   BigInt                   @id @default(autoincrement())
+  blockKey             String                   @unique
+  blockNumber          Int?
+  sectionNumber        Int?
+  areaSqm              Float
+  zoning               String
+  address              String?
+  district             String?
+  division             String?
+  lifecycleStage       String?
+  geojson              Json?
+  geometry             Unsupported("geometry")?
+  estateId             BigInt?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  overlays             String[]
+  designOnLots         designOnLot[]
+  enquiries            enquiry[]
+  estate               estate?                  @relation(fields: [estateId], references: [id])
+  lotZoningRules       lotZoningRule[]
+  frontageCoordinate   Unsupported("geometry")?
 
   @@index([geometry], map: "geometry_index")
 }
@@ -179,6 +180,17 @@ model brandSetting {
   fontFamilyPrimary   String?
   fontFamilySecondary String?
 
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model geoData {
+  // Single logical row — always id = "default"
+  id                  Int      @id @default(autoincrement())
+  name                String?
+  color               String?
+  coordinates         String
+  geoType             String
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

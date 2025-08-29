@@ -57,6 +57,7 @@ export class LotService {
         overlays,
         geojson,
         ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
         "createdAt",
         "updatedAt"
       FROM
@@ -73,18 +74,55 @@ export class LotService {
   }
 
   async findLot(lotId: number) {
-    const lot = await this.prisma.lot.findUnique({
-      where: {
-        id: lotId
+    const lot: any = await this.prisma.$queryRawUnsafe(
+      `SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "estateId",
+        overlays,
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate"
+      FROM
+        lot
+      WHERE
+        id = $1`,lotId);
+    
+    if (lot && lot.length > 0) {
+      const lotData = lot[0];
+      
+      // Get zoning setback data directly from zoning table
+      let zoningSetbacks: any = null;
+      if (lotData.zoning) {
+        const zoneCode = lotData.zoning.split(":")[0];
+        const zoningData: any = await this.prisma.zoningRule.findUnique({
+          where: { code: zoneCode }
+        });
+        
+        if (zoningData) {
+          zoningSetbacks = {
+            frontSetback: zoningData.minFrontSetback_m ,
+            rearSetback: zoningData.minRearSetback_m ,
+            sideSetback: zoningData.minSideSetback_m
+          };
+        }
       }
-    });
-    if (lot) {
+      
       return {
-        ...lot,
-        id: lot.id.toString(),
-        estateId: lot.estateId?.toString()
+        ...lotData,
+        id: lotData.id.toString(),
+        estateId: lotData.estateId?.toString(),
+        zoningSetbacks
       };
     }
-    return lot;
+    return null;
   }
 }
