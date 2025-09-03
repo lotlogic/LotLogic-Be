@@ -1,9 +1,24 @@
 import { Controller, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { EnquiryService } from '@modules/enquiry/enquiry.service';
 import { MailService } from '@modules/mail/mail.service';
 import { BuilderService } from '@modules/builder/builder.service';
 import { LotService } from '@modules/lot/lot.service';
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
+
+// DTO for enquiry request
+export class CreateEnquiryDto {
+  name: string;
+  email: string;
+  number: string;
+  builders: string[];
+  comments: string;
+  lot_id: number;
+  house_design_id: string;
+  facade_id: string;
+}
+
+@ApiTags('enquiry')
 @Controller('enquiry')
 export class EnquiryController {
     constructor(
@@ -15,6 +30,17 @@ export class EnquiryController {
     ) { }
 
     @Post()
+    @ApiOperation({ 
+        summary: 'Create new enquiry', 
+        description: 'Submit a new enquiry with lot, house design, facade, and builder preferences' 
+    })
+    @ApiBody({ 
+        type: CreateEnquiryDto,
+        description: 'Enquiry data including personal details, preferences, and selections'
+    })
+    @ApiResponse({ status: 201, description: 'Enquiry created successfully' })
+    @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
+    @ApiResponse({ status: 500, description: 'Internal server error' })
     async postEnquiryData(
         @Body('name') name: string,
         @Body('email') email: string,
