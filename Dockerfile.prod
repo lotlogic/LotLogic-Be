@@ -53,5 +53,5 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Run migrations, seed, and start the app
-CMD ["sh", "./scripts/entrypoint.sh"]
+CMD ["sh", "./scripts/prodEntrypoint.sh"]
     
