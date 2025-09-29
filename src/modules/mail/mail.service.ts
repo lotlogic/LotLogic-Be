@@ -21,7 +21,7 @@ export class MailService {
             const emailPromises = emailArray.map(async (email) => {
                 const sendMailParams = {
                     to: email, // Send to individual builder
-                    from: process.env.SMTP_FROM,
+                    from: `${process.env.SMTP_FROM_NAME || 'LotLogic'} <${process.env.SMTP_FROM}>`,
                     subject: params.subject,
                     template: params.template,
                     context: params.context,
