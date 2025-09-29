@@ -1,9 +1,9 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { reorderPolygonByFrontage } from '@/helper/polygonReorder';
+import { getWidthHeight, insetQuadPerSideLL } from '@/helper/turf';
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
 import { LotService } from '@modules/lot/lot.service';
 import { ZoningService } from '@modules/zoning/zoning.service';
-import { reorderPolygonByFrontage } from '@/helper/polygonReorder';
-import { getWidthHeight, insetQuadPerSideLL } from '@/helper/turf';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 
 @Controller('house-design')
 export class FloorPlanController {
@@ -62,8 +62,21 @@ export class FloorPlanController {
         );
         const zoningDetail = await this.zoningService.getFilteredHouseDesigns(lotDetail ? lotDetail.zoning.split(":")[0] : "");
         const geometry = JSON.parse(lotDetail.geometry).coordinates;
-        const frontageCoordinate = JSON.parse(lotDetail?.frontageCoordinate).coordinates;
-        const reOrdered = reorderPolygonByFrontage(geometry[0], frontageCoordinate[0]);
+        
+        // Handle potential null or missing frontageCoordinate
+        let reOrdered;
+        if (lotDetail?.frontageCoordinate) {
+            try {
+                const frontageCoordinate = JSON.parse(lotDetail.frontageCoordinate).coordinates;
+                
+                
+                reOrdered = reorderPolygonByFrontage(geometry[0], frontageCoordinate[0]);
+            } catch (error) {
+                reOrdered = geometry[0];
+            }
+        } else {
+            reOrdered = geometry[0];
+        }
         
         if (lotDetail && zoningDetail) {
             const innerLL = insetQuadPerSideLL(reOrdered, {
