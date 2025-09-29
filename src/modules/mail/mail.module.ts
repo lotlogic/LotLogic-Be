@@ -23,7 +23,7 @@ import { join } from 'path';
           },
         } as SMTPTransport.Options,
         defaults: {
-          from: process.env.SMTP_FROM,
+          from: `${process.env.SMTP_FROM_NAME || 'LotLogic'} <${process.env.SMTP_FROM}>`,
         },
         template: {
           dir: join(__dirname, '..', '..', 'templates'),
