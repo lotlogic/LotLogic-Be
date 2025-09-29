@@ -77,6 +77,9 @@ html(lang="en")
       .content
         p Dear #{builderName},
 
+        if hotLead
+          p.highlight Hot lead: highly interested and looking to secure this lot.
+
         if isSelected
           p.highlight Congratulations! You have been selected to proceed with this lot.
 
@@ -89,6 +92,8 @@ html(lang="en")
           p Size: #{lotSize} m²
           p Zoning: #{lotZoning}
           p Status: #{lotStatus}
+          p comments: #{comments}
+          //- p Image: #{imageUrl}
 
         //- if imageUrl
         //-   .image-container

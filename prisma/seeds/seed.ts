@@ -263,6 +263,13 @@ async function main(): Promise<void> {
       name: 'Beyond Himalaya Pty Ltd',
       email: 'info@beyondhimalayatech.com.au',
       phone: '+610435581311',
+    }
+  });
+  await prisma.builder.create({
+    data: {
+      name: 'Lotlogic BlockPlanner Pty Ltd',
+      email: 'mitch@blockplanner.com.au',
+      phone: '+61 401 637 961',
     },
   });
 
