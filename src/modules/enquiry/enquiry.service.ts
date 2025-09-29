@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class EnquiryService {
@@ -13,7 +13,8 @@ export class EnquiryService {
         lot_id: number,
         house_design_id: string,
         facade_id: string,
-        builder: string[]
+        builder: string[],
+        hot_lead?: boolean
     ) {
         try {
             await this.prisma.$transaction(async (tx) => {
