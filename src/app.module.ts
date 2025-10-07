@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import { LotModule } from '@modules/lot/lot.module';
@@ -13,29 +13,36 @@ import { FacadeModule } from '@modules/facade/facade.module';
 import { BrandModule } from '@modules/brand/brand.module';
 import { ConfigModule } from '@nestjs/config';
 import configs from './config';
+import { LoggingMiddleware } from './middlewares/log.middleware';
 
 @Module({
   imports: [
-      ConfigModule.forRoot({
-        isGlobal: true,
-        load: configs,
-        envFilePath: [
-          `.env.${process.env.NODE_ENV || ''}`,
-          '.env',
-        ],
-      }),
-      PrismaModule,
-      EstateModule,
-      LotModule,
-      DesignOnLotModule,
-      FloorPlanModule,
-      EnquiryModule,
-      MailModule,
-      BuilderModule,
-      FacadeModule,
-      BrandModule
-    ],
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: configs,
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || ''}`,
+        '.env',
+      ],
+    }),
+    PrismaModule,
+    EstateModule,
+    LotModule,
+    DesignOnLotModule,
+    FloorPlanModule,
+    EnquiryModule,
+    MailModule,
+    BuilderModule,
+    FacadeModule,
+    BrandModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggingMiddleware)
+      .forRoutes('*'); // Apply middleware to all routes
+  }
+}
