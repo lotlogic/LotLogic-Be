@@ -11,9 +11,19 @@ import { MailModule } from '@modules/mail/mail.module';
 import { BuilderModule } from '@modules/builder/builder.module';
 import { FacadeModule } from '@modules/facade/facade.module';
 import { BrandModule } from '@modules/brand/brand.module';
+import { ConfigModule } from '@nestjs/config';
+import configs from './config';
 
 @Module({
   imports: [
+      ConfigModule.forRoot({
+        isGlobal: true,
+        load: configs,
+        envFilePath: [
+          `.env.${process.env.NODE_ENV || ''}`,
+          '.env',
+        ],
+      }),
       PrismaModule,
       EstateModule,
       LotModule,
