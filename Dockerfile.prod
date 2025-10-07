@@ -41,6 +41,8 @@ COPY --from=builder /app/prisma ./prisma
 
 # Copy data folder
 COPY --from=builder /app/src/data ./src/data
+# Copy helper folder
+COPY --from=builder /app/src/helper ./src/helper
 
 # Optional: add .env or config files here if required
 # COPY --from=builder /app/.env .env
@@ -51,5 +53,5 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Run migrations, seed, and start the app
-CMD ["sh", "./scripts/entrypoint.sh"]
+CMD ["sh", "./scripts/prodEntrypoint.sh"]
     
