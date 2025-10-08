@@ -10,7 +10,7 @@ export const logger = WinstonModule.createLogger({
             winston.format.timestamp(),
             winston.format.printf(({ timestamp, level, message, context, ...meta }) => {
             const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
-                return `[${level}] {${timestamp} ${context ? `${JSON.stringify(context)}` : ''}, ${message}, ${(metaStr)}`;
+                return `[${level}] {"timestamp": "${timestamp}", ${context ? `${JSON.stringify(context)}` : ''}, ${message}, ${(metaStr)}`;
             }),
         ),
         })
