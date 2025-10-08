@@ -11,9 +11,11 @@ import { MailModule } from '@modules/mail/mail.module';
 import { BuilderModule } from '@modules/builder/builder.module';
 import { FacadeModule } from '@modules/facade/facade.module';
 import { BrandModule } from '@modules/brand/brand.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import configs from './config';
 import { LoggingMiddleware } from './middlewares/log.middleware';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -25,6 +27,20 @@ import { LoggingMiddleware } from './middlewares/log.middleware';
         '.env',
       ],
     }),
+
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: config.get<number>('app.throttle_ttl') || 60,  // in seconds
+            limit: config.get<number>('app.throttle_limit') || 10, // requests per window
+          },
+        ],
+      }),
+    }),
+
     PrismaModule,
     EstateModule,
     LotModule,
@@ -36,13 +52,18 @@ import { LoggingMiddleware } from './middlewares/log.middleware';
     FacadeModule,
     BrandModule,
   ],
+
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard, // enable global rate limiting
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggingMiddleware)
-      .forRoutes('*'); // Apply middleware to all routes
+    consumer.apply(LoggingMiddleware).forRoutes('*');
   }
 }
