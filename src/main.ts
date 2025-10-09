@@ -36,7 +36,7 @@ async function bootstrap() {
     .addTag('enquiry', 'Customer enquiry management endpoints')
     .addTag('brand', 'Brand configuration and styling endpoints')
     .addTag('mail', 'Email service endpoints')
-    .addTag('facade', 'Facade design endpoints (placeholder)')
+    // .addTag('facade', 'Facade design endpoints (placeholder)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
