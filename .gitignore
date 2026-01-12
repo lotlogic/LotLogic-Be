@@ -95,3 +95,7 @@ node_modules/
 dist/
 .vscode/
 .DS_Store
+
+# Large reference GeoJSON files (keep local; import into PostGIS)
+ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson
+ACTGOV_BLOCKS_-3707349334185229602.geojson
