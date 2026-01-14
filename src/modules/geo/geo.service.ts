@@ -5,6 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import {
+  LotCheckRuleMatch,
+  LotCheckRulesService,
+} from '@modules/geo/lotcheck-rules.service';
 
 type GoogleGeocodingResponse = {
   status: string;
@@ -32,7 +36,10 @@ type ActBlockRow = {
 
 @Injectable()
 export class GeoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private lotCheckRulesService: LotCheckRulesService,
+  ) {}
 
   async geocodeAddress(address: string): Promise<{
     formattedAddress: string;
@@ -164,6 +171,11 @@ export class GeoService {
     source: 'block' | 'zone';
     block: ActBlockRow | null;
     zone: ActLandUseZoneRow | null;
+    lotCheckRules: {
+      zoneCode: string | null;
+      blockAreaSqm: number | null;
+      matches: LotCheckRuleMatch[];
+    };
   }> {
     let location: { lat: number; lng: number } | null = null;
     let formattedAddress: string | undefined;
@@ -192,12 +204,40 @@ export class GeoService {
       );
     }
 
+    const blockAreaSqm =
+      block?.derivedAreaSqm !== null && block?.derivedAreaSqm !== undefined
+        ? Number(block.derivedAreaSqm)
+        : null;
+
+    const blockProps = (block?.properties ?? null) as
+      | Record<string, unknown>
+      | null;
+    const zoneCodeFromBlock = this.lotCheckRulesService.extractZoneCodeFromBlockLandUsePolicyZones(
+      blockProps?.LAND_USE_POLICY_ZONES ?? null,
+    );
+
+    const rulesZoneCode = zone?.zoneCode?.trim()
+      ? zone.zoneCode.trim().toUpperCase()
+      : zoneCodeFromBlock;
+
+    const lotCheckMatches = rulesZoneCode
+      ? this.lotCheckRulesService.getRulesForZone({
+          zoneCode: rulesZoneCode,
+          blockAreaSqm,
+        })
+      : [];
+
     return {
       ...(formattedAddress ? { formattedAddress } : {}),
       location,
       source: block ? 'block' : 'zone',
       block,
       zone,
+      lotCheckRules: {
+        zoneCode: rulesZoneCode,
+        blockAreaSqm,
+        matches: lotCheckMatches,
+      },
     };
   }
 }

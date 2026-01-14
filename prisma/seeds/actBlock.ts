@@ -60,7 +60,7 @@ async function main(): Promise<void> {
 
   const geoJsonPath =
     getArgValue('file') ??
-    path.join(__dirname, '../../ACTGOV_BLOCKS_-3707349334185229602.geojson');
+    path.join(__dirname, '../../data/ACTGOV_BLOCKS_-3707349334185229602.geojson');
 
   const batchSize = Number(process.env.ACT_BLOCK_SEED_BATCH_SIZE ?? 500);
   const logEvery = Number(process.env.ACT_BLOCK_SEED_LOG_EVERY ?? 5000);
@@ -160,4 +160,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

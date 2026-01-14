@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GeoService } from '@modules/geo/geo.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { LotCheckRulesService } from '@modules/geo/lotcheck-rules.service';
 
 describe('GeoService', () => {
   let service: GeoService;
@@ -12,6 +13,13 @@ describe('GeoService', () => {
         {
           provide: PrismaService,
           useValue: {},
+        },
+        {
+          provide: LotCheckRulesService,
+          useValue: {
+            extractZoneCodeFromBlockLandUsePolicyZones: () => null,
+            getRulesForZone: () => [],
+          },
         },
       ],
     }).compile();

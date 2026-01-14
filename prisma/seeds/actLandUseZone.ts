@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     process.argv.find((arg) => arg.startsWith('--file='))?.split('=')[1] ??
     path.join(
       __dirname,
-      '../../ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson',
+      '../../data/ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson',
     );
 
   console.log('🗺️  Importing ACT land use zones...');
@@ -120,4 +120,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
