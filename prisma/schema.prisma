@@ -195,6 +195,31 @@ model geoData {
   updatedAt           DateTime @updatedAt
 }
 
+model actLandUseZone {
+  id         Int                     @id @default(autoincrement())
+  objectId   Int                     @unique
+  zoneCode   String
+  properties Json
+  geometry   Unsupported("geometry")
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+}
+
+model actBlock {
+  id             Int                     @id @default(autoincrement())
+  objectId       Int                     @unique
+  blockKey       BigInt
+  blockNumber    Int
+  sectionNumber  Int
+  derivedAreaSqm BigInt?
+  properties     Json
+  geometry       Unsupported("geometry")
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([blockKey])
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model spatial_ref_sys {
   srid      Int     @id

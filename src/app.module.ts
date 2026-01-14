@@ -11,6 +11,7 @@ import { MailModule } from '@modules/mail/mail.module';
 import { BuilderModule } from '@modules/builder/builder.module';
 import { FacadeModule } from '@modules/facade/facade.module';
 import { BrandModule } from '@modules/brand/brand.module';
+import { GeoModule } from '@modules/geo/geo.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { BrandModule } from '@modules/brand/brand.module';
       MailModule,
       BuilderModule,
       FacadeModule,
-      BrandModule
+      BrandModule,
+      GeoModule
     ],
   controllers: [AppController],
   providers: [AppService],
