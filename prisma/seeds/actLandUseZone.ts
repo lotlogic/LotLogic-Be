@@ -15,12 +15,10 @@ const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
   const shouldTruncate = process.argv.includes('--truncate');
+  const shouldSkipIfExists = process.argv.includes('--skip-if-exists');
   const geoJsonPath =
     process.argv.find((arg) => arg.startsWith('--file='))?.split('=')[1] ??
-    path.join(
-      __dirname,
-      '../../data/ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson',
-    );
+    path.join(process.cwd(), 'data', 'ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson');
 
   console.log('🗺️  Importing ACT land use zones...');
   console.log(`📄 Source: ${geoJsonPath}`);
@@ -34,6 +32,14 @@ async function main(): Promise<void> {
     await prisma.$executeRawUnsafe(
       'TRUNCATE TABLE "actLandUseZone" RESTART IDENTITY',
     );
+  } else if (shouldSkipIfExists) {
+    const existing = await prisma.actLandUseZone.findFirst({
+      select: { id: true },
+    });
+    if (existing) {
+      console.log('⏭️  actLandUseZone already contains rows; skipping import.');
+      return;
+    }
   }
 
   const raw = fs.readFileSync(geoJsonPath, 'utf-8');

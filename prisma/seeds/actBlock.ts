@@ -55,12 +55,13 @@ async function upsertBatch(features: Feature[]): Promise<void> {
 
 async function main(): Promise<void> {
   const shouldTruncate = process.argv.includes('--truncate');
+  const shouldSkipIfExists = process.argv.includes('--skip-if-exists');
   const limitArg = getArgValue('limit');
   const limit = limitArg ? Number(limitArg) : undefined;
 
   const geoJsonPath =
     getArgValue('file') ??
-    path.join(__dirname, '../../data/ACTGOV_BLOCKS_-3707349334185229602.geojson');
+    path.join(process.cwd(), 'data', 'ACTGOV_BLOCKS_-3707349334185229602.geojson');
 
   const batchSize = Number(process.env.ACT_BLOCK_SEED_BATCH_SIZE ?? 500);
   const logEvery = Number(process.env.ACT_BLOCK_SEED_LOG_EVERY ?? 5000);
@@ -77,6 +78,12 @@ async function main(): Promise<void> {
   if (shouldTruncate) {
     console.log('🧹 Truncating actBlock...');
     await prisma.$executeRawUnsafe('TRUNCATE TABLE "actBlock" RESTART IDENTITY');
+  } else if (shouldSkipIfExists) {
+    const existing = await prisma.actBlock.findFirst({ select: { id: true } });
+    if (existing) {
+      console.log('⏭️  actBlock already contains rows; skipping import.');
+      return;
+    }
   }
 
   // stream-json is CommonJS; require keeps this seed runnable under tsx without tsconfig module tweaks.

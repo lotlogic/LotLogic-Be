@@ -192,9 +192,12 @@ This repo supports importing ACT Gov GeoJSON datasets (EPSG:4326) into PostGIS a
 ### 2) Apply DB migrations + import GeoJSON (Docker)
 ```bash
 docker exec lotlogic-backend npx prisma migrate deploy
-docker exec lotlogic-backend npx tsx prisma/seeds/actLandUseZone.ts --truncate
-docker exec lotlogic-backend npx tsx prisma/seeds/actBlock.ts --truncate
+docker exec lotlogic-backend npx tsx prisma/seeds/actLandUseZone.ts --skip-if-exists
+docker exec lotlogic-backend npx tsx prisma/seeds/actBlock.ts --skip-if-exists
 ```
+
+- Use `--truncate` to force a full re-import (drops existing rows first).
+- In AWS App Runner, you can set `AUTO_IMPORT_ACT_DATA=true` to run these imports in the background on boot.
 
 ### 3) Call the endpoint
 - By address: `GET http://localhost:3000/api/geo/act-zone?address=1%20Bunda%20St%20Canberra%20ACT`

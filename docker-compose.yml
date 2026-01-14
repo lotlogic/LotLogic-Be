@@ -45,7 +45,11 @@ services:
       SMTP_PORT: 587
       SMTP_USER: dev@beyondhimalayatech.com.au
       SMTP_PASS: "ZqcG(1*tY5oE[ @"
-      SMTP_FROM: dev@beyondhimalayatech.com.au
+      SMTP_FROM: dev@beyondhimalayatech.com.au      
+      GOOGLE_GEOCODING_REGION: "au"
+      GOOGLE_GEOCODING_COMPONENTS: "country:AU|administrative_area:ACT"
+      LOT_CHECK_RULES_CSV_PATH: "data/LotCheck - Public tool data   - Rules v3.csv"
+      AUTO_IMPORT_ACT_DATA: "true"
     ports:
       - "3000:3000"
     volumes:

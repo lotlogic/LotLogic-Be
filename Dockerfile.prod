@@ -18,8 +18,7 @@ RUN npx prisma generate
 # Build the NestJS app
 RUN npm run build
 
-# Remove dev dependencies for production
-RUN npm prune --omit=dev
+# NOTE: Keep devDependencies in the production image because we run Prisma CLI + seed scripts in AWS.
 
 
 # -------------------------------
@@ -38,6 +37,9 @@ COPY --from=builder /app/dist ./dist
 # Copy scripts and Prisma schema
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/prisma ./prisma
+
+# Copy root data folder (GeoJSON/CSV for PostGIS imports + rules)
+COPY --from=builder /app/data ./data
 
 # Copy data folder
 COPY --from=builder /app/src/data ./src/data
