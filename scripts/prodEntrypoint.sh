@@ -2,6 +2,8 @@
 
 set -e
 
+cd "$(dirname "$0")/.."
+
 echo "➡️ Running Prisma Migrations..."
 npx prisma migrate deploy
 echo "✅ Migrations complete."
@@ -9,14 +11,36 @@ echo "✅ Migrations complete."
 # Optional: Import ACT GeoJSON datasets into PostGIS (runs in background so App Runner can pass health checks).
 # Enable by setting AUTO_IMPORT_ACT_DATA=true in the runtime environment.
 if [ "${AUTO_IMPORT_ACT_DATA}" = "true" ]; then
-  echo "🌱 Starting ACT dataset import in background..."
-  (
-    set -e
-    sleep 5
-    npx tsx prisma/seeds/actLandUseZone.ts --skip-if-exists
-    npx tsx prisma/seeds/actBlock.ts --skip-if-exists
-    echo "✅ ACT dataset import complete."
-  ) &
+  if [ "${ACT_DATA_IMPORT_TRUNCATE}" = "true" ]; then
+    IMPORT_FLAGS="--truncate"
+  else
+    IMPORT_FLAGS="--skip-if-exists"
+  fi
+
+  if [ -n "${ACT_LAND_USE_ZONE_GEOJSON_PATH}" ] || [ -n "${ACT_BLOCK_GEOJSON_PATH}" ]; then
+    echo "ℹ️  Using ACT_*_GEOJSON_PATH env var(s) for import."
+  else
+    ZONE_FILE="$(ls -1 data/ACTGOV_TP_LAND_USE_ZONE_*.geojson 2>/dev/null | head -n 1 || true)"
+    BLOCK_FILE="$(ls -1 data/ACTGOV_BLOCKS_*.geojson 2>/dev/null | head -n 1 || true)"
+
+    if [ -z "$ZONE_FILE" ] || [ -z "$BLOCK_FILE" ]; then
+      echo "⚠️  AUTO_IMPORT_ACT_DATA=true but missing ACT GeoJSON files under ./data; skipping import."
+      ls -la data || true
+      ZONE_FILE=""
+      BLOCK_FILE=""
+    fi
+  fi
+
+  if [ -n "$ZONE_FILE" ] || [ -n "$BLOCK_FILE" ] || [ -n "${ACT_LAND_USE_ZONE_GEOJSON_PATH}" ] || [ -n "${ACT_BLOCK_GEOJSON_PATH}" ]; then
+    echo "🌱 Starting ACT dataset import in background ($IMPORT_FLAGS)..."
+    (
+      set -e
+      sleep 5
+      npx tsx prisma/seeds/actLandUseZone.ts $IMPORT_FLAGS
+      npx tsx prisma/seeds/actBlock.ts $IMPORT_FLAGS
+      echo "✅ ACT dataset import complete."
+    ) &
+  fi
 fi
 
 echo "🚀 Starting NestJS app..."

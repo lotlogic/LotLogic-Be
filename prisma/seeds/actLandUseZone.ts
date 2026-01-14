@@ -13,18 +13,69 @@ type FeatureCollection = {
 
 const prisma = new PrismaClient();
 
+function getArgValue(name: string): string | undefined {
+  const prefix = `--${name}=`;
+  return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+}
+
+function findFirstFileMatching(dataDir: string, match: (name: string) => boolean): string | undefined {
+  try {
+    const candidates = fs
+      .readdirSync(dataDir)
+      .filter((name) => match(name))
+      .sort((a, b) => a.localeCompare(b));
+
+    if (candidates.length === 0) return undefined;
+    if (candidates.length > 1) {
+      console.warn(
+        `⚠️  Multiple candidate ACT land use zone files found in ${dataDir}; using ${candidates[0]}`,
+      );
+    }
+
+    return path.join(dataDir, candidates[0]);
+  } catch {
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const shouldTruncate = process.argv.includes('--truncate');
   const shouldSkipIfExists = process.argv.includes('--skip-if-exists');
-  const geoJsonPath =
-    process.argv.find((arg) => arg.startsWith('--file='))?.split('=')[1] ??
-    path.join(process.cwd(), 'data', 'ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson');
+
+  const projectRoot = path.resolve(__dirname, '../..');
+  const dataDir = path.join(projectRoot, 'data');
+  const defaultFile = path.join(dataDir, 'ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson');
+
+  const geoJsonArg = getArgValue('file');
+  const geoJsonEnv = process.env.ACT_LAND_USE_ZONE_GEOJSON_PATH;
+
+  let geoJsonPath = geoJsonArg ?? geoJsonEnv ?? defaultFile;
+
+  if (!fs.existsSync(geoJsonPath) && !geoJsonArg && !geoJsonEnv) {
+    const fallback = findFirstFileMatching(
+      dataDir,
+      (name) => name.startsWith('ACTGOV_TP_LAND_USE_ZONE_') && name.endsWith('.geojson'),
+    );
+    if (fallback) geoJsonPath = fallback;
+  }
 
   console.log('🗺️  Importing ACT land use zones...');
   console.log(`📄 Source: ${geoJsonPath}`);
 
   if (!fs.existsSync(geoJsonPath)) {
-    throw new Error(`GeoJSON file not found: ${geoJsonPath}`);
+    const dataDirExists = fs.existsSync(dataDir);
+    const dataDirContents = dataDirExists ? fs.readdirSync(dataDir).slice(0, 50).join(', ') : '';
+    throw new Error(
+      [
+        `GeoJSON file not found: ${geoJsonPath}`,
+        `cwd: ${process.cwd()}`,
+        `dataDir: ${dataDir}${dataDirExists ? '' : ' (missing)'}`,
+        dataDirExists ? `dataDir contents: ${dataDirContents}` : undefined,
+        'Tip: if running in CI/Docker, ensure Git LFS files are pulled and the image includes /app/data.',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
   }
 
   if (shouldTruncate) {

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, readdirSync } from 'fs';
 import * as path from 'path';
 
 type Feature = {
@@ -13,6 +13,25 @@ const prisma = new PrismaClient();
 function getArgValue(name: string): string | undefined {
   const prefix = `--${name}=`;
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+}
+
+function findFirstFileMatching(dataDir: string, match: (name: string) => boolean): string | undefined {
+  try {
+    const candidates = readdirSync(dataDir)
+      .filter((name) => match(name))
+      .sort((a, b) => a.localeCompare(b));
+
+    if (candidates.length === 0) return undefined;
+    if (candidates.length > 1) {
+      console.warn(
+        `⚠️  Multiple candidate ACT blocks files found in ${dataDir}; using ${candidates[0]}`,
+      );
+    }
+
+    return path.join(dataDir, candidates[0]);
+  } catch {
+    return undefined;
+  }
 }
 
 async function upsertBatch(features: Feature[]): Promise<void> {
@@ -59,9 +78,22 @@ async function main(): Promise<void> {
   const limitArg = getArgValue('limit');
   const limit = limitArg ? Number(limitArg) : undefined;
 
-  const geoJsonPath =
-    getArgValue('file') ??
-    path.join(process.cwd(), 'data', 'ACTGOV_BLOCKS_-3707349334185229602.geojson');
+  const projectRoot = path.resolve(__dirname, '../..');
+  const dataDir = path.join(projectRoot, 'data');
+  const defaultFile = path.join(dataDir, 'ACTGOV_BLOCKS_-3707349334185229602.geojson');
+
+  const geoJsonArg = getArgValue('file');
+  const geoJsonEnv = process.env.ACT_BLOCK_GEOJSON_PATH;
+
+  let geoJsonPath = geoJsonArg ?? geoJsonEnv ?? defaultFile;
+
+  if (!existsSync(geoJsonPath) && !geoJsonArg && !geoJsonEnv) {
+    const fallback = findFirstFileMatching(
+      dataDir,
+      (name) => name.startsWith('ACTGOV_BLOCKS_') && name.endsWith('.geojson'),
+    );
+    if (fallback) geoJsonPath = fallback;
+  }
 
   const batchSize = Number(process.env.ACT_BLOCK_SEED_BATCH_SIZE ?? 500);
   const logEvery = Number(process.env.ACT_BLOCK_SEED_LOG_EVERY ?? 5000);
@@ -72,7 +104,19 @@ async function main(): Promise<void> {
   if (limit) console.log(`🧪 Limit: ${limit}`);
 
   if (!existsSync(geoJsonPath)) {
-    throw new Error(`GeoJSON file not found: ${geoJsonPath}`);
+    const dataDirExists = existsSync(dataDir);
+    const dataDirContents = dataDirExists ? readdirSync(dataDir).slice(0, 50).join(', ') : '';
+    throw new Error(
+      [
+        `GeoJSON file not found: ${geoJsonPath}`,
+        `cwd: ${process.cwd()}`,
+        `dataDir: ${dataDir}${dataDirExists ? '' : ' (missing)'}`,
+        dataDirExists ? `dataDir contents: ${dataDirContents}` : undefined,
+        'Tip: if running in CI/Docker, ensure Git LFS files are pulled and the image includes /app/data.',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
   }
 
   if (shouldTruncate) {
