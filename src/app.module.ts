@@ -12,6 +12,7 @@ import { BuilderModule } from '@modules/builder/builder.module';
 import { FacadeModule } from '@modules/facade/facade.module';
 import { BrandModule } from '@modules/brand/brand.module';
 import { GeoModule } from '@modules/geo/geo.module';
+import { GoogleSheetsModule } from '@modules/google-sheets/google-sheets.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { GeoModule } from '@modules/geo/geo.module';
       BuilderModule,
       FacadeModule,
       BrandModule,
-      GeoModule
+      GeoModule,
+      GoogleSheetsModule
     ],
   controllers: [AppController],
   providers: [AppService],

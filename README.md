@@ -289,6 +289,30 @@ GET /design-on-lot/calculate?lotId={lotId}
 | `PORT` | Application port | 3000 |
 | `NODE_ENV` | Environment mode | development |
 
+## 📄 Form Post → Google Sheets
+
+This service exposes an endpoint that accepts a form POST and forwards it to a Google Apps Script webhook which appends a row into a Google Sheet:
+
+- `POST /api/google-sheets/append`
+- Accepts `application/x-www-form-urlencoded`, `multipart/form-data`, or JSON bodies.
+- Sends a JSON payload with keys: `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`.
+
+### Setup
+
+1. Deploy your Google Apps Script as a Web App and note the `/exec` URL.
+2. Set env vars (see `.env-example`):
+   - `GOOGLE_SHEETS_WEB_APP_URL`
+   - `GOOGLE_SHEETS_WEB_APP_SECRET` (sent as query param `?secret=...` and also as JSON field `secret`)
+   - Optional: `GOOGLE_SHEETS_INBOUND_WEBHOOK_SECRET` (requires callers of this API to send header `x-webhook-secret`)
+
+### Example request
+
+```bash
+curl -X POST "http://localhost:3000/api/google-sheets/append" \
+  -H "Content-Type: application/json" \
+  -d '{"reportId":"R-123","clientName":"Jane Citizen","clientEmail":"jane@example.com","clientPhone":"+61 400 000 000","address":"1 George St","suburb":"Sydney","blockSizeM2":"450","zone":"R2"}'
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
