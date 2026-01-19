@@ -14,6 +14,61 @@ function doGet() {
 }
 
 /**
+ * Manual debug helper (run from Apps Script editor).
+ * Posts the given row's data (plus Row Number) to the backend trigger endpoint.
+ */
+function debugDashboardTriggerForRow(rowNumber) {
+  const rn = normalizeInt_(rowNumber);
+  if (!rn) {
+    debugLog_('debugDashboardTriggerForRow: invalid rowNumber', { rowNumber });
+    return null;
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    debugLog_('debugDashboardTriggerForRow: sheet not found', { sheetName: SHEET_NAME });
+    return null;
+  }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet
+    .getRange(HEADER_ROW, 1, 1, lastCol)
+    .getValues()[0]
+    .map(h => String(h).trim());
+
+  const payload = buildRowPayload_(sheet, headers, rn, lastCol);
+  payload['Row Number'] = rn;
+
+  debugLog_('debugDashboardTriggerForRow: calling backend', { rowNumber: rn });
+  return callBackendDashboardTrigger_(payload);
+}
+
+/**
+ * Manual debug helper (run from Apps Script editor).
+ * Uses the active cell's row.
+ */
+function debugDashboardTriggerForActiveRow() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+  const range = sheet.getActiveRange();
+  const rn = range ? range.getRow() : null;
+  return debugDashboardTriggerForRow(rn);
+}
+
+function debugLog_(message, data) {
+  const text = (data === undefined)
+    ? String(message)
+    : String(message) + ' ' + safeJson_(data);
+  try { Logger.log(text); } catch (_) {}
+  try { console.log(text); } catch (_) {}
+}
+
+function safeJson_(value) {
+  try { return JSON.stringify(value); } catch (_) { return String(value); }
+}
+
+/**
  * Installable edit trigger handler for column AB ("send for QA?").
  * Set this as an "On edit" trigger in Apps Script.
  *
@@ -22,24 +77,48 @@ function doGet() {
  */
 function onDashboardSendForQaEdit(e) {
   try {
-    if (!e || !e.range) return;
+    debugLog_('onDashboardSendForQaEdit: start', { hasEvent: !!e, hasRange: !!(e && e.range) });
+    if (!e) return;
+    if (!e.range) {
+      debugLog_('onDashboardSendForQaEdit: missing range', {
+        keys: Object.keys(e || {}),
+        changeType: e && e.changeType ? String(e.changeType) : '',
+        note: 'This function must be installed as a Sheets "On edit" trigger. If installed as "On change" or "On form submit", no range will be provided.'
+      });
+      return;
+    }
 
     const range = e.range;
     const sheet = range.getSheet();
-    if (!sheet || sheet.getName() !== SHEET_NAME) return;
+    const sheetName = sheet ? sheet.getName() : '';
 
-    Logger.log(
-      'onDashboardSendForQaEdit: sheet=%s range=%s',
-      sheet.getName(),
-      range.getA1Notation()
-    );
+    debugLog_('onDashboardSendForQaEdit: event', {
+      sheet: sheetName,
+      a1: range.getA1Notation(),
+      row: range.getRow(),
+      col: range.getColumn(),
+      numRows: range.getNumRows(),
+      numCols: range.getNumColumns()
+    });
+
+    if (!sheet) {
+      debugLog_('onDashboardSendForQaEdit: missing sheet');
+      return;
+    }
+    if (sheetName !== SHEET_NAME) {
+      debugLog_('onDashboardSendForQaEdit: sheet mismatch', { expected: SHEET_NAME, got: sheetName });
+      return;
+    }
 
     const startCol = range.getColumn();
     const numCols = range.getNumColumns();
     const endCol = startCol + numCols - 1;
 
     // Only react when the edited range includes column AB
-    if (TRIGGER_COLUMN_AB < startCol || TRIGGER_COLUMN_AB > endCol) return;
+    if (TRIGGER_COLUMN_AB < startCol || TRIGGER_COLUMN_AB > endCol) {
+      debugLog_('onDashboardSendForQaEdit: edit not in AB', { startCol, endCol, triggerCol: TRIGGER_COLUMN_AB });
+      return;
+    }
 
     const startRow = range.getRow();
     const numRows = range.getNumRows();
@@ -59,23 +138,22 @@ function onDashboardSendForQaEdit(e) {
 
       const abValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AB).getValue();
       if (!isTruthy_(abValue)) {
-        Logger.log('onDashboardSendForQaEdit: row=%s AB not truthy (%s)', rowNumber, String(abValue));
+        debugLog_('onDashboardSendForQaEdit: AB not truthy', { rowNumber, abValue: String(abValue) });
         continue;
       }
 
       const payload = buildRowPayload_(sheet, headers, rowNumber, lastCol);
       payload['Row Number'] = rowNumber;
 
-      Logger.log(
-        'onDashboardSendForQaEdit: firing backend trigger row=%s reportId=%s',
+      debugLog_('onDashboardSendForQaEdit: firing backend trigger', {
         rowNumber,
-        String(payload['Report ID'] || '')
-      );
+        reportId: String(payload['Report ID'] || '')
+      });
       callBackendDashboardTrigger_(payload);
     }
   } catch (err) {
     // Best effort: triggers shouldn't throw
-    Logger.log('onDashboardSendForQaEdit error: ' + String(err && err.message ? err.message : err));
+    debugLog_('onDashboardSendForQaEdit error', { message: String(err && err.message ? err.message : err), stack: String(err && err.stack ? err.stack : '') });
   }
 }
 
@@ -107,7 +185,7 @@ function doPost(e) {
       payload.rowNumber || payload['Row Number'] || e?.parameter?.rowNumber || e?.parameter?.['Row Number']
     );
 
-    Logger.log('doPost: action=%s rowNumber=%s', action || '(append)', rowNumber || '');
+    debugLog_('doPost: request', { action: action || '(append)', rowNumber: rowNumber || '' });
 
     if (action === 'update' || rowNumber) {
       return updateRow_(sheet, lastCol, headerIndex, payload, rowNumber);
@@ -166,7 +244,7 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
   // Write updated values back into the copied row
   targetRange.setValues([targetRow]);
 
-  Logger.log('appendRow_: row=%s reportId=%s', targetRowNumber, String(REPORT_ID_BASE + targetRowNumber));
+  debugLog_('appendRow_: created', { rowNumber: targetRowNumber, reportId: String(REPORT_ID_BASE + targetRowNumber) });
 
   return json_({
     ok: true,
@@ -211,7 +289,7 @@ function updateRow_(sheet, lastCol, headerIndex, payload, rowNumber) {
 
   range.setValues([row]);
 
-  Logger.log('updateRow_: row=%s applied=%s', rowNumber, applied);
+  debugLog_('updateRow_: updated', { rowNumber, applied });
 
   return json_({ ok: true, rowNumber, applied });
 }
@@ -258,7 +336,10 @@ function buildRowPayload_(sheet, headers, rowNumber, lastCol) {
 
 function callBackendDashboardTrigger_(payload) {
   const base = String(BACKEND_BASE_URL || '').trim();
-  if (!base) return;
+  if (!base) {
+    debugLog_('callBackendDashboardTrigger_: missing BACKEND_BASE_URL');
+    return null;
+  }
 
   const url =
     base.replace(/\/+$/, '') +
@@ -268,12 +349,11 @@ function callBackendDashboardTrigger_(payload) {
     encodeURIComponent(WEBHOOK_SECRET || '');
 
   const safeUrl = url.replace(/\bsecret=[^&]+/i, 'secret=REDACTED');
-  Logger.log(
-    'callBackendDashboardTrigger_: POST %s row=%s reportId=%s',
-    safeUrl,
-    String(payload && (payload['Row Number'] || payload.rowNumber) ? (payload['Row Number'] || payload.rowNumber) : ''),
-    String(payload && payload['Report ID'] ? payload['Report ID'] : '')
-  );
+  debugLog_('callBackendDashboardTrigger_: POST', {
+    url: safeUrl,
+    rowNumber: String(payload && (payload['Row Number'] || payload.rowNumber) ? (payload['Row Number'] || payload.rowNumber) : ''),
+    reportId: String(payload && payload['Report ID'] ? payload['Report ID'] : '')
+  });
 
   const options = {
     method: 'post',
@@ -286,12 +366,14 @@ function callBackendDashboardTrigger_(payload) {
     const res = UrlFetchApp.fetch(url, options);
     const code = res.getResponseCode();
     const bodyText = res.getContentText();
-    Logger.log('callBackendDashboardTrigger_: response code=%s body=%s', code, bodyText);
+    debugLog_('callBackendDashboardTrigger_: response', { code, body: bodyText });
     if (code < 200 || code >= 300) {
-      Logger.log('dashboard-trigger non-2xx: ' + code + ' body=' + bodyText);
+      debugLog_('callBackendDashboardTrigger_: non-2xx', { code, body: bodyText });
     }
+    return { code, body: bodyText };
   } catch (err) {
-    Logger.log('callBackendDashboardTrigger_ error: ' + String(err && err.message ? err.message : err));
+    debugLog_('callBackendDashboardTrigger_ error', { message: String(err && err.message ? err.message : err), stack: String(err && err.stack ? err.stack : '') });
+    return null;
   }
 }
 
@@ -313,4 +395,3 @@ function json_(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
