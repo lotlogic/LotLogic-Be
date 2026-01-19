@@ -313,6 +313,31 @@ curl -X POST "http://localhost:3000/api/google-sheets/append" \
   -d '{"reportId":"R-123","clientName":"Jane Citizen","clientEmail":"jane@example.com","clientPhone":"+61 400 000 000","address":"1 George St","suburb":"Sydney","blockSizeM2":"450","zone":"R2"}'
 ```
 
+## 📄 Google Sheets Dashboard Trigger → PDF
+
+This service exposes an endpoint that accepts a JSON payload from a Google Sheets trigger, generates a PDF in the background, uploads it to Azure Blob Storage, then updates the originating sheet row with the final PDF link:
+
+- `POST /api/google-sheets/dashboard-trigger`
+- Requires the same secret as the Apps Script webhook: `GOOGLE_SHEETS_WEB_APP_SECRET` (accepted as query param `?secret=...`, header `x-webhook-secret`, or JSON field `secret`).
+- Expects `Row Number` (or `rowNumber`) plus the dashboard columns as fields.
+- Responds with `true` immediately (background processing).
+
+### Background flow
+
+1. Render HTML from `src/templates/dashboard-report.pug`.
+2. Convert HTML → PDF via headless Chromium (`puppeteer-core`).
+3. Upload PDF to Azure Blob Storage.
+4. Call `GOOGLE_SHEETS_WEB_APP_URL` with `{ action: "update", rowNumber, finalPdfLink }` to update the row.
+
+### Setup
+
+Set env vars (see `.env-example`):
+
+- `AZURE_STORAGE_CONNECTION_STRING`
+- `AZURE_STORAGE_CONTAINER`
+- Optional: `AZURE_STORAGE_FOLDER` (defaults to `dashboard-reports`)
+- Optional: `CHROME_EXECUTABLE_PATH` (only needed if Chrome/Chromium isn't on a standard path)
+
 ## 🤝 Contributing
 
 1. Fork the repository

@@ -28,6 +28,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Headless Chrome deps (for puppeteer-core HTML -> PDF)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
+
 # Copy production node_modules
 COPY --from=builder /app/node_modules ./node_modules
 

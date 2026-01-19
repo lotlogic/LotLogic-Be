@@ -1,6 +1,15 @@
 # Use Node.js 20 Alpine as base image
 FROM node:20-alpine
 
+# Headless Chrome deps (for puppeteer-core HTML -> PDF)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
+
 # Set working directory
 WORKDIR /app
 

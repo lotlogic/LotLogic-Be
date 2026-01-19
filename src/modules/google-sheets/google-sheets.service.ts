@@ -90,13 +90,29 @@ export class GoogleSheetsService {
   }
 
   async forwardToGoogleSheetsWebhook(formData: Record<string, unknown>) {
+    const payload = this.buildWebhookPayload(formData);
+    return this.postToGoogleSheetsWebhook(payload);
+  }
+
+  async updateGoogleSheetsRow(params: {
+    rowNumber: number;
+    finalPdfLink: string;
+  }) {
+    return this.postToGoogleSheetsWebhook({
+      action: 'update',
+      rowNumber: params.rowNumber,
+      finalPdfLink: params.finalPdfLink,
+    });
+  }
+
+  private async postToGoogleSheetsWebhook(payload: Record<string, unknown>) {
     const webhookUrl = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_URL');
     const webhookSecret = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_SECRET');
     const timeoutMs = this.getTimeoutMs();
     const requestUrl = this.buildWebhookRequestUrl(webhookUrl, webhookSecret);
 
-    const payload = {
-      ...this.buildWebhookPayload(formData),
+    const requestBody = {
+      ...payload,
       secret: webhookSecret,
     };
 
@@ -109,7 +125,7 @@ export class GoogleSheetsService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(requestBody),
         signal: abortController.signal,
       });
 
