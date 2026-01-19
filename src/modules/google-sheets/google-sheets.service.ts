@@ -3,6 +3,7 @@ import {
   GatewayTimeoutException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 const GOOGLE_SHEETS_WEBHOOK_KEYS = [
@@ -20,6 +21,8 @@ type GoogleSheetsWebhookKey = (typeof GOOGLE_SHEETS_WEBHOOK_KEYS)[number];
 
 @Injectable()
 export class GoogleSheetsService {
+  private readonly logger = new Logger(GoogleSheetsService.name);
+
   async pingGoogleSheetsWebhook(): Promise<'OK'> {
     const webhookUrl = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_URL');
     const webhookSecret = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_SECRET');
@@ -116,6 +119,17 @@ export class GoogleSheetsService {
       secret: webhookSecret,
     };
 
+    const action =
+      typeof payload.action === 'string' ? payload.action : 'append';
+    const rowNumber =
+      typeof payload.rowNumber === 'number' ? payload.rowNumber : undefined;
+
+    this.logger.log(
+      `Posting to Google Sheets webhook (action=${action}${
+        rowNumber ? ` row=${rowNumber}` : ''
+      })`,
+    );
+
     const abortController = new AbortController();
     const timeoutHandle = setTimeout(() => abortController.abort(), timeoutMs);
 
@@ -149,6 +163,11 @@ export class GoogleSheetsService {
         });
       }
 
+      this.logger.log(
+        `Google Sheets webhook response OK (action=${action}${
+          rowNumber ? ` row=${rowNumber}` : ''
+        })`,
+      );
       return responseBody;
     } catch (error) {
       if (this.isAbortError(error)) {

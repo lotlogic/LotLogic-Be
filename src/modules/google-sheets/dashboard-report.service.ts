@@ -52,26 +52,64 @@ export class DashboardReportService {
   constructor(private readonly googleSheetsService: GoogleSheetsService) {}
 
   async processDashboardTrigger(payload: Record<string, unknown>): Promise<void> {
+    let rowNumber: number | undefined;
+    let reportId: string | undefined;
     try {
-      const rowNumber = this.readRequiredRowNumber(payload);
-      const reportId = this.readValue(payload, 'Report ID');
+      rowNumber = this.readRequiredRowNumber(payload);
+      reportId = this.readValue(payload, 'Report ID');
+
+      this.logger.log(
+        `Dashboard report job started (row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        })`,
+      );
+
       const fields = DASHBOARD_COLUMNS.map((label) => ({
         label,
         value: this.readValue(payload, label),
       }));
 
       const html = this.renderHtml({ rowNumber, reportId, fields });
-      const pdf = await this.renderPdf(html);
-      const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
+      this.logger.log(
+        `Dashboard report HTML rendered (row=${rowNumber} bytes=${Buffer.byteLength(
+          html,
+          'utf8',
+        )})`,
+      );
 
-      await this.googleSheetsService.updateGoogleSheetsRow({
+      const pdf = await this.renderPdf(html);
+      this.logger.log(
+        `Dashboard report PDF rendered (row=${rowNumber} bytes=${pdf.length})`,
+      );
+
+      const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
+      this.logger.log(`Dashboard report uploaded (row=${rowNumber} url=${pdfUrl})`);
+
+      const updateResponse = await this.googleSheetsService.updateGoogleSheetsRow({
         rowNumber,
         finalPdfLink: pdfUrl,
       });
+
+      const updateOk =
+        typeof updateResponse === 'object' &&
+        updateResponse !== null &&
+        'ok' in updateResponse
+          ? Boolean((updateResponse as { ok?: unknown }).ok)
+          : undefined;
+
+      if (updateOk === false) {
+        this.logger.warn(
+          `Dashboard report row update returned ok=false (row=${rowNumber})`,
+        );
+      } else {
+        this.logger.log(`Dashboard report row updated (row=${rowNumber})`);
+      }
     } catch (error) {
       const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Dashboard report generation failed: ${this.normalizeToString(
+        `Dashboard report generation failed (row=${
+          rowNumber ?? 'unknown'
+        }${reportId ? ` reportId=${reportId}` : ''}): ${this.normalizeToString(
           error instanceof Error ? error.message : error,
         )}`,
         stack,

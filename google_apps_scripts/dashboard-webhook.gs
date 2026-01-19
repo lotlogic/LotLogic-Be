@@ -28,6 +28,12 @@ function onDashboardSendForQaEdit(e) {
     const sheet = range.getSheet();
     if (!sheet || sheet.getName() !== SHEET_NAME) return;
 
+    Logger.log(
+      'onDashboardSendForQaEdit: sheet=%s range=%s',
+      sheet.getName(),
+      range.getA1Notation()
+    );
+
     const startCol = range.getColumn();
     const numCols = range.getNumColumns();
     const endCol = startCol + numCols - 1;
@@ -52,11 +58,19 @@ function onDashboardSendForQaEdit(e) {
       if (rowNumber < TEMPLATE_ROW) continue;
 
       const abValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AB).getValue();
-      if (!isTruthy_(abValue)) continue;
+      if (!isTruthy_(abValue)) {
+        Logger.log('onDashboardSendForQaEdit: row=%s AB not truthy (%s)', rowNumber, String(abValue));
+        continue;
+      }
 
       const payload = buildRowPayload_(sheet, headers, rowNumber, lastCol);
       payload['Row Number'] = rowNumber;
 
+      Logger.log(
+        'onDashboardSendForQaEdit: firing backend trigger row=%s reportId=%s',
+        rowNumber,
+        String(payload['Report ID'] || '')
+      );
       callBackendDashboardTrigger_(payload);
     }
   } catch (err) {
@@ -92,6 +106,8 @@ function doPost(e) {
     const rowNumber = normalizeInt_(
       payload.rowNumber || payload['Row Number'] || e?.parameter?.rowNumber || e?.parameter?.['Row Number']
     );
+
+    Logger.log('doPost: action=%s rowNumber=%s', action || '(append)', rowNumber || '');
 
     if (action === 'update' || rowNumber) {
       return updateRow_(sheet, lastCol, headerIndex, payload, rowNumber);
@@ -150,6 +166,8 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
   // Write updated values back into the copied row
   targetRange.setValues([targetRow]);
 
+  Logger.log('appendRow_: row=%s reportId=%s', targetRowNumber, String(REPORT_ID_BASE + targetRowNumber));
+
   return json_({
     ok: true,
     reportId: REPORT_ID_BASE + targetRowNumber,
@@ -192,6 +210,8 @@ function updateRow_(sheet, lastCol, headerIndex, payload, rowNumber) {
   }
 
   range.setValues([row]);
+
+  Logger.log('updateRow_: row=%s applied=%s', rowNumber, applied);
 
   return json_({ ok: true, rowNumber, applied });
 }
@@ -247,6 +267,14 @@ function callBackendDashboardTrigger_(payload) {
     '?secret=' +
     encodeURIComponent(WEBHOOK_SECRET || '');
 
+  const safeUrl = url.replace(/\bsecret=[^&]+/i, 'secret=REDACTED');
+  Logger.log(
+    'callBackendDashboardTrigger_: POST %s row=%s reportId=%s',
+    safeUrl,
+    String(payload && (payload['Row Number'] || payload.rowNumber) ? (payload['Row Number'] || payload.rowNumber) : ''),
+    String(payload && payload['Report ID'] ? payload['Report ID'] : '')
+  );
+
   const options = {
     method: 'post',
     contentType: 'application/json',
@@ -254,10 +282,16 @@ function callBackendDashboardTrigger_(payload) {
     muteHttpExceptions: true,
   };
 
-  const res = UrlFetchApp.fetch(url, options);
-  const code = res.getResponseCode();
-  if (code < 200 || code >= 300) {
-    Logger.log('dashboard-trigger non-2xx: ' + code + ' body=' + res.getContentText());
+  try {
+    const res = UrlFetchApp.fetch(url, options);
+    const code = res.getResponseCode();
+    const bodyText = res.getContentText();
+    Logger.log('callBackendDashboardTrigger_: response code=%s body=%s', code, bodyText);
+    if (code < 200 || code >= 300) {
+      Logger.log('dashboard-trigger non-2xx: ' + code + ' body=' + bodyText);
+    }
+  } catch (err) {
+    Logger.log('callBackendDashboardTrigger_ error: ' + String(err && err.message ? err.message : err));
   }
 }
 
@@ -279,5 +313,4 @@ function json_(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
 

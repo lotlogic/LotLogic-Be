@@ -5,6 +5,7 @@ import {
   Headers,
   Get,
   InternalServerErrorException,
+  Logger,
   Post,
   Query,
   UnauthorizedException,
@@ -16,6 +17,8 @@ import { DashboardReportService } from '@modules/google-sheets/dashboard-report.
 
 @Controller('google-sheets')
 export class GoogleSheetsController {
+  private readonly logger = new Logger(GoogleSheetsController.name);
+
   constructor(
     private readonly googleSheetsService: GoogleSheetsService,
     private readonly dashboardReportService: DashboardReportService,
@@ -95,6 +98,8 @@ export class GoogleSheetsController {
     if (!Number.isFinite(rowNumber) || rowNumber < 1) {
       throw new BadRequestException('Missing/invalid Row Number');
     }
+
+    this.logger.log(`Dashboard trigger accepted (row=${rowNumber})`);
 
     setImmediate(() => {
       void this.dashboardReportService
