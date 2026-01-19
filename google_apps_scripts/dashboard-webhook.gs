@@ -8,9 +8,9 @@ const REPORT_ID_BASE = 15000;
 const TRIGGER_COLUMN_AB = 28; // Column AB ("send for QA?")
 
 function doGet() {
-  return ContentService
-    .createTextOutput('OK')
-    .setMimeType(ContentService.MimeType.TEXT);
+  return ContentService.createTextOutput('OK').setMimeType(
+    ContentService.MimeType.TEXT,
+  );
 }
 
 /**
@@ -27,7 +27,9 @@ function debugDashboardTriggerForRow(rowNumber) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
-    debugLog_('debugDashboardTriggerForRow: sheet not found', { sheetName: SHEET_NAME });
+    debugLog_('debugDashboardTriggerForRow: sheet not found', {
+      sheetName: SHEET_NAME,
+    });
     return null;
   }
 
@@ -35,7 +37,7 @@ function debugDashboardTriggerForRow(rowNumber) {
   const headers = sheet
     .getRange(HEADER_ROW, 1, 1, lastCol)
     .getValues()[0]
-    .map(h => String(h).trim());
+    .map((h) => String(h).trim());
 
   const payload = buildRowPayload_(sheet, headers, rn, lastCol);
   payload['Row Number'] = rn;
@@ -57,15 +59,24 @@ function debugDashboardTriggerForActiveRow() {
 }
 
 function debugLog_(message, data) {
-  const text = (data === undefined)
-    ? String(message)
-    : String(message) + ' ' + safeJson_(data);
-  try { Logger.log(text); } catch (_) {}
-  try { console.log(text); } catch (_) {}
+  const text =
+    data === undefined
+      ? String(message)
+      : String(message) + ' ' + safeJson_(data);
+  try {
+    Logger.log(text);
+  } catch (_) {}
+  try {
+    console.log(text);
+  } catch (_) {}
 }
 
 function safeJson_(value) {
-  try { return JSON.stringify(value); } catch (_) { return String(value); }
+  try {
+    return JSON.stringify(value);
+  } catch (_) {
+    return String(value);
+  }
 }
 
 /**
@@ -77,13 +88,16 @@ function safeJson_(value) {
  */
 function onDashboardSendForQaEdit(e) {
   try {
-    debugLog_('onDashboardSendForQaEdit: start', { hasEvent: !!e, hasRange: !!(e && e.range) });
+    debugLog_('onDashboardSendForQaEdit: start', {
+      hasEvent: !!e,
+      hasRange: !!(e && e.range),
+    });
     if (!e) return;
     if (!e.range) {
       debugLog_('onDashboardSendForQaEdit: missing range', {
         keys: Object.keys(e || {}),
         changeType: e && e.changeType ? String(e.changeType) : '',
-        note: 'This function must be installed as a Sheets "On edit" trigger. If installed as "On change" or "On form submit", no range will be provided.'
+        note: 'This function must be installed as a Sheets "On edit" trigger. If installed as "On change" or "On form submit", no range will be provided.',
       });
       return;
     }
@@ -98,7 +112,7 @@ function onDashboardSendForQaEdit(e) {
       row: range.getRow(),
       col: range.getColumn(),
       numRows: range.getNumRows(),
-      numCols: range.getNumColumns()
+      numCols: range.getNumColumns(),
     });
 
     if (!sheet) {
@@ -106,7 +120,10 @@ function onDashboardSendForQaEdit(e) {
       return;
     }
     if (sheetName !== SHEET_NAME) {
-      debugLog_('onDashboardSendForQaEdit: sheet mismatch', { expected: SHEET_NAME, got: sheetName });
+      debugLog_('onDashboardSendForQaEdit: sheet mismatch', {
+        expected: SHEET_NAME,
+        got: sheetName,
+      });
       return;
     }
 
@@ -116,7 +133,11 @@ function onDashboardSendForQaEdit(e) {
 
     // Only react when the edited range includes column AB
     if (TRIGGER_COLUMN_AB < startCol || TRIGGER_COLUMN_AB > endCol) {
-      debugLog_('onDashboardSendForQaEdit: edit not in AB', { startCol, endCol, triggerCol: TRIGGER_COLUMN_AB });
+      debugLog_('onDashboardSendForQaEdit: edit not in AB', {
+        startCol,
+        endCol,
+        triggerCol: TRIGGER_COLUMN_AB,
+      });
       return;
     }
 
@@ -128,7 +149,7 @@ function onDashboardSendForQaEdit(e) {
     const headers = sheet
       .getRange(HEADER_ROW, 1, 1, lastCol)
       .getValues()[0]
-      .map(h => String(h).trim());
+      .map((h) => String(h).trim());
 
     const headerIndex = new Map(headers.map((h, i) => [h, i]));
 
@@ -138,7 +159,10 @@ function onDashboardSendForQaEdit(e) {
 
       const abValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AB).getValue();
       if (!isTruthy_(abValue)) {
-        debugLog_('onDashboardSendForQaEdit: AB not truthy', { rowNumber, abValue: String(abValue) });
+        debugLog_('onDashboardSendForQaEdit: AB not truthy', {
+          rowNumber,
+          abValue: String(abValue),
+        });
         continue;
       }
 
@@ -147,20 +171,23 @@ function onDashboardSendForQaEdit(e) {
 
       debugLog_('onDashboardSendForQaEdit: firing backend trigger', {
         rowNumber,
-        reportId: String(payload['Report ID'] || '')
+        reportId: String(payload['Report ID'] || ''),
       });
       callBackendDashboardTrigger_(payload);
     }
   } catch (err) {
     // Best effort: triggers shouldn't throw
-    debugLog_('onDashboardSendForQaEdit error', { message: String(err && err.message ? err.message : err), stack: String(err && err.stack ? err.stack : '') });
+    debugLog_('onDashboardSendForQaEdit error', {
+      message: String(err && err.message ? err.message : err),
+      stack: String(err && err.stack ? err.stack : ''),
+    });
   }
 }
 
 function doPost(e) {
   try {
     const payload = parsePayload_(e);
-    const secret = (e?.parameter?.secret || payload.secret || '');
+    const secret = e?.parameter?.secret || payload.secret || '';
 
     if (WEBHOOK_SECRET && secret !== WEBHOOK_SECRET) {
       return json_({ ok: false, error: 'unauthorized' });
@@ -176,16 +203,24 @@ function doPost(e) {
     const headers = sheet
       .getRange(HEADER_ROW, 1, 1, lastCol)
       .getValues()[0]
-      .map(h => String(h).trim());
+      .map((h) => String(h).trim());
 
     const headerIndex = new Map(headers.map((h, i) => [h, i]));
 
-    const action = String(payload.action || e?.parameter?.action || '').toLowerCase();
+    const action = String(
+      payload.action || e?.parameter?.action || '',
+    ).toLowerCase();
     const rowNumber = normalizeInt_(
-      payload.rowNumber || payload['Row Number'] || e?.parameter?.rowNumber || e?.parameter?.['Row Number']
+      payload.rowNumber ||
+        payload['Row Number'] ||
+        e?.parameter?.rowNumber ||
+        e?.parameter?.['Row Number'],
     );
 
-    debugLog_('doPost: request', { action: action || '(append)', rowNumber: rowNumber || '' });
+    debugLog_('doPost: request', {
+      action: action || '(append)',
+      rowNumber: rowNumber || '',
+    });
 
     if (action === 'update' || rowNumber) {
       return updateRow_(sheet, lastCol, headerIndex, payload, rowNumber);
@@ -207,7 +242,9 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
   // Copy template row (values, formatting, data validation, etc.) into the new row
   sheet
     .getRange(TEMPLATE_ROW, 1, 1, lastCol)
-    .copyTo(sheet.getRange(targetRowNumber, 1, 1, lastCol), { contentsOnly: false });
+    .copyTo(sheet.getRange(targetRowNumber, 1, 1, lastCol), {
+      contentsOnly: false,
+    });
 
   // Now set the values you want to override
   const targetRange = sheet.getRange(targetRowNumber, 1, 1, lastCol);
@@ -215,7 +252,8 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
 
   // Timestamp
   const tsIdx = headerIndex.get('Timestamp');
-  if (tsIdx === undefined) return json_({ ok: false, error: 'missing_timestamp_header' });
+  if (tsIdx === undefined)
+    return json_({ ok: false, error: 'missing_timestamp_header' });
   targetRow[tsIdx] = new Date();
 
   // Auto Report ID
@@ -233,6 +271,7 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
     { header: 'Suburb', key: 'suburb' },
     { header: 'Block size (m²)', key: 'blockSizeM2' },
     { header: 'Zone', key: 'zone' },
+    { header: 'Intention', key: 'intention' },
   ];
 
   for (const { header, key } of fieldMap) {
@@ -244,7 +283,10 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
   // Write updated values back into the copied row
   targetRange.setValues([targetRow]);
 
-  debugLog_('appendRow_: created', { rowNumber: targetRowNumber, reportId: String(REPORT_ID_BASE + targetRowNumber) });
+  debugLog_('appendRow_: created', {
+    rowNumber: targetRowNumber,
+    reportId: String(REPORT_ID_BASE + targetRowNumber),
+  });
 
   return json_({
     ok: true,
@@ -255,22 +297,32 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
 
 function updateRow_(sheet, lastCol, headerIndex, payload, rowNumber) {
   if (!rowNumber) return json_({ ok: false, error: 'missing_row_number' });
-  if (rowNumber < TEMPLATE_ROW) return json_({ ok: false, error: 'invalid_row_number' });
-  if (rowNumber > sheet.getLastRow()) return json_({ ok: false, error: 'row_out_of_range' });
+  if (rowNumber < TEMPLATE_ROW)
+    return json_({ ok: false, error: 'invalid_row_number' });
+  if (rowNumber > sheet.getLastRow())
+    return json_({ ok: false, error: 'row_out_of_range' });
 
   const range = sheet.getRange(rowNumber, 1, 1, lastCol);
   const row = range.getValues()[0];
 
-  const updates = (payload.updates && typeof payload.updates === 'object' && !Array.isArray(payload.updates))
-    ? payload.updates
-    : {};
+  const updates =
+    payload.updates &&
+    typeof payload.updates === 'object' &&
+    !Array.isArray(payload.updates)
+      ? payload.updates
+      : {};
 
   // Convenience keys (backend-friendly)
-  if (payload.finalPdfLink !== undefined) updates['Final PDF link'] = payload.finalPdfLink;
-  if (payload.deliveryStatus !== undefined) updates['Delivery status'] = payload.deliveryStatus;
-  if (payload.deliveryDate !== undefined) updates['Delivery date'] = payload.deliveryDate;
-  if (payload.internalNotes !== undefined) updates['Internal notes'] = payload.internalNotes;
-  if (payload.escalation !== undefined) updates['Escalation'] = payload.escalation;
+  if (payload.finalPdfLink !== undefined)
+    updates['Final PDF link'] = payload.finalPdfLink;
+  if (payload.deliveryStatus !== undefined)
+    updates['Delivery status'] = payload.deliveryStatus;
+  if (payload.deliveryDate !== undefined)
+    updates['Delivery date'] = payload.deliveryDate;
+  if (payload.internalNotes !== undefined)
+    updates['Internal notes'] = payload.internalNotes;
+  if (payload.escalation !== undefined)
+    updates['Escalation'] = payload.escalation;
 
   // Also allow direct header keys in the payload (sheets-friendly)
   for (const k in payload) {
@@ -320,7 +372,14 @@ function isTruthy_(v) {
   if (v === true) return true;
   if (v === false || v === null || v === undefined) return false;
   const s = String(v).trim().toLowerCase();
-  return s === 'true' || s === 'yes' || s === 'y' || s === '1' || s === 'on' || s === 'checked';
+  return (
+    s === 'true' ||
+    s === 'yes' ||
+    s === 'y' ||
+    s === '1' ||
+    s === 'on' ||
+    s === 'checked'
+  );
 }
 
 function buildRowPayload_(sheet, headers, rowNumber, lastCol) {
@@ -351,8 +410,14 @@ function callBackendDashboardTrigger_(payload) {
   const safeUrl = url.replace(/\bsecret=[^&]+/i, 'secret=REDACTED');
   debugLog_('callBackendDashboardTrigger_: POST', {
     url: safeUrl,
-    rowNumber: String(payload && (payload['Row Number'] || payload.rowNumber) ? (payload['Row Number'] || payload.rowNumber) : ''),
-    reportId: String(payload && payload['Report ID'] ? payload['Report ID'] : '')
+    rowNumber: String(
+      payload && (payload['Row Number'] || payload.rowNumber)
+        ? payload['Row Number'] || payload.rowNumber
+        : '',
+    ),
+    reportId: String(
+      payload && payload['Report ID'] ? payload['Report ID'] : '',
+    ),
   });
 
   const options = {
@@ -366,13 +431,22 @@ function callBackendDashboardTrigger_(payload) {
     const res = UrlFetchApp.fetch(url, options);
     const code = res.getResponseCode();
     const bodyText = res.getContentText();
-    debugLog_('callBackendDashboardTrigger_: response', { code, body: bodyText });
+    debugLog_('callBackendDashboardTrigger_: response', {
+      code,
+      body: bodyText,
+    });
     if (code < 200 || code >= 300) {
-      debugLog_('callBackendDashboardTrigger_: non-2xx', { code, body: bodyText });
+      debugLog_('callBackendDashboardTrigger_: non-2xx', {
+        code,
+        body: bodyText,
+      });
     }
     return { code, body: bodyText };
   } catch (err) {
-    debugLog_('callBackendDashboardTrigger_ error', { message: String(err && err.message ? err.message : err), stack: String(err && err.stack ? err.stack : '') });
+    debugLog_('callBackendDashboardTrigger_ error', {
+      message: String(err && err.message ? err.message : err),
+      stack: String(err && err.stack ? err.stack : ''),
+    });
     return null;
   }
 }
@@ -387,11 +461,13 @@ function normalizeInt_(v) {
 }
 
 function getHeader_(e, name) {
-  return (e?.headers && (e.headers[name] || e.headers[name.toLowerCase()])) || '';
+  return (
+    (e?.headers && (e.headers[name] || e.headers[name.toLowerCase()])) || ''
+  );
 }
 
 function json_(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
+    ContentService.MimeType.JSON,
+  );
 }

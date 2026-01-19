@@ -3,24 +3,232 @@ html
   head
     meta(charset='utf-8')
     meta(name='viewport' content='width=device-width, initial-scale=1')
-    title= title
+    title= report?.cover?.title || 'LotCheck Report'
     style.
-      :root { --fg:#0f172a; --muted:#475569; --border:#e2e8f0; --bg:#ffffff; --header:#f8fafc; }
-      * { box-sizing:border-box; }
-      body { margin:0; padding:24px; font-family: Arial, Helvetica, sans-serif; color:var(--fg); background:var(--bg); }
-      h1 { margin:0 0 6px 0; font-size:18px; }
-      .meta { margin:0 0 14px 0; color:var(--muted); font-size:12px; }
-      table { width:100%; border-collapse:collapse; font-size:12px; }
-      th, td { border:1px solid var(--border); padding:8px; vertical-align:top; }
-      th { width:35%; text-align:left; background:var(--header); }
-      td.value { white-space:pre-wrap; word-break:break-word; }
+      :root {
+        --blue: #1a5276;
+        --blue-100: #e8f4f8;
+        --green-100: #d5f5e3;
+        --gray-50: #f5f5f5;
+        --border: #cccccc;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; }
+      h1, h2 { margin: 0; }
+      p { margin: 0 0 10pt 0; line-height: 1.2; }
+      .spacer { margin: 0 0 22pt 0; }
+      .brand { text-align: center; color: var(--blue); font-weight: 700; font-size: 24pt; margin: 0 0 4pt 0; }
+      .subtitle { text-align: center; font-weight: 700; font-size: 16pt; margin: 0 0 22pt 0; }
+      .section { color: var(--blue); font-weight: 700; font-size: 16pt; margin: 15pt 0 10pt 0; }
+      .note { color: #333; font-style: italic; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid var(--border); padding: 6pt 8pt; vertical-align: top; }
+      th.k { width: 40%; background: var(--blue-100); text-align: left; font-weight: 700; }
+      th.k-gray { width: 40%; background: var(--gray-50); text-align: left; font-weight: 700; }
+      .meta-line { margin: 0 0 10pt 0; }
+      .meta-line strong { color: #000; }
+      .meta-sep { color: #666; padding: 0 6pt; }
+      .page-break { break-before: page; page-break-before: always; }
+      .reforms thead th { background: var(--blue); color: #fff; font-weight: 700; }
+      .reforms td.threshold { background: var(--green-100); font-weight: 700; white-space: nowrap; }
+      .reforms tr.not-qualified td.threshold,
+      .reforms tr.not-qualified td.allowed { background: var(--gray-50); color: #666; }
+      .bullet { margin: 0 0 10pt 0; }
+      .bullet .icon { display: inline-block; width: 14pt; font-weight: 700; }
+      .bullet strong { font-weight: 700; }
+      .cta { text-align: center; font-weight: 700; margin-top: 20pt; }
   body
-    h1= title
-    p.meta Generated #{generatedAt} • Row #{rowNumber}#{reportId ? ' • Report ID ' + reportId : ''}
+    // Cover
+    p.spacer
+    h1.brand LOTCHECK
+    h2.subtitle Site Assessment Report
     table
       tbody
-        each field in fields
+        tr
+          th.k Address
+          td= report.cover.address
+        if report.cover.blockSection
           tr
-            th= field.label
-            td.value= field.value || ''
+            th.k Block / Section
+            td= report.cover.blockSection
+        tr
+          th.k Zoning
+          td= report.cover.zoning
+        tr
+          th.k Prepared for
+          td= report.cover.preparedFor
+        tr
+          th.k Date
+          td= report.cover.date
 
+    p.spacer
+
+    // At a glance
+    h1.section YOUR BLOCK AT A GLANCE
+    table
+      tbody
+        tr
+          th.k-gray Block size
+          td= report.atAGlance.blockSize
+        tr
+          th.k-gray Frontage
+          td= report.atAGlance.frontage
+        tr
+          th.k-gray Zone
+          td= report.atAGlance.zone
+        tr
+          th.k-gray Your intention
+          td= report.atAGlance.intention
+    p.note These measurements are drawn from ACT Government mapping and may differ slightly from a formal survey.
+
+    // Reforms
+    h1.section WHAT THE REFORMS NOW ALLOW FOR BLOCKS YOUR SIZE
+    p Based on your block size of #{report.reforms.blockSize}, the Missing Middle reforms now permit:
+    table.reforms
+      thead
+        tr
+          th Block size threshold
+          th What's now allowed
+      tbody
+        each row in report.reforms.rows
+          tr(class=row.qualifies ? '' : 'not-qualified')
+            td.threshold
+              span.icon= row.qualifies ? '✓' : '✘'
+              |  #{row.threshold}
+            td.allowed= row.allowed
+    p
+      strong Your block at #{report.reforms.blockSize} qualifies for:
+      |  #{report.reforms.qualifiesFor}
+    p.note These are the headline permissions. Whether they're achievable on your specific block depends on access, trees, and other constraints assessed below.
+
+    // Zoning
+    h1.section ZONING
+    each para in report.zoning.paragraphs
+      p= para
+
+    // Site constraints on a new page (matches sample)
+    div.page-break
+
+    h1.section EXISTING HOUSE
+    if report.existingHouse.metaItems && report.existingHouse.metaItems.length
+      p.meta-line
+        each item, idx in report.existingHouse.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.existingHouse.paragraphs
+      p= para
+
+    h1.section REAR YARD SPACE
+    if report.rearYard.metaItems && report.rearYard.metaItems.length
+      p.meta-line
+        each item, idx in report.rearYard.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.rearYard.paragraphs
+      p= para
+
+    h1.section SITE COVERAGE
+    each para in report.siteCoverage.paragraphs
+      p= para
+
+    h1.section TREES
+    if report.trees.metaItems && report.trees.metaItems.length
+      p.meta-line
+        each item, idx in report.trees.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.trees.paragraphs
+      p= para
+    if report.trees.bullets && report.trees.bullets.length
+      ul
+        each item in report.trees.bullets
+          li= item
+
+    h1.section HERITAGE
+    if report.heritage.metaItems && report.heritage.metaItems.length
+      p.meta-line
+        each item, idx in report.heritage.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.heritage.paragraphs
+      p= para
+
+    h1.section EASEMENTS
+    if report.easements.metaItems && report.easements.metaItems.length
+      p.meta-line
+        each item, idx in report.easements.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.easements.paragraphs
+      p= para
+
+    h1.section SEWER
+    if report.sewer.metaItems && report.sewer.metaItems.length
+      p.meta-line
+        each item, idx in report.sewer.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.sewer.paragraphs
+      p= para
+
+    h1.section DRIVEWAY & ACCESS
+    if report.driveway.metaItems && report.driveway.metaItems.length
+      p.meta-line
+        each item, idx in report.driveway.metaItems
+          if idx > 0
+            span.meta-sep | |
+          strong #{item.label}:
+          |  #{item.value}
+    each para in report.driveway.paragraphs
+      p= para
+
+    // Summary on new page (matches sample)
+    div.page-break
+
+    h1.section WHAT THIS MEANS FOR YOUR BLOCK
+    p= report.whatMeans.intro
+    each bullet in report.whatMeans.bullets
+      p.bullet
+        span.icon= bullet.icon
+        strong #{bullet.title}:
+        |  #{bullet.text}
+    if report.whatMeans.summary
+      p
+        strong Summary:
+        |  #{report.whatMeans.summary}
+
+    h1.section YOUR RECOMMENDED NEXT STEP
+    each para in report.nextStep.paragraphs
+      p= para
+    if report.nextStep.bullets && report.nextStep.bullets.length
+      ul
+        each item in report.nextStep.bullets
+          li= item
+
+    // Disclaimer on new page (matches sample)
+    div.page-break
+
+    h1.section IMPORTANT DISCLAIMER
+    each para in report.disclaimer.paragraphs
+      p= para
+
+    h1.section WHAT HAPPENS NEXT
+    ol
+      each step in report.whatHappensNext.steps
+        li
+          strong #{step.title}
+          |  — #{step.text}
+
+    p.cta= report.whatHappensNext.cta
