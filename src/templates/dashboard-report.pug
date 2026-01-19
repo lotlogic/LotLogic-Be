@@ -3,7 +3,7 @@ html
   head
     meta(charset='utf-8')
     meta(name='viewport' content='width=device-width, initial-scale=1')
-    title= report?.cover?.title || 'LotCheck Report'
+    title= (report && report.cover && report.cover.title) || 'LotCheck Report'
     style.
       :root {
         --blue: #1a5276;
