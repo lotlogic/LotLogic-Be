@@ -67,7 +67,10 @@ export class DashboardReportService {
         })`,
       );
 
+      this.logPayloadSnapshot_(payload, { rowNumber, reportId });
+
       const report = this.buildPaidReport(payload);
+      this.logComputedSnapshot_(report, { rowNumber, reportId });
       const html = this.renderHtml(report);
       this.logger.log(
         `Dashboard report HTML rendered (row=${rowNumber} bytes=${Buffer.byteLength(
@@ -76,7 +79,7 @@ export class DashboardReportService {
         )})`,
       );
 
-      const pdf = await this.renderPdf(html);
+      const pdf = await this.renderPdf(html, { rowNumber, reportId });
       this.logger.log(
         `Dashboard report PDF rendered (row=${rowNumber} bytes=${pdf.length})`,
       );
@@ -309,6 +312,74 @@ export class DashboardReportService {
     };
   }
 
+  private logPayloadSnapshot_(
+    payload: Record<string, unknown>,
+    context: { rowNumber: number; reportId?: string },
+  ): void {
+    const snapshot = {
+      zone: this.readValue(payload, 'Zone'),
+      blockSizeM2: this.readValue(payload, 'Block size (m²)'),
+      frontageM: this.readValue(payload, 'Frontage (m)'),
+      housePosition: this.readValue(payload, 'House position'),
+      houseFootprintM2: this.readValue(payload, 'House footprint (m²)'),
+      rearYardDepthM: this.readValue(payload, 'Rear yard depth (m)'),
+      rearYardCategory: this.readValue(payload, 'Rear yard category'),
+      remainingSiteCoverageM2: this.readValue(payload, 'Remaining site coverage (m²)'),
+      grannyFlatKeepHouse: this.readValue(payload, 'Granny flat (keep house)'),
+      dualOccRemoveHouse: this.readValue(payload, 'Dual occ (remove house)'),
+      subdivisionPotential: this.readValue(payload, 'Subdivision potential'),
+      intention: this.readValue(payload, 'Intention'),
+      keysCount: Object.keys(payload).length,
+    };
+
+    const feasibility = {
+      grannyFlat: this.normalizeFeasibility_(snapshot.grannyFlatKeepHouse, {
+        possibleOk: true,
+      }),
+      dualOcc: this.normalizeFeasibility_(snapshot.dualOccRemoveHouse, {
+        possibleOk: false,
+      }),
+      subdivision: this.normalizeFeasibility_(snapshot.subdivisionPotential, {
+        possibleOk: false,
+      }),
+    };
+
+    this.logger.log(
+      `Dashboard report payload snapshot (row=${context.rowNumber}${
+        context.reportId ? ` reportId=${context.reportId}` : ''
+      }): ${JSON.stringify(snapshot)}`,
+    );
+
+    this.logger.log(
+      `Dashboard report feasibility snapshot (row=${context.rowNumber}${
+        context.reportId ? ` reportId=${context.reportId}` : ''
+      }): ${JSON.stringify({
+        grannyFlat: { raw: snapshot.grannyFlatKeepHouse, ok: feasibility.grannyFlat.ok },
+        dualOcc: { raw: snapshot.dualOccRemoveHouse, ok: feasibility.dualOcc.ok },
+        subdivision: { raw: snapshot.subdivisionPotential, ok: feasibility.subdivision.ok },
+      })}`,
+    );
+  }
+
+  private logComputedSnapshot_(
+    report: PaidReport,
+    context: { rowNumber: number; reportId?: string },
+  ): void {
+    const computed = {
+      rearYardMeta: report.rearYard?.metaItems || [],
+      whatMeans: (report.whatMeans?.bullets || []).map((b) => ({
+        title: b.title,
+        icon: b.icon,
+      })),
+    };
+
+    this.logger.log(
+      `Dashboard report computed snapshot (row=${context.rowNumber}${
+        context.reportId ? ` reportId=${context.reportId}` : ''
+      }): ${JSON.stringify(computed)}`,
+    );
+  }
+
   private renderHtml(report: PaidReport): string {
     const templatePath = join(
       __dirname,
@@ -323,7 +394,17 @@ export class DashboardReportService {
     });
   }
 
-  private async renderPdf(html: string): Promise<Buffer> {
+  private async renderPdf(
+    html: string,
+    context?: { rowNumber: number; reportId?: string },
+  ): Promise<Buffer> {
+    const ctx = context
+      ? ` (row=${context.rowNumber}${context.reportId ? ` reportId=${context.reportId}` : ''})`
+      : '';
+
+    const t0 = Date.now();
+    this.logger.log(`Dashboard report PDF render starting${ctx}`);
+
     const executablePath = this.getChromeExecutablePath();
     if (!executablePath) {
       throw new Error(
@@ -347,12 +428,26 @@ export class DashboardReportService {
       page.setDefaultTimeout(60_000);
       page.setDefaultNavigationTimeout(60_000);
 
+      const tSetContent = Date.now();
       await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
+      this.logger.log(
+        `Dashboard report PDF setContent done (ms=${Date.now() - tSetContent})${ctx}`,
+      );
+
+      const tPdf = Date.now();
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
         margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
       });
+
+      this.logger.log(
+        `Dashboard report PDF page.pdf done (ms=${Date.now() - tPdf})${ctx}`,
+      );
+      this.logger.log(
+        `Dashboard report PDF render finished (ms=${Date.now() - t0})${ctx}`,
+      );
+
       return Buffer.from(pdf);
     } finally {
       await browser.close().catch(() => undefined);
@@ -719,7 +814,13 @@ export class DashboardReportService {
   private parseTreeCount_(raw: string): number {
     const s = String(raw || '').trim().toLowerCase();
     if (!s) return 0;
-    if (s.includes('3+')) return 3;
+    if (s.includes('none') || s === '0') return 0;
+    if (s.includes('3+') || s.includes('3 plus') || s.includes('three')) return 3;
+    if (s.includes('several') || s.includes('multiple') || s.includes('many'))
+      return 3;
+    if (s.includes('two')) return 2;
+    if (s.includes('one')) return 1;
+
     const n = this.normalizeToInt(raw);
     if (n !== null) return n;
     const parsed = this.normalizeToFloat_(raw);
@@ -953,13 +1054,29 @@ export class DashboardReportService {
     };
   }
 
-  private normalizeFeasibility_(raw: string): { ok: boolean; label: string } {
+  private normalizeFeasibility_(
+    raw: string,
+    options: { possibleOk: boolean },
+  ): { ok: boolean; label: string } {
     const s = String(raw || '').trim().toLowerCase();
     if (!s) return { ok: false, label: 'Unknown' };
-    if (s.includes('yes') || s.includes('likely')) return { ok: true, label: raw };
-    if (s.includes('possible')) return { ok: true, label: raw };
+
+    // Note: "unlikely" contains "likely", so check negative states first.
+    if (s.includes('unlikely') || s === 'false' || s.includes('no')) {
+      return { ok: false, label: raw };
+    }
+
     if (s.includes('tight')) return { ok: false, label: raw };
-    if (s.includes('unlikely') || s.includes('no')) return { ok: false, label: raw };
+
+    if (s === 'true' || s === '1' || s === 'on' || s.includes('yes')) {
+      return { ok: true, label: raw };
+    }
+
+    if (s.includes('possible')) {
+      return { ok: options.possibleOk, label: raw };
+    }
+
+    if (s.includes('likely')) return { ok: true, label: raw };
     return { ok: false, label: raw };
   }
 
@@ -974,9 +1091,9 @@ export class DashboardReportService {
   }): PaidReport['whatMeans'] {
     const bullets: ReportBullet[] = [];
 
-    const gf = this.normalizeFeasibility_(params.grannyFlat);
-    const dual = this.normalizeFeasibility_(params.dualOcc);
-    const sub = this.normalizeFeasibility_(params.subdivision);
+    const gf = this.normalizeFeasibility_(params.grannyFlat, { possibleOk: true });
+    const dual = this.normalizeFeasibility_(params.dualOcc, { possibleOk: false });
+    const sub = this.normalizeFeasibility_(params.subdivision, { possibleOk: false });
 
     bullets.push({
       icon: gf.ok ? '✓' : '✘',

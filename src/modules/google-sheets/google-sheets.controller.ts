@@ -99,7 +99,34 @@ export class GoogleSheetsController {
       throw new BadRequestException('Missing/invalid Row Number');
     }
 
-    this.logger.log(`Dashboard trigger accepted (row=${rowNumber})`);
+    const reportIdRaw = (body['Report ID'] ?? body.reportId) as unknown;
+    const reportId = String(reportIdRaw || '').trim();
+
+    this.logger.log(
+      `Dashboard trigger accepted (row=${rowNumber}${
+        reportId ? ` reportId=${reportId}` : ''
+      })`,
+    );
+
+    const fieldsSnapshot = {
+      zone: body['Zone'],
+      blockSizeM2: body['Block size (m²)'],
+      frontageM: body['Frontage (m)'],
+      housePosition: body['House position'],
+      rearYardDepthM: body['Rear yard depth (m)'],
+      rearYardCategory: body['Rear yard category'],
+      grannyFlatKeepHouse: body['Granny flat (keep house)'],
+      dualOccRemoveHouse: body['Dual occ (remove house)'],
+      subdivisionPotential: body['Subdivision potential'],
+      intention: body['Intention'],
+      keysCount: Object.keys(body).length,
+    };
+
+    this.logger.log(
+      `Dashboard trigger fields snapshot (row=${rowNumber}${
+        reportId ? ` reportId=${reportId}` : ''
+      }): ${JSON.stringify(fieldsSnapshot)}`,
+    );
 
     setImmediate(() => {
       void this.dashboardReportService
