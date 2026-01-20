@@ -1,0 +1,80 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title LotCheck Report Delivery
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 640px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 28px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+
+      h2 {
+        margin: 0 0 12px 0;
+        color: #1a5276;
+      }
+
+      p, li {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333333;
+      }
+
+      .meta {
+        background-color: #f9f9f9;
+        padding: 12px 14px;
+        border: 1px solid #dddddd;
+        border-radius: 4px;
+        margin: 16px 0 18px 0;
+      }
+
+      .footer {
+        margin-top: 22px;
+        font-size: 13px;
+        color: #888888;
+        text-align: center;
+      }
+  body
+    .container
+      h2 Your LotCheck Site Assessment Report
+
+      p Hi #{clientName},
+
+      p Thanks for using LotCheck. Please find your Site Assessment Report attached.
+
+      if address
+        .meta
+          p
+            strong Address:
+            |  #{address}
+          if reportId
+            p
+              strong Report ID:
+              |  #{reportId}
+
+      p If you'd like to proceed further, reply to this email and we'll help you understand the best pathway forward.
+
+      p A Detailed Feasibility Review can confirm the things we can't verify from public mapping, including:
+      ul
+        li Tree status and protection zones
+        li Services capacity (sewer, stormwater, electrical)
+        li Access and parking compliance
+        li Solar access and overshadowing constraints
+
+      p Best regards,
+      p The LotLogic Team
+
+      .footer
+        p This is an automated message. Please reply to this email if you have questions.

@@ -2,10 +2,12 @@ const SHEET_NAME = 'DASHBOARD';
 const WEBHOOK_SECRET = '';
 const BACKEND_BASE_URL = 'https://agnei6ds9x.ap-southeast-2.awsapprunner.com/';
 const DASHBOARD_TRIGGER_PATH = 'api/google-sheets/dashboard-trigger';
+const DASHBOARD_DELIVERY_PATH = 'api/google-sheets/dashboard-delivery';
 const HEADER_ROW = 2;
 const TEMPLATE_ROW = 3;
 const REPORT_ID_BASE = 15000;
 const TRIGGER_COLUMN_AB = 28; // Column AB ("send for QA?")
+const TRIGGER_COLUMN_AE = 31; // Column AE ("Delivery status")
 
 function doGet() {
   return ContentService.createTextOutput('OK').setMimeType(
@@ -80,11 +82,13 @@ function safeJson_(value) {
 }
 
 /**
- * Installable edit trigger handler for column AB ("send for QA?").
+ * Installable edit trigger handler for key dashboard columns.
  * Set this as an "On edit" trigger in Apps Script.
  *
- * When AB is set to TRUE (e.g. checkbox ticked), it posts the full row payload
- * (including "Row Number") to the backend dashboard-trigger endpoint.
+ * - Column AB ("send for QA?"): when set to TRUE, posts the full row payload
+ *   (including "Row Number") to the backend dashboard-trigger endpoint.
+ * - Column AE ("Delivery status"): when set to "Ready to send", posts the full
+ *   row payload to the backend dashboard-delivery endpoint (which emails the PDF).
  */
 function onDashboardSendForQaEdit(e) {
   try {
@@ -131,12 +135,18 @@ function onDashboardSendForQaEdit(e) {
     const numCols = range.getNumColumns();
     const endCol = startCol + numCols - 1;
 
-    // Only react when the edited range includes column AB
-    if (TRIGGER_COLUMN_AB < startCol || TRIGGER_COLUMN_AB > endCol) {
-      debugLog_('onDashboardSendForQaEdit: edit not in AB', {
+    const includesAb =
+      TRIGGER_COLUMN_AB >= startCol && TRIGGER_COLUMN_AB <= endCol;
+    const includesAe =
+      TRIGGER_COLUMN_AE >= startCol && TRIGGER_COLUMN_AE <= endCol;
+
+    // Only react when the edited range includes AB and/or AE
+    if (!includesAb && !includesAe) {
+      debugLog_('onDashboardSendForQaEdit: edit not in AB/AE', {
         startCol,
         endCol,
-        triggerCol: TRIGGER_COLUMN_AB,
+        triggerColAb: TRIGGER_COLUMN_AB,
+        triggerColAe: TRIGGER_COLUMN_AE,
       });
       return;
     }
@@ -157,23 +167,62 @@ function onDashboardSendForQaEdit(e) {
       const rowNumber = startRow + i;
       if (rowNumber < TEMPLATE_ROW) continue;
 
-      const abValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AB).getValue();
-      if (!isTruthy_(abValue)) {
-        debugLog_('onDashboardSendForQaEdit: AB not truthy', {
-          rowNumber,
-          abValue: String(abValue),
-        });
-        continue;
+      let shouldTriggerQa = false;
+      let shouldSendDelivery = false;
+
+      if (includesAb) {
+        const abValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AB).getValue();
+        if (isTruthy_(abValue)) {
+          shouldTriggerQa = true;
+        } else {
+          debugLog_('onDashboardSendForQaEdit: AB not truthy', {
+            rowNumber,
+            abValue: String(abValue),
+          });
+        }
       }
+
+      if (includesAe) {
+        const aeValue = sheet.getRange(rowNumber, TRIGGER_COLUMN_AE).getValue();
+        if (isReadyToSend_(aeValue)) {
+          shouldSendDelivery = true;
+        } else {
+          debugLog_('onDashboardSendForQaEdit: AE not Ready to send', {
+            rowNumber,
+            aeValue: String(aeValue),
+          });
+        }
+      }
+
+      if (!shouldTriggerQa && !shouldSendDelivery) continue;
 
       const payload = buildRowPayload_(sheet, headers, rowNumber, lastCol);
       payload['Row Number'] = rowNumber;
 
-      debugLog_('onDashboardSendForQaEdit: firing backend trigger', {
-        rowNumber,
-        reportId: String(payload['Report ID'] || ''),
-      });
-      callBackendDashboardTrigger_(payload);
+      if (shouldTriggerQa) {
+        debugLog_('onDashboardSendForQaEdit: firing backend QA trigger', {
+          rowNumber,
+          reportId: String(payload['Report ID'] || ''),
+        });
+        callBackendDashboardTrigger_(payload);
+      }
+
+      if (shouldSendDelivery) {
+        const pdfLink = String(payload['Final PDF link'] || '').trim();
+        if (!pdfLink) {
+          debugLog_('onDashboardSendForQaEdit: missing Final PDF link (skip delivery)', {
+            rowNumber,
+            reportId: String(payload['Report ID'] || ''),
+          });
+          continue;
+        }
+
+        debugLog_('onDashboardSendForQaEdit: firing backend delivery trigger', {
+          rowNumber,
+          reportId: String(payload['Report ID'] || ''),
+        });
+        callBackendDashboardDelivery_(payload);
+      }
     }
   } catch (err) {
     // Best effort: triggers shouldn't throw
@@ -382,6 +431,11 @@ function isTruthy_(v) {
   );
 }
 
+function isReadyToSend_(v) {
+  const s = String(v || '').trim().toLowerCase();
+  return s === 'ready to send';
+}
+
 function buildRowPayload_(sheet, headers, rowNumber, lastCol) {
   const values = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
   const payload = {};
@@ -444,6 +498,62 @@ function callBackendDashboardTrigger_(payload) {
     return { code, body: bodyText };
   } catch (err) {
     debugLog_('callBackendDashboardTrigger_ error', {
+      message: String(err && err.message ? err.message : err),
+      stack: String(err && err.stack ? err.stack : ''),
+    });
+    return null;
+  }
+}
+
+function callBackendDashboardDelivery_(payload) {
+  const base = String(BACKEND_BASE_URL || '').trim();
+  if (!base) {
+    debugLog_('callBackendDashboardDelivery_: missing BACKEND_BASE_URL');
+    return null;
+  }
+
+  const url =
+    base.replace(/\/+$/, '') +
+    '/' +
+    String(DASHBOARD_DELIVERY_PATH || '').replace(/^\/+/, '') +
+    '?secret=' +
+    encodeURIComponent(WEBHOOK_SECRET || '');
+
+  const safeUrl = url.replace(/\bsecret=[^&]+/i, 'secret=REDACTED');
+  debugLog_('callBackendDashboardDelivery_: POST', {
+    url: safeUrl,
+    rowNumber: String(
+      payload && (payload['Row Number'] || payload.rowNumber)
+        ? payload['Row Number'] || payload.rowNumber
+        : '',
+    ),
+    reportId: String(payload && payload['Report ID'] ? payload['Report ID'] : ''),
+  });
+
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload || {}),
+    muteHttpExceptions: true,
+  };
+
+  try {
+    const res = UrlFetchApp.fetch(url, options);
+    const code = res.getResponseCode();
+    const bodyText = res.getContentText();
+    debugLog_('callBackendDashboardDelivery_: response', {
+      code,
+      body: bodyText,
+    });
+    if (code < 200 || code >= 300) {
+      debugLog_('callBackendDashboardDelivery_: non-2xx', {
+        code,
+        body: bodyText,
+      });
+    }
+    return { code, body: bodyText };
+  } catch (err) {
+    debugLog_('callBackendDashboardDelivery_ error', {
       message: String(err && err.message ? err.message : err),
       stack: String(err && err.stack ? err.stack : ''),
     });

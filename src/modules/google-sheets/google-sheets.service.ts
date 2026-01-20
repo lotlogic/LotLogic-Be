@@ -108,6 +108,19 @@ export class GoogleSheetsService {
     });
   }
 
+  async updateGoogleSheetsDelivery(params: {
+    rowNumber: number;
+    deliveryStatus: string;
+    deliveryDate: string;
+  }) {
+    return this.postToGoogleSheetsWebhook({
+      action: 'update',
+      rowNumber: params.rowNumber,
+      deliveryStatus: params.deliveryStatus,
+      deliveryDate: params.deliveryDate,
+    });
+  }
+
   private async postToGoogleSheetsWebhook(payload: Record<string, unknown>) {
     const webhookUrl = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_URL');
     const webhookSecret = this.getRequiredEnv('GOOGLE_SHEETS_WEB_APP_SECRET');

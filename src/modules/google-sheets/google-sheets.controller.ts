@@ -136,4 +136,96 @@ export class GoogleSheetsController {
 
     return true;
   }
+
+  @Post('dashboard-delivery')
+  @UseInterceptors(AnyFilesInterceptor({ limits: { files: 0 } }))
+  async dashboardDelivery(
+    @Body() body: Record<string, unknown>,
+    @Headers('x-webhook-secret') webhookSecret?: string,
+    @Query('secret') querySecret?: string,
+  ) {
+    const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
+    if (!expectedSecret) {
+      throw new InternalServerErrorException(
+        'Missing env var GOOGLE_SHEETS_WEB_APP_SECRET',
+      );
+    }
+
+    const providedSecret =
+      querySecret ||
+      webhookSecret ||
+      (typeof body?.secret === 'string' ? body.secret : '');
+
+    if (providedSecret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid webhook secret');
+    }
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('Expected JSON body');
+    }
+
+    const rowNumberRaw =
+      (body['Row Number'] ??
+        body.rowNumber ??
+        (body as { row_number?: unknown }).row_number) as unknown;
+    const rowNumber =
+      typeof rowNumberRaw === 'number'
+        ? rowNumberRaw
+        : Number.parseInt(String(rowNumberRaw || '').trim(), 10);
+
+    if (!Number.isFinite(rowNumber) || rowNumber < 1) {
+      throw new BadRequestException('Missing/invalid Row Number');
+    }
+
+    const reportIdRaw = (body['Report ID'] ?? body.reportId) as unknown;
+    const reportId = String(reportIdRaw || '').trim();
+
+    const pdfUrlRaw = (body['Final PDF link'] ?? body.finalPdfLink) as unknown;
+    const pdfUrl = String(pdfUrlRaw || '').trim();
+
+    const clientEmailRaw = (body['Client email'] ?? body.clientEmail) as unknown;
+    const clientEmail = String(clientEmailRaw || '').trim();
+
+    const emailOverride = String(
+      process.env.GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE || '',
+    ).trim();
+
+    if (!pdfUrl) {
+      throw new BadRequestException('Missing Final PDF link');
+    }
+    if (!clientEmail && !emailOverride) {
+      throw new BadRequestException(
+        'Missing Client email (and GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE is not set)',
+      );
+    }
+
+    this.logger.log(
+      `Dashboard delivery accepted (row=${rowNumber}${
+        reportId ? ` reportId=${reportId}` : ''
+      })`,
+    );
+
+    const deliverySnapshot = {
+      deliveryStatus: body['Delivery status'],
+      deliveryDate: body['Delivery date'],
+      finalPdfLinkPresent: Boolean(pdfUrl),
+      clientEmailPresent: Boolean(clientEmail),
+      emailOverrideEnabled: Boolean(emailOverride),
+      keysCount: Object.keys(body).length,
+    };
+
+    this.logger.log(
+      `Dashboard delivery fields snapshot (row=${rowNumber}${
+        reportId ? ` reportId=${reportId}` : ''
+      }): ${JSON.stringify(deliverySnapshot)}`,
+    );
+
+    setImmediate(() => {
+      void this.dashboardReportService
+        .processDashboardDelivery(body)
+        .catch(() => undefined);
+    });
+
+    return true;
+  }
 }

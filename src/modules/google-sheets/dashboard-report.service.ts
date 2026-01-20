@@ -1,4 +1,5 @@
 import { GoogleSheetsService } from '@modules/google-sheets/google-sheets.service';
+import { MailService } from '@modules/mail/mail.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { existsSync } from 'node:fs';
@@ -52,7 +53,10 @@ export class DashboardReportService {
   private readonly logger = new Logger(DashboardReportService.name);
   private blobServiceClient: BlobServiceClient | null = null;
 
-  constructor(private readonly googleSheetsService: GoogleSheetsService) {}
+  constructor(
+    private readonly googleSheetsService: GoogleSheetsService,
+    private readonly mailService: MailService,
+  ) {}
 
   async processDashboardTrigger(payload: Record<string, unknown>): Promise<void> {
     let rowNumber: number | undefined;
@@ -114,6 +118,120 @@ export class DashboardReportService {
         }${reportId ? ` reportId=${reportId}` : ''}): ${this.normalizeToString(
           error instanceof Error ? error.message : error,
         )}`,
+        stack,
+      );
+    }
+  }
+
+  async processDashboardDelivery(payload: Record<string, unknown>): Promise<void> {
+    let rowNumber: number | undefined;
+    let reportId: string | undefined;
+
+    try {
+      rowNumber = this.readRequiredRowNumber(payload);
+      reportId = this.readValue(payload, 'Report ID');
+
+      const address = this.readValue(payload, 'Address');
+      const suburb = this.readValue(payload, 'Suburb');
+      const fullAddress = [address, suburb].filter(Boolean).join(', ');
+
+      const clientName = this.readValue(payload, 'Client name') || 'there';
+      const clientEmail = this.readValue(payload, 'Client email');
+      const pdfUrl = this.readValue(payload, 'Final PDF link');
+      const deliveryStatus = this.readValue(payload, 'Delivery status');
+
+      const emailOverride = String(
+        process.env.GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE || '',
+      ).trim();
+      const recipientEmail = emailOverride || clientEmail;
+
+      this.logger.log(
+        `Dashboard delivery job started (row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        } status=${deliveryStatus || '—'} to=${this.redactEmail_(
+          recipientEmail,
+        )}${emailOverride ? ' override=true' : ''})`,
+      );
+
+      if (!pdfUrl) {
+        throw new Error('Missing Final PDF link');
+      }
+      if (!recipientEmail) {
+        throw new Error(
+          'Missing Client email (and GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE is not set)',
+        );
+      }
+
+      const pdf = await this.downloadPdf_(pdfUrl);
+      this.logger.log(
+        `Dashboard delivery PDF downloaded (row=${rowNumber} bytes=${pdf.length})`,
+      );
+
+      const subject = `Your LotCheck Site Assessment Report${
+        fullAddress ? ` — ${fullAddress}` : ''
+      }`;
+
+      const filename = this.buildDeliveryAttachmentFilename_({
+        reportId,
+        rowNumber,
+        fullAddress,
+      });
+
+      await this.mailService.sendEmailOrThrow({
+        subject,
+        template: 'dashboard-delivery-email',
+        context: {
+          clientName,
+          address: fullAddress || address || suburb || '',
+          reportId: reportId || '',
+        },
+        emailsList: recipientEmail,
+        attachments: [
+          {
+            filename,
+            content: pdf,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+
+      this.logger.log(
+        `Dashboard delivery email sent (row=${rowNumber} to=${this.redactEmail_(
+          recipientEmail,
+        )})`,
+      );
+
+      const deliveryDate = new Date().toISOString();
+      const updateResponse = await this.googleSheetsService.updateGoogleSheetsDelivery(
+        {
+          rowNumber,
+          deliveryStatus: 'Sent',
+          deliveryDate,
+        },
+      );
+
+      const updateOk =
+        typeof updateResponse === 'object' &&
+        updateResponse !== null &&
+        'ok' in updateResponse
+          ? Boolean((updateResponse as { ok?: unknown }).ok)
+          : undefined;
+
+      if (updateOk === false) {
+        this.logger.warn(
+          `Dashboard delivery row update returned ok=false (row=${rowNumber})`,
+        );
+      } else {
+        this.logger.log(
+          `Dashboard delivery row updated (row=${rowNumber} status=Sent)`,
+        );
+      }
+    } catch (error) {
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(
+        `Dashboard delivery failed (row=${rowNumber ?? 'unknown'}${
+          reportId ? ` reportId=${reportId}` : ''
+        }): ${this.normalizeToString(error instanceof Error ? error.message : error)}`,
         stack,
       );
     }
@@ -1225,6 +1343,69 @@ export class DashboardReportService {
       ],
       bullets,
     };
+  }
+
+  private redactEmail_(email: string): string {
+    const value = String(email || '').trim();
+    if (!value) return '—';
+
+    const [local, domain] = value.split('@');
+    if (!domain) return 'REDACTED';
+
+    const safeLocal =
+      local.length <= 2
+        ? local.charAt(0) + '*'
+        : local.slice(0, 2) + '***';
+
+    return `${safeLocal}@${domain}`;
+  }
+
+  private buildDeliveryAttachmentFilename_(params: {
+    reportId?: string;
+    rowNumber: number;
+    fullAddress: string;
+  }): string {
+    const id =
+      (params.reportId && String(params.reportId).trim()) || `row-${params.rowNumber}`;
+
+    const addressPart = String(params.fullAddress || '')
+      .trim()
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    const base = addressPart
+      ? `LotCheck_Report_${addressPart}_${id}`
+      : `LotCheck_Report_${id}`;
+
+    const maxBaseLen = 140;
+    const trimmedBase = base.length > maxBaseLen ? base.slice(0, maxBaseLen) : base;
+    return `${trimmedBase}.pdf`;
+  }
+
+  private async downloadPdf_(url: string): Promise<Buffer> {
+    const timeoutMs = Number(process.env.DASHBOARD_DELIVERY_PDF_TIMEOUT_MS || 30_000);
+    const abortController = new AbortController();
+    const timeoutHandle = setTimeout(() => abortController.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, { method: 'GET', signal: abortController.signal });
+      if (!response.ok) {
+        throw new Error(`PDF download failed (status=${response.status})`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (error) {
+      if (error && typeof error === 'object' && 'name' in error) {
+        const name = String((error as { name?: unknown }).name || '');
+        if (name === 'AbortError') {
+          throw new Error(`PDF download timed out after ${timeoutMs}ms`);
+        }
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutHandle);
+    }
   }
 
   private formatQualifiesFor_(

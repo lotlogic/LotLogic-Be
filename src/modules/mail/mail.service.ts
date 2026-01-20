@@ -12,6 +12,7 @@ export class MailService {
         template: string;
         context: ISendMailOptions['context'];
         emailsList: string;
+        attachments?: ISendMailOptions['attachments'];
     }) {
         try {
             // Parse the emails list (comma-separated string)
@@ -25,6 +26,7 @@ export class MailService {
                     subject: params.subject,
                     template: params.template,
                     context: params.context,
+                    attachments: params.attachments,
                 };
                 
                 return await this.mailerService.sendMail(sendMailParams);
@@ -47,12 +49,43 @@ export class MailService {
         }
     }
 
+    async sendEmailOrThrow(params: {
+        subject: string;
+        template: string;
+        context: ISendMailOptions['context'];
+        emailsList: string;
+        attachments?: ISendMailOptions['attachments'];
+    }) {
+        // Parse the emails list (comma-separated string)
+        const emailArray = params.emailsList.split(',').map(email => email.trim());
+
+        const emailPromises = emailArray.map(async (email) => {
+            const sendMailParams = {
+                to: email,
+                from: `${process.env.SMTP_FROM_NAME || 'LotLogic'} <${process.env.SMTP_FROM}>`,
+                subject: params.subject,
+                template: params.template,
+                context: params.context,
+                attachments: params.attachments,
+            };
+
+            return await this.mailerService.sendMail(sendMailParams);
+        });
+
+        const responses = await Promise.all(emailPromises);
+        this.logger.log(
+            `Emails sent successfully to ${emailArray.length} recipients individually: ${emailArray.join(', ')}`,
+            responses,
+        );
+    }
+
     // Alternative method using BCC (sends one email with BCC recipients)
     async sendEmailWithBCC(params: {
         subject: string;
         template: string;
         context: ISendMailOptions['context'];
         emailsList: string;
+        attachments?: ISendMailOptions['attachments'];
     }) {
         try {
             // Parse the emails list (comma-separated string)
@@ -66,6 +99,7 @@ export class MailService {
                 subject: params.subject,
                 template: params.template,
                 context: params.context,
+                attachments: params.attachments,
             };
             
             const response = await this.mailerService.sendMail(sendMailParams);
