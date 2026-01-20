@@ -21,14 +21,13 @@ html
       .subtitle { text-align: center; font-weight: 700; font-size: 16pt; margin: 0 0 22pt 0; }
       .section { color: var(--blue); font-weight: 700; font-size: 16pt; margin: 15pt 0 10pt 0; }
       .note { color: #333; font-style: italic; }
-      table { width: 100%; border-collapse: collapse; }
+      table { width: 100%; border-collapse: collapse; margin: 0 0 10pt 0; }
       th, td { border: 1px solid var(--border); padding: 6pt 8pt; vertical-align: top; }
       th.k { width: 40%; background: var(--blue-100); text-align: left; font-weight: 700; }
       th.k-gray { width: 40%; background: var(--gray-50); text-align: left; font-weight: 700; }
       .meta-line { margin: 0 0 10pt 0; }
       .meta-line strong { color: #000; }
       .meta-sep { color: #666; padding: 0 6pt; }
-      .page-break { break-before: page; page-break-before: always; }
       .reforms thead th { background: var(--blue); color: #fff; font-weight: 700; }
       .reforms td.threshold { background: var(--green-100); font-weight: 700; white-space: nowrap; }
       .reforms tr.not-qualified td.threshold,
@@ -106,15 +105,13 @@ html
     each para in report.zoning.paragraphs
       p= para
 
-    // Site constraints on a new page (matches sample)
-    div.page-break
-
+    // Site constraints
     h1.section EXISTING HOUSE
     if report.existingHouse.metaItems && report.existingHouse.metaItems.length
       p.meta-line
         each item, idx in report.existingHouse.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.existingHouse.paragraphs
@@ -125,7 +122,7 @@ html
       p.meta-line
         each item, idx in report.rearYard.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.rearYard.paragraphs
@@ -140,7 +137,7 @@ html
       p.meta-line
         each item, idx in report.trees.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.trees.paragraphs
@@ -155,7 +152,7 @@ html
       p.meta-line
         each item, idx in report.heritage.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.heritage.paragraphs
@@ -166,7 +163,7 @@ html
       p.meta-line
         each item, idx in report.easements.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.easements.paragraphs
@@ -177,7 +174,7 @@ html
       p.meta-line
         each item, idx in report.sewer.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.sewer.paragraphs
@@ -188,15 +185,13 @@ html
       p.meta-line
         each item, idx in report.driveway.metaItems
           if idx > 0
-            span.meta-sep | |
+            span.meta-sep |
           strong #{item.label}:
           |  #{item.value}
     each para in report.driveway.paragraphs
       p= para
 
-    // Summary on new page (matches sample)
-    div.page-break
-
+    // Summary
     h1.section WHAT THIS MEANS FOR YOUR BLOCK
     p= report.whatMeans.intro
     each bullet in report.whatMeans.bullets
@@ -216,9 +211,6 @@ html
       ul
         each item in report.nextStep.bullets
           li= item
-
-    // Disclaimer on new page (matches sample)
-    div.page-break
 
     h1.section IMPORTANT DISCLAIMER
     each para in report.disclaimer.paragraphs
