@@ -5,6 +5,19 @@ import { StripeService } from './stripe.service';
 export class StripeController {
   constructor(private readonly stripeService: StripeService) {}
 
+  @Post('create-checkout-session')
+  async createCheckoutSession(
+    @Body() body: { email: string; address: string; site: string },
+  ): Promise<{ url: string | null }> {
+    const sessionUrl = await this.stripeService.createCheckoutSession(
+      body.email,
+      body.address,
+      body.site,
+    );
+
+    return { url: sessionUrl };
+  }
+
   @Get('products')
   async getProducts() {
     return this.stripeService.getProducts();

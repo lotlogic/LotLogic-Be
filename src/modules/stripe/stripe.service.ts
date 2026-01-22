@@ -10,9 +10,42 @@ export class StripeService {
     @Inject('STRIPE_API_KEY')
     private readonly apiKey: string,
   ) {
-    this.stripe = new Stripe(this.apiKey, {
-      // apiVersion: '2024-12-18.clover', // Use latest API version, or "null" for your default
-    });
+    this.stripe = new Stripe(this.apiKey, {});
+  }
+
+  // Stripe-Hosted Checkout Session
+  async createCheckoutSession(
+    email: string,
+    address: string,
+    site: string,
+  ): Promise<string | null> {
+    try {
+      const session = await this.stripe.checkout.sessions.create({
+        customer_email: email,
+        line_items: [
+          {
+            quantity: 1,
+            price: 'price_1Sr7jTL0WBX6DtDJZlje3U91',
+          },
+        ],
+        payment_intent_data: {
+          // transaction dashboard metadata content
+          metadata: {
+            address: address,
+            email: email,
+          },
+        },
+        mode: 'payment',
+        success_url: site + `/checkout?success={CHECKOUT_SESSION_ID}`,
+        cancel_url: site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
+      });
+
+      this.logger.log('Checkout session created successfully');
+      return session.url;
+    } catch (error) {
+      this.logger.error('Failed to create checkout session', error.stack);
+      throw error;
+    }
   }
 
   // Get Products
@@ -146,18 +179,6 @@ export class StripeService {
     }
   }
 
-  // Reports and Analytics (Retrieve Balance)
-  async getBalance(): Promise<Stripe.Balance> {
-    try {
-      const balance = await this.stripe.balance.retrieve();
-      this.logger.log('Balance retrieved successfully');
-      return balance;
-    } catch (error) {
-      this.logger.error('Failed to retrieve balance', error.stack);
-      throw error;
-    }
-  }
-
   // Payment Links
   async createPaymentLink(priceId: string): Promise<Stripe.PaymentLink> {
     try {
@@ -168,6 +189,18 @@ export class StripeService {
       return paymentLink;
     } catch (error) {
       this.logger.error('Failed to create payment link', error.stack);
+      throw error;
+    }
+  }
+
+  // Reports and Analytics (Retrieve Balance)
+  async getBalance(): Promise<Stripe.Balance> {
+    try {
+      const balance = await this.stripe.balance.retrieve();
+      this.logger.log('Balance retrieved successfully');
+      return balance;
+    } catch (error) {
+      this.logger.error('Failed to retrieve balance', error.stack);
       throw error;
     }
   }
