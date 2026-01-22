@@ -3,7 +3,7 @@ name: Build & Push to Azure ACR
 on:
   push:
     branches:
-      - main
+      - stage
   workflow_dispatch:
 
 jobs:
