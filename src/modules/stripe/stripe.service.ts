@@ -1,6 +1,25 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 
+export const GOOGLE_SHEETS_STRIPE_METADATA_KEYS = [
+  'reportId',
+  'clientName',
+  'clientEmail',
+  'clientPhone',
+  'address',
+  'suburb',
+  'blockSizeM2',
+  'zone',
+  'stripePaymentId',
+] as const;
+
+export type GoogleSheetsStripeMetadataKey =
+  (typeof GOOGLE_SHEETS_STRIPE_METADATA_KEYS)[number];
+
+export type GoogleSheetsStripeMetadata = Partial<
+  Record<GoogleSheetsStripeMetadataKey, unknown>
+>;
+
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
@@ -15,13 +34,25 @@ export class StripeService {
 
   // Stripe-Hosted Checkout Session
   async createCheckoutSession(
-    email: string,
-    address: string,
-    site: string,
+    params: {
+      customerEmail: string;
+      site: string;
+      metadata?: GoogleSheetsStripeMetadata;
+      intention?: string;
+    },
   ): Promise<string | null> {
     try {
+      const googleSheetsMetadata = this.normalizeGoogleSheetsMetadata(
+        params.metadata,
+      );
+      const metadata: Record<string, string> = {
+        ...googleSheetsMetadata,
+        intention: this.normalizeToMetadataValue(params.intention),
+      };
+
       const session = await this.stripe.checkout.sessions.create({
-        customer_email: email,
+        customer_email: params.customerEmail,
+        client_reference_id: googleSheetsMetadata.reportId || undefined,
         line_items: [
           {
             quantity: 1,
@@ -30,14 +61,12 @@ export class StripeService {
         ],
         payment_intent_data: {
           // transaction dashboard metadata content
-          metadata: {
-            address: address,
-            email: email,
-          },
+          metadata,
         },
+        metadata,
         mode: 'payment',
-        success_url: site + `/checkout?success={CHECKOUT_SESSION_ID}`,
-        cancel_url: site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
+        success_url: params.site + `/checkout?success={CHECKOUT_SESSION_ID}`,
+        cancel_url: params.site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
       });
 
       this.logger.log('Checkout session created successfully');
@@ -46,6 +75,119 @@ export class StripeService {
       this.logger.error('Failed to create checkout session', error.stack);
       throw error;
     }
+  }
+
+  constructWebhookEvent(
+    rawBody: Buffer,
+    signatureHeader: string,
+    webhookSecret: string,
+  ): Stripe.Event {
+    return this.stripe.webhooks.constructEvent(
+      rawBody,
+      signatureHeader,
+      webhookSecret,
+    );
+  }
+
+  async extractGoogleSheetsPayloadFromEvent(
+    event: Stripe.Event,
+  ): Promise<Record<GoogleSheetsStripeMetadataKey, string> | null> {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const fallbackEmail =
+        session.customer_email || session.customer_details?.email || '';
+
+      let combinedMetadata: Stripe.Metadata | null | undefined = session.metadata;
+
+      const paymentIntentId =
+        typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id;
+
+      if (paymentIntentId) {
+        try {
+          const paymentIntent =
+            await this.stripe.paymentIntents.retrieve(paymentIntentId);
+
+          combinedMetadata = {
+            ...(paymentIntent.metadata || {}),
+            ...(session.metadata || {}),
+          };
+        } catch (error) {
+          this.logger.warn(
+            `Failed to retrieve payment_intent metadata for session ${session.id}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
+      const payload = this.buildGoogleSheetsPayload(
+        combinedMetadata,
+        fallbackEmail,
+      );
+
+      if (paymentIntentId) {
+        payload.stripePaymentId = paymentIntentId;
+      }
+
+      return payload;
+    }
+
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const fallbackEmail = paymentIntent.receipt_email || '';
+      const payload = this.buildGoogleSheetsPayload(
+        paymentIntent.metadata,
+        fallbackEmail,
+      );
+      payload.stripePaymentId = paymentIntent.id;
+      return payload;
+    }
+
+    return null;
+  }
+
+  private normalizeGoogleSheetsMetadata(
+    input: GoogleSheetsStripeMetadata | undefined,
+  ): Record<GoogleSheetsStripeMetadataKey, string> {
+    const metadata = {} as Record<GoogleSheetsStripeMetadataKey, string>;
+    for (const key of GOOGLE_SHEETS_STRIPE_METADATA_KEYS) {
+      metadata[key] = this.normalizeToMetadataValue(input?.[key]);
+    }
+    return metadata;
+  }
+
+  private buildGoogleSheetsPayload(
+    metadata: Stripe.Metadata | null | undefined,
+    fallbackEmail: string,
+  ): Record<GoogleSheetsStripeMetadataKey, string> {
+    const payload = {} as Record<GoogleSheetsStripeMetadataKey, string>;
+    for (const key of GOOGLE_SHEETS_STRIPE_METADATA_KEYS) {
+      payload[key] = this.normalizeToMetadataValue(metadata?.[key]);
+    }
+
+    if (!payload.clientEmail && fallbackEmail) {
+      payload.clientEmail = fallbackEmail;
+    }
+
+    return payload;
+  }
+
+  private normalizeToMetadataValue(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'bigint') return value.toString();
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return value.map((v) => String(v)).join(', ');
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
   }
 
   // Get Products

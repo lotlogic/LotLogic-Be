@@ -295,7 +295,16 @@ This service exposes an endpoint that accepts a form POST and forwards it to a G
 
 - `POST /api/google-sheets/append`
 - Accepts `application/x-www-form-urlencoded`, `multipart/form-data`, or JSON bodies.
-- Sends a JSON payload with keys: `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`.
+- Sends a JSON payload with keys: `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`, `stripePaymentId`.
+
+## 💳 Stripe Webhook → Google Sheets
+
+This service exposes a Stripe webhook endpoint and forwards the checkout metadata to the same Google Apps Script webhook (as an append):
+
+- `POST /api/stripe/webhook`
+- Requires Stripe signature verification via env var `STRIPE_WEBHOOK_SECRET`.
+- On `checkout.session.completed` (and `payment_intent.succeeded`), extracts these metadata keys and forwards them:
+  `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`, `stripePaymentId`.
 
 ### Setup
 

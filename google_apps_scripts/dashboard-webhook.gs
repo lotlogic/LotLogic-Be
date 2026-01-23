@@ -321,6 +321,7 @@ function appendRow_(sheet, lastCol, headerIndex, payload) {
     { header: 'Block size (m²)', key: 'blockSizeM2' },
     { header: 'Zone', key: 'zone' },
     { header: 'Intention', key: 'intention' },
+    { header: 'Stripe payment id', key: 'stripePaymentId' },
   ];
 
   for (const { header, key } of fieldMap) {

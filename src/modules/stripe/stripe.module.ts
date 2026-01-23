@@ -1,5 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { GoogleSheetsModule } from '@modules/google-sheets/google-sheets.module';
 import { StripeController } from './stripe.controller';
 import { StripeService } from './stripe.service';
 
@@ -9,7 +10,7 @@ export class StripeModule {
     return {
       module: StripeModule,
       controllers: [StripeController],
-      imports: [ConfigModule.forRoot()],
+      imports: [ConfigModule.forRoot(), GoogleSheetsModule],
       providers: [
         StripeService,
         {

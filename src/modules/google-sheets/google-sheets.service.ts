@@ -15,6 +15,7 @@ const GOOGLE_SHEETS_WEBHOOK_KEYS = [
   'suburb',
   'blockSizeM2',
   'zone',
+  'stripePaymentId',
 ] as const;
 
 type GoogleSheetsWebhookKey = (typeof GOOGLE_SHEETS_WEBHOOK_KEYS)[number];
