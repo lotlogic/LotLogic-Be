@@ -167,7 +167,7 @@ export class DashboardReportService {
         `Dashboard delivery PDF downloaded (row=${rowNumber} bytes=${pdf.length})`,
       );
 
-      const subject = `Your LotCheck Site Assessment Report${
+      const subject = `Your BlockPlanner Site Assessment Report${
         fullAddress ? ` — ${fullAddress}` : ''
       }`;
 
@@ -325,7 +325,7 @@ export class DashboardReportService {
 
     return {
       cover: {
-        title: 'LotCheck Site Assessment Report',
+        title: 'BlockPlanner Site Assessment Report',
         address: coverAddress,
         zoning: zoneDisplay || zone || '—',
         preparedFor,
@@ -1374,8 +1374,8 @@ export class DashboardReportService {
       .replace(/^_+|_+$/g, '');
 
     const base = addressPart
-      ? `LotCheck_Report_${addressPart}_${id}`
-      : `LotCheck_Report_${id}`;
+      ? `BlockPlanner_Report_${addressPart}_${id}`
+      : `BlockPlanner_Report_${id}`;
 
     const maxBaseLen = 140;
     const trimmedBase = base.length > maxBaseLen ? base.slice(0, maxBaseLen) : base;
