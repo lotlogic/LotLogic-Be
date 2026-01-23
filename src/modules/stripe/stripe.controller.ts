@@ -82,6 +82,7 @@ export class StripeController {
     emptyKeys: string[];
     reportId?: string;
     stripePaymentId?: string;
+    intention?: string;
     clientEmailMasked?: string;
     clientPhoneLast4?: string;
     hasAddress: boolean;
@@ -100,6 +101,7 @@ export class StripeController {
 
     const reportIdRaw = payload.reportId;
     const stripePaymentIdRaw = payload.stripePaymentId;
+    const intentionRaw = payload.intention;
     const clientEmailRaw = payload.clientEmail;
     const clientPhoneRaw = payload.clientPhone;
     const addressRaw = payload.address;
@@ -107,6 +109,8 @@ export class StripeController {
     const reportId = typeof reportIdRaw === 'string' ? reportIdRaw.trim() : '';
     const stripePaymentId =
       typeof stripePaymentIdRaw === 'string' ? stripePaymentIdRaw.trim() : '';
+    const intention =
+      typeof intentionRaw === 'string' ? intentionRaw.trim() : '';
     const clientEmail =
       typeof clientEmailRaw === 'string' ? clientEmailRaw.trim() : '';
     const clientPhone =
@@ -118,6 +122,7 @@ export class StripeController {
       emptyKeys,
       reportId: reportId || undefined,
       stripePaymentId: stripePaymentId || undefined,
+      intention: intention || undefined,
       clientEmailMasked: clientEmail ? this.maskEmail(clientEmail) : undefined,
       clientPhoneLast4: clientPhone ? this.last4(clientPhone) : undefined,
       hasAddress: Boolean(

@@ -14,6 +14,7 @@ import {
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { GoogleSheetsService } from '@modules/google-sheets/google-sheets.service';
 import { DashboardReportService } from '@modules/google-sheets/dashboard-report.service';
+import { randomUUID } from 'crypto';
 
 @Controller('google-sheets')
 export class GoogleSheetsController {
@@ -53,9 +54,8 @@ export class GoogleSheetsController {
       throw new BadRequestException('Empty form body');
     }
 
-    const result = await this.googleSheetsService.forwardToGoogleSheetsWebhook(
-      body,
-    );
+    const result =
+      await this.googleSheetsService.forwardToGoogleSheetsWebhook(body);
     return { ok: true, result };
   }
 
@@ -86,10 +86,9 @@ export class GoogleSheetsController {
       throw new BadRequestException('Expected JSON body');
     }
 
-    const rowNumberRaw =
-      (body['Row Number'] ??
-        body.rowNumber ??
-        (body as { row_number?: unknown }).row_number) as unknown;
+    const rowNumberRaw = (body['Row Number'] ??
+      body.rowNumber ??
+      (body as { row_number?: unknown }).row_number) as unknown;
     const rowNumber =
       typeof rowNumberRaw === 'number'
         ? rowNumberRaw
@@ -144,8 +143,14 @@ export class GoogleSheetsController {
     @Headers('x-webhook-secret') webhookSecret?: string,
     @Query('secret') querySecret?: string,
   ) {
+    const requestId = randomUUID();
+    const startedAt = Date.now();
+
     const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
     if (!expectedSecret) {
+      this.logger.error(
+        `Dashboard delivery rejected (requestId=${requestId}): Missing env var GOOGLE_SHEETS_WEB_APP_SECRET`,
+      );
       throw new InternalServerErrorException(
         'Missing env var GOOGLE_SHEETS_WEB_APP_SECRET',
       );
@@ -157,23 +162,31 @@ export class GoogleSheetsController {
       (typeof body?.secret === 'string' ? body.secret : '');
 
     if (providedSecret !== expectedSecret) {
+      this.logger.warn(
+        `Dashboard delivery rejected (requestId=${requestId}): Invalid webhook secret`,
+      );
       throw new UnauthorizedException('Invalid webhook secret');
     }
 
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      this.logger.warn(
+        `Dashboard delivery rejected (requestId=${requestId}): Expected JSON body`,
+      );
       throw new BadRequestException('Expected JSON body');
     }
 
-    const rowNumberRaw =
-      (body['Row Number'] ??
-        body.rowNumber ??
-        (body as { row_number?: unknown }).row_number) as unknown;
+    const rowNumberRaw = (body['Row Number'] ??
+      body.rowNumber ??
+      (body as { row_number?: unknown }).row_number) as unknown;
     const rowNumber =
       typeof rowNumberRaw === 'number'
         ? rowNumberRaw
         : Number.parseInt(String(rowNumberRaw || '').trim(), 10);
 
     if (!Number.isFinite(rowNumber) || rowNumber < 1) {
+      this.logger.warn(
+        `Dashboard delivery rejected (requestId=${requestId}): Missing/invalid Row Number`,
+      );
       throw new BadRequestException('Missing/invalid Row Number');
     }
 
@@ -183,7 +196,8 @@ export class GoogleSheetsController {
     const pdfUrlRaw = (body['Final PDF link'] ?? body.finalPdfLink) as unknown;
     const pdfUrl = String(pdfUrlRaw || '').trim();
 
-    const clientEmailRaw = (body['Client email'] ?? body.clientEmail) as unknown;
+    const clientEmailRaw = (body['Client email'] ??
+      body.clientEmail) as unknown;
     const clientEmail = String(clientEmailRaw || '').trim();
 
     const emailOverride = String(
@@ -191,16 +205,26 @@ export class GoogleSheetsController {
     ).trim();
 
     if (!pdfUrl) {
+      this.logger.warn(
+        `Dashboard delivery rejected (requestId=${requestId} row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        }): Missing Final PDF link`,
+      );
       throw new BadRequestException('Missing Final PDF link');
     }
     if (!clientEmail && !emailOverride) {
+      this.logger.warn(
+        `Dashboard delivery rejected (requestId=${requestId} row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        }): Missing Client email (and GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE is not set)`,
+      );
       throw new BadRequestException(
         'Missing Client email (and GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE is not set)',
       );
     }
 
     this.logger.log(
-      `Dashboard delivery accepted (row=${rowNumber}${
+      `Dashboard delivery accepted (requestId=${requestId} row=${rowNumber}${
         reportId ? ` reportId=${reportId}` : ''
       })`,
     );
@@ -215,15 +239,42 @@ export class GoogleSheetsController {
     };
 
     this.logger.log(
-      `Dashboard delivery fields snapshot (row=${rowNumber}${
+      `Dashboard delivery fields snapshot (requestId=${requestId} row=${rowNumber}${
         reportId ? ` reportId=${reportId}` : ''
       }): ${JSON.stringify(deliverySnapshot)}`,
     );
 
     setImmediate(() => {
+      const jobStartedAt = Date.now();
+
+      this.logger.log(
+        `Dashboard delivery job started (requestId=${requestId} row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        })`,
+      );
+
       void this.dashboardReportService
         .processDashboardDelivery(body)
-        .catch(() => undefined);
+        .then((ok) => {
+          this.logger.log(
+            `Dashboard delivery job finished (requestId=${requestId} row=${rowNumber}${
+              reportId ? ` reportId=${reportId}` : ''
+            } ok=${ok} jobMs=${Date.now() - jobStartedAt} totalMs=${
+              Date.now() - startedAt
+            })`,
+          );
+        })
+        .catch((error) => {
+          const stack = error instanceof Error ? error.stack : undefined;
+          this.logger.error(
+            `Dashboard delivery job threw (requestId=${requestId} row=${rowNumber}${
+              reportId ? ` reportId=${reportId}` : ''
+            } jobMs=${Date.now() - jobStartedAt} totalMs=${
+              Date.now() - startedAt
+            }): ${error instanceof Error ? error.message : String(error)}`,
+            stack,
+          );
+        });
     });
 
     return true;

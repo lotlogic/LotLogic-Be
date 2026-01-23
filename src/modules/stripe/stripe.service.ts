@@ -10,6 +10,7 @@ export const GOOGLE_SHEETS_STRIPE_METADATA_KEYS = [
   'suburb',
   'blockSizeM2',
   'zone',
+  'intention',
   'stripePaymentId',
 ] as const;
 
@@ -33,14 +34,12 @@ export class StripeService {
   }
 
   // Stripe-Hosted Checkout Session
-  async createCheckoutSession(
-    params: {
-      customerEmail: string;
-      site: string;
-      metadata?: GoogleSheetsStripeMetadata;
-      intention?: string;
-    },
-  ): Promise<string | null> {
+  async createCheckoutSession(params: {
+    customerEmail: string;
+    site: string;
+    metadata?: GoogleSheetsStripeMetadata;
+    intention?: string;
+  }): Promise<string | null> {
     try {
       const googleSheetsMetadata = this.normalizeGoogleSheetsMetadata(
         params.metadata,
@@ -97,7 +96,8 @@ export class StripeService {
       const fallbackEmail =
         session.customer_email || session.customer_details?.email || '';
 
-      let combinedMetadata: Stripe.Metadata | null | undefined = session.metadata;
+      let combinedMetadata: Stripe.Metadata | null | undefined =
+        session.metadata;
 
       const paymentIntentId =
         typeof session.payment_intent === 'string'

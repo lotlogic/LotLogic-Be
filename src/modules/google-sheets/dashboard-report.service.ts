@@ -37,7 +37,11 @@ type PaidReport = {
   existingHouse: { metaItems: ReportKeyValue[]; paragraphs: string[] };
   rearYard: { metaItems: ReportKeyValue[]; paragraphs: string[] };
   siteCoverage: { paragraphs: string[] };
-  trees: { metaItems: ReportKeyValue[]; paragraphs: string[]; bullets: string[] };
+  trees: {
+    metaItems: ReportKeyValue[];
+    paragraphs: string[];
+    bullets: string[];
+  };
   heritage: { metaItems: ReportKeyValue[]; paragraphs: string[] };
   easements: { metaItems: ReportKeyValue[]; paragraphs: string[] };
   sewer: { metaItems: ReportKeyValue[]; paragraphs: string[] };
@@ -58,7 +62,9 @@ export class DashboardReportService {
     private readonly mailService: MailService,
   ) {}
 
-  async processDashboardTrigger(payload: Record<string, unknown>): Promise<void> {
+  async processDashboardTrigger(
+    payload: Record<string, unknown>,
+  ): Promise<void> {
     let rowNumber: number | undefined;
     let reportId: string | undefined;
     try {
@@ -89,12 +95,15 @@ export class DashboardReportService {
       );
 
       const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
-      this.logger.log(`Dashboard report uploaded (row=${rowNumber} url=${pdfUrl})`);
+      this.logger.log(
+        `Dashboard report uploaded (row=${rowNumber} url=${pdfUrl})`,
+      );
 
-      const updateResponse = await this.googleSheetsService.updateGoogleSheetsRow({
-        rowNumber,
-        finalPdfLink: pdfUrl,
-      });
+      const updateResponse =
+        await this.googleSheetsService.updateGoogleSheetsRow({
+          rowNumber,
+          finalPdfLink: pdfUrl,
+        });
 
       const updateOk =
         typeof updateResponse === 'object' &&
@@ -123,7 +132,9 @@ export class DashboardReportService {
     }
   }
 
-  async processDashboardDelivery(payload: Record<string, unknown>): Promise<void> {
+  async processDashboardDelivery(
+    payload: Record<string, unknown>,
+  ): Promise<boolean> {
     let rowNumber: number | undefined;
     let reportId: string | undefined;
 
@@ -202,13 +213,12 @@ export class DashboardReportService {
       );
 
       const deliveryDate = new Date().toISOString();
-      const updateResponse = await this.googleSheetsService.updateGoogleSheetsDelivery(
-        {
+      const updateResponse =
+        await this.googleSheetsService.updateGoogleSheetsDelivery({
           rowNumber,
           deliveryStatus: 'Sent',
           deliveryDate,
-        },
-      );
+        });
 
       const updateOk =
         typeof updateResponse === 'object' &&
@@ -226,6 +236,8 @@ export class DashboardReportService {
           `Dashboard delivery row updated (row=${rowNumber} status=Sent)`,
         );
       }
+
+      return true;
     } catch (error) {
       const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
@@ -234,6 +246,7 @@ export class DashboardReportService {
         }): ${this.normalizeToString(error instanceof Error ? error.message : error)}`,
         stack,
       );
+      return false;
     }
   }
 
@@ -273,8 +286,9 @@ export class DashboardReportService {
     );
 
     const maxBuildingAllowedM2 =
-      this.normalizeToFloat_(this.readRaw(payload, 'Max building allowed (m²)')) ??
-      (blockSizeM2 !== null ? blockSizeM2 * 0.5 : null);
+      this.normalizeToFloat_(
+        this.readRaw(payload, 'Max building allowed (m²)'),
+      ) ?? (blockSizeM2 !== null ? blockSizeM2 * 0.5 : null);
 
     const remainingSiteCoverageM2 =
       this.normalizeToFloat_(
@@ -368,7 +382,10 @@ export class DashboardReportService {
             ? [{ label: 'Depth', value: this.formatMeters_(rearYardDepthM) }]
             : []),
         ],
-        paragraphs: this.buildRearYardParagraphs_(rearYardCategory, rearYardDepthM),
+        paragraphs: this.buildRearYardParagraphs_(
+          rearYardCategory,
+          rearYardDepthM,
+        ),
       },
       siteCoverage: {
         paragraphs: this.buildSiteCoverageParagraphs_({
@@ -403,7 +420,7 @@ export class DashboardReportService {
         paragraphs: [
           'This report is based on ACT Government mapping, aerial imagery, and publicly available planning information. It is not a formal planning assessment, survey, engineering report, or guarantee of approval.',
           'All development must comply with ACT laws, the Territory Plan, and technical requirements. Site-specific conditions — including exact tree status, easement locations, sewer alignment, and heritage requirements — should be confirmed through detailed due diligence before committing to any design or construction.',
-          "BlockPlanner is not a licensed planning consultancy. Where formal planning advice or development applications are required, we work with registered planners and can coordinate this on your behalf.",
+          'BlockPlanner is not a licensed planning consultancy. Where formal planning advice or development applications are required, we work with registered planners and can coordinate this on your behalf.',
         ],
       },
       whatHappensNext: {
@@ -442,7 +459,10 @@ export class DashboardReportService {
       houseFootprintM2: this.readValue(payload, 'House footprint (m²)'),
       rearYardDepthM: this.readValue(payload, 'Rear yard depth (m)'),
       rearYardCategory: this.readValue(payload, 'Rear yard category'),
-      remainingSiteCoverageM2: this.readValue(payload, 'Remaining site coverage (m²)'),
+      remainingSiteCoverageM2: this.readValue(
+        payload,
+        'Remaining site coverage (m²)',
+      ),
       grannyFlatKeepHouse: this.readValue(payload, 'Granny flat (keep house)'),
       dualOccRemoveHouse: this.readValue(payload, 'Dual occ (remove house)'),
       subdivisionPotential: this.readValue(payload, 'Subdivision potential'),
@@ -472,9 +492,18 @@ export class DashboardReportService {
       `Dashboard report feasibility snapshot (row=${context.rowNumber}${
         context.reportId ? ` reportId=${context.reportId}` : ''
       }): ${JSON.stringify({
-        grannyFlat: { raw: snapshot.grannyFlatKeepHouse, ok: feasibility.grannyFlat.ok },
-        dualOcc: { raw: snapshot.dualOccRemoveHouse, ok: feasibility.dualOcc.ok },
-        subdivision: { raw: snapshot.subdivisionPotential, ok: feasibility.subdivision.ok },
+        grannyFlat: {
+          raw: snapshot.grannyFlatKeepHouse,
+          ok: feasibility.grannyFlat.ok,
+        },
+        dualOcc: {
+          raw: snapshot.dualOccRemoveHouse,
+          ok: feasibility.dualOcc.ok,
+        },
+        subdivision: {
+          raw: snapshot.subdivisionPotential,
+          ok: feasibility.subdivision.ok,
+        },
       })}`,
     );
   }
@@ -613,7 +642,8 @@ export class DashboardReportService {
 
   private getChromeExecutablePath(): string | null {
     const explicit =
-      process.env.CHROME_EXECUTABLE_PATH || process.env.PUPPETEER_EXECUTABLE_PATH;
+      process.env.CHROME_EXECUTABLE_PATH ||
+      process.env.PUPPETEER_EXECUTABLE_PATH;
     if (explicit) return explicit;
 
     const candidates =
@@ -765,18 +795,22 @@ export class DashboardReportService {
   }
 
   private formatArea_(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    if (value === null || value === undefined || !Number.isFinite(value))
+      return '—';
     return `${Math.round(value)} m²`;
   }
 
   private formatMeters_(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
-    if (Math.abs(value - Math.round(value)) < 0.05) return `${Math.round(value)} m`;
+    if (value === null || value === undefined || !Number.isFinite(value))
+      return '—';
+    if (Math.abs(value - Math.round(value)) < 0.05)
+      return `${Math.round(value)} m`;
     return `${value.toFixed(1)} m`;
   }
 
   private formatDate_(date: Date): string {
-    const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+    const d =
+      date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
     const months = [
       'January',
       'February',
@@ -830,7 +864,9 @@ export class DashboardReportService {
   }
 
   private buildExistingHouseParagraphs_(housePositionRaw: string): string[] {
-    const pos = String(housePositionRaw || '').trim().toLowerCase();
+    const pos = String(housePositionRaw || '')
+      .trim()
+      .toLowerCase();
 
     if (pos.includes('front')) {
       return [
@@ -860,7 +896,9 @@ export class DashboardReportService {
     depthM: number | null,
   ): string[] {
     const depthText = depthM !== null ? this.formatMeters_(depthM) : '—';
-    const c = String(categoryRaw || '').trim().toLowerCase();
+    const c = String(categoryRaw || '')
+      .trim()
+      .toLowerCase();
 
     if (c.includes('large')) {
       return [
@@ -930,10 +968,13 @@ export class DashboardReportService {
   }
 
   private parseTreeCount_(raw: string): number {
-    const s = String(raw || '').trim().toLowerCase();
+    const s = String(raw || '')
+      .trim()
+      .toLowerCase();
     if (!s) return 0;
     if (s.includes('none') || s === '0') return 0;
-    if (s.includes('3+') || s.includes('3 plus') || s.includes('three')) return 3;
+    if (s.includes('3+') || s.includes('3 plus') || s.includes('three'))
+      return 3;
     if (s.includes('several') || s.includes('multiple') || s.includes('many'))
       return 3;
     if (s.includes('two')) return 2;
@@ -954,10 +995,14 @@ export class DashboardReportService {
     const metaItems: ReportKeyValue[] = [
       {
         label: 'Large trees visible',
-        value: treesVisibleCount >= 3 ? '3+' : String(Math.max(0, treesVisibleCount)),
+        value:
+          treesVisibleCount >= 3
+            ? '3+'
+            : String(Math.max(0, treesVisibleCount)),
       },
     ];
-    if (treeLocation) metaItems.push({ label: 'Tree location', value: treeLocation });
+    if (treeLocation)
+      metaItems.push({ label: 'Tree location', value: treeLocation });
 
     if (!treesVisibleCount) {
       return {
@@ -996,13 +1041,21 @@ export class DashboardReportService {
   }
 
   private isYesLike_(value: string): boolean {
-    const s = String(value || '').trim().toLowerCase();
+    const s = String(value || '')
+      .trim()
+      .toLowerCase();
     return s === 'yes' || s === 'y' || s === 'true' || s === '1' || s === 'on';
   }
 
-  private buildHeritageSection_(heritageOverlayRaw: string): PaidReport['heritage'] {
+  private buildHeritageSection_(
+    heritageOverlayRaw: string,
+  ): PaidReport['heritage'] {
     const yes = this.isYesLike_(heritageOverlayRaw);
-    const metaValue = heritageOverlayRaw ? heritageOverlayRaw : yes ? 'Yes' : 'No';
+    const metaValue = heritageOverlayRaw
+      ? heritageOverlayRaw
+      : yes
+        ? 'Yes'
+        : 'No';
 
     return {
       metaItems: [{ label: 'Heritage overlay', value: metaValue }],
@@ -1020,7 +1073,9 @@ export class DashboardReportService {
   }
 
   private buildEasementsSection_(easementRaw: string): PaidReport['easements'] {
-    const s = String(easementRaw || '').trim().toLowerCase();
+    const s = String(easementRaw || '')
+      .trim()
+      .toLowerCase();
     const isYes = this.isYesLike_(easementRaw);
     const isUnsure =
       s.includes('unsure') || s.includes('unknown') || s.includes('not sure');
@@ -1067,7 +1122,9 @@ export class DashboardReportService {
   }
 
   private buildSewerSection_(sewerRaw: string): PaidReport['sewer'] {
-    const s = String(sewerRaw || '').trim().toLowerCase();
+    const s = String(sewerRaw || '')
+      .trim()
+      .toLowerCase();
     const value = sewerRaw || 'Unknown';
 
     if (s.includes('front') || s.includes('side')) {
@@ -1116,7 +1173,9 @@ export class DashboardReportService {
     secondDriveway: string;
   }): PaidReport['driveway'] {
     const frontageText = this.formatMeters_(params.frontageM);
-    const s = String(params.secondDriveway || '').trim().toLowerCase();
+    const s = String(params.secondDriveway || '')
+      .trim()
+      .toLowerCase();
 
     const metaItems: ReportKeyValue[] = [
       { label: 'Frontage', value: frontageText },
@@ -1176,7 +1235,9 @@ export class DashboardReportService {
     raw: string,
     options: { possibleOk: boolean },
   ): { ok: boolean; label: string } {
-    const s = String(raw || '').trim().toLowerCase();
+    const s = String(raw || '')
+      .trim()
+      .toLowerCase();
     if (!s) return { ok: false, label: 'Unknown' };
 
     // Note: "unlikely" contains "likely", so check negative states first.
@@ -1209,9 +1270,15 @@ export class DashboardReportService {
   }): PaidReport['whatMeans'] {
     const bullets: ReportBullet[] = [];
 
-    const gf = this.normalizeFeasibility_(params.grannyFlat, { possibleOk: true });
-    const dual = this.normalizeFeasibility_(params.dualOcc, { possibleOk: false });
-    const sub = this.normalizeFeasibility_(params.subdivision, { possibleOk: false });
+    const gf = this.normalizeFeasibility_(params.grannyFlat, {
+      possibleOk: true,
+    });
+    const dual = this.normalizeFeasibility_(params.dualOcc, {
+      possibleOk: false,
+    });
+    const sub = this.normalizeFeasibility_(params.subdivision, {
+      possibleOk: false,
+    });
 
     bullets.push({
       icon: gf.ok ? '✓' : '✘',
@@ -1251,7 +1318,7 @@ export class DashboardReportService {
 
     return {
       intro:
-        "Based on the assessment above, here is what you could typically do given the constraints identified on your block:",
+        'Based on the assessment above, here is what you could typically do given the constraints identified on your block:',
       bullets,
       summary: this.buildSummary_({
         housePosition: params.housePosition,
@@ -1270,13 +1337,25 @@ export class DashboardReportService {
     grannyFlatOk: boolean;
     dualOk: boolean;
   }): string {
-    const pos = String(params.housePosition || '').trim().toLowerCase();
+    const pos = String(params.housePosition || '')
+      .trim()
+      .toLowerCase();
     const hasTrees = params.treesVisibleCount > 0;
     const sewerRear =
-      String(params.sewerLocation || '').trim().toLowerCase().includes('rear') ||
-      String(params.sewerLocation || '').trim().toLowerCase().includes('through');
+      String(params.sewerLocation || '')
+        .trim()
+        .toLowerCase()
+        .includes('rear') ||
+      String(params.sewerLocation || '')
+        .trim()
+        .toLowerCase()
+        .includes('through');
 
-    if (!params.grannyFlatOk && params.dualOk && (pos.includes('middle') || pos.includes('rear') || pos.includes('back'))) {
+    if (
+      !params.grannyFlatOk &&
+      params.dualOk &&
+      (pos.includes('middle') || pos.includes('rear') || pos.includes('back'))
+    ) {
       return `Your block has strong underlying metrics for redevelopment under the Missing Middle reforms. The key constraint is the existing house — its size and position leave limited room for additions while it remains. The most viable pathway is a knockdown-rebuild scenario${hasTrees ? ', designing around tree protection zones' : ''}${sewerRear ? ' and sewer constraints' : ''}.`;
     }
 
@@ -1288,7 +1367,9 @@ export class DashboardReportService {
   }
 
   private buildNextStepSection_(intentionRaw: string): PaidReport['nextStep'] {
-    const s = String(intentionRaw || '').trim().toLowerCase();
+    const s = String(intentionRaw || '')
+      .trim()
+      .toLowerCase();
 
     const bullets = [
       'Lease purpose clause — whether your lease permits multiple dwellings or requires a variation',
@@ -1353,9 +1434,7 @@ export class DashboardReportService {
     if (!domain) return 'REDACTED';
 
     const safeLocal =
-      local.length <= 2
-        ? local.charAt(0) + '*'
-        : local.slice(0, 2) + '***';
+      local.length <= 2 ? local.charAt(0) + '*' : local.slice(0, 2) + '***';
 
     return `${safeLocal}@${domain}`;
   }
@@ -1366,7 +1445,8 @@ export class DashboardReportService {
     fullAddress: string;
   }): string {
     const id =
-      (params.reportId && String(params.reportId).trim()) || `row-${params.rowNumber}`;
+      (params.reportId && String(params.reportId).trim()) ||
+      `row-${params.rowNumber}`;
 
     const addressPart = String(params.fullAddress || '')
       .trim()
@@ -1378,17 +1458,23 @@ export class DashboardReportService {
       : `BlockPlanner_Report_${id}`;
 
     const maxBaseLen = 140;
-    const trimmedBase = base.length > maxBaseLen ? base.slice(0, maxBaseLen) : base;
+    const trimmedBase =
+      base.length > maxBaseLen ? base.slice(0, maxBaseLen) : base;
     return `${trimmedBase}.pdf`;
   }
 
   private async downloadPdf_(url: string): Promise<Buffer> {
-    const timeoutMs = Number(process.env.DASHBOARD_DELIVERY_PDF_TIMEOUT_MS || 30_000);
+    const timeoutMs = Number(
+      process.env.DASHBOARD_DELIVERY_PDF_TIMEOUT_MS || 30_000,
+    );
     const abortController = new AbortController();
     const timeoutHandle = setTimeout(() => abortController.abort(), timeoutMs);
 
     try {
-      const response = await fetch(url, { method: 'GET', signal: abortController.signal });
+      const response = await fetch(url, {
+        method: 'GET',
+        signal: abortController.signal,
+      });
       if (!response.ok) {
         throw new Error(`PDF download failed (status=${response.status})`);
       }
