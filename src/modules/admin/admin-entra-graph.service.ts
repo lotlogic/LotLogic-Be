@@ -19,6 +19,16 @@ interface GraphInvitationResponse {
   };
 }
 
+interface GraphUserResponse {
+  id?: string;
+  accountEnabled?: boolean;
+  userType?: string;
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
+
 interface InviteUserParams {
   email: string;
   redirectUrl: string;
@@ -33,6 +43,13 @@ export class AdminEntraGraphService {
   private getEnv(name: string): string | null {
     const value = process.env[name];
     return value && value.trim() ? value.trim() : null;
+  }
+
+  isConfigured(): boolean {
+    const tenant = this.getEnv('ENTRA_TENANT_ID') || this.getEnv('AZURE_TENANT_ID');
+    const clientId = this.getEnv('ENTRA_CLIENT_ID');
+    const clientSecret = this.getEnv('ENTRA_CLIENT_SECRET');
+    return Boolean(tenant && clientId && clientSecret);
   }
 
   private getRequiredEnv(name: string): string {
@@ -97,15 +114,45 @@ export class AdminEntraGraphService {
     return json.access_token;
   }
 
-  async inviteUser(params: InviteUserParams) {
+  private async graphFetch<T>(path: string, init?: RequestInit): Promise<T> {
+    if (!this.isConfigured()) {
+      throw new InternalServerErrorException(
+        'Microsoft Graph is not configured on this runtime',
+      );
+    }
     const accessToken = await this.getAccessToken();
-
-    const response = await fetch('https://graph.microsoft.com/v1.0/invitations', {
-      method: 'POST',
+    const response = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
+      ...init,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        ...(init?.headers || {}),
       },
+    });
+
+    const hasBody = response.status !== 204;
+    const json = hasBody ? ((await response.json()) as T) : ({} as T);
+    if (!response.ok) {
+      const detail =
+        json &&
+        typeof json === 'object' &&
+        'error' in json &&
+        json.error &&
+        typeof json.error === 'object' &&
+        'message' in json.error
+          ? String((json.error as { message?: unknown }).message || '')
+          : '';
+      throw new InternalServerErrorException(
+        detail || `Graph request failed with status ${response.status}`,
+      );
+    }
+
+    return json;
+  }
+
+  async inviteUser(params: InviteUserParams) {
+    const json = await this.graphFetch<GraphInvitationResponse>('/invitations', {
+      method: 'POST',
       body: JSON.stringify({
         invitedUserEmailAddress: params.email,
         inviteRedirectUrl: params.redirectUrl,
@@ -114,18 +161,40 @@ export class AdminEntraGraphService {
       }),
     });
 
-    const json = (await response.json()) as GraphInvitationResponse;
-    if (!response.ok || json.error) {
-      const detail =
-        json.error?.message || `Graph invitation failed with status ${response.status}`;
-      throw new InternalServerErrorException(detail);
-    }
-
     return {
       invitationId: json.id || null,
       invitedUserId: json.invitedUser?.id || null,
       inviteRedeemUrl: json.inviteRedeemUrl || null,
     };
   }
-}
 
+  async getUser(userId: string) {
+    const safeUserId = encodeURIComponent(userId);
+    const json = await this.graphFetch<GraphUserResponse>(
+      `/users/${safeUserId}?$select=id,accountEnabled,userType`,
+      { method: 'GET' },
+    );
+    return {
+      id: json.id || null,
+      accountEnabled: json.accountEnabled ?? null,
+      userType: json.userType || null,
+    };
+  }
+
+  async setUserAccountEnabled(userId: string, enabled: boolean) {
+    const safeUserId = encodeURIComponent(userId);
+    await this.graphFetch<GraphUserResponse>(`/users/${safeUserId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ accountEnabled: enabled }),
+    });
+    return { userId, accountEnabled: enabled };
+  }
+
+  async deleteUser(userId: string) {
+    const safeUserId = encodeURIComponent(userId);
+    await this.graphFetch<GraphUserResponse>(`/users/${safeUserId}`, {
+      method: 'DELETE',
+    });
+    return { userId, deleted: true as const };
+  }
+}

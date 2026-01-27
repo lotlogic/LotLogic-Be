@@ -1,10 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserStatus } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.service';
 
 interface EstateAssignmentBody {
   estateIds?: string[];
@@ -13,7 +25,10 @@ interface EstateAssignmentBody {
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/users')
 export class AdminUserController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly graph: AdminEntraGraphService,
+  ) {}
 
   @Get()
   @Roles('ADMIN')
@@ -54,9 +69,106 @@ export class AdminUserController {
   @Delete(':id')
   @Roles('ADMIN')
   async remove(@Param('id') id: string) {
-    return this.prisma.user.delete({
-      where: { id: parseBigIntId(id, 'id') },
+    const userId = parseBigIntId(id, 'id');
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    let entra: { attempted: boolean; deleted: boolean; skipped: boolean } = {
+      attempted: false,
+      deleted: false,
+      skipped: false,
+    };
+
+    if (this.graph.isConfigured()) {
+      entra.attempted = true;
+      await this.graph.deleteUser(user.externalAuthId);
+      entra.deleted = true;
+    } else {
+      entra.skipped = true;
+    }
+
+    await this.prisma.user.delete({ where: { id: userId } });
+
+    return {
+      id: userId.toString(),
+      externalAuthId: user.externalAuthId,
+      localDeleted: true,
+      entra,
+    };
+  }
+
+  @Post(':id/disable')
+  @Roles('ADMIN')
+  async disable(@Param('id') id: string) {
+    const userId = parseBigIntId(id, 'id');
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    let entra: { attempted: boolean; disabled: boolean; skipped: boolean } = {
+      attempted: false,
+      disabled: false,
+      skipped: false,
+    };
+
+    if (this.graph.isConfigured()) {
+      entra.attempted = true;
+      await this.graph.setUserAccountEnabled(user.externalAuthId, false);
+      entra.disabled = true;
+    } else {
+      entra.skipped = true;
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.DISABLED },
     });
+
+    return {
+      id: updated.id.toString(),
+      externalAuthId: updated.externalAuthId,
+      status: updated.status,
+      entra,
+    };
+  }
+
+  @Post(':id/enable')
+  @Roles('ADMIN')
+  async enable(@Param('id') id: string) {
+    const userId = parseBigIntId(id, 'id');
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    let entra: { attempted: boolean; enabled: boolean; skipped: boolean } = {
+      attempted: false,
+      enabled: false,
+      skipped: false,
+    };
+
+    if (this.graph.isConfigured()) {
+      entra.attempted = true;
+      await this.graph.setUserAccountEnabled(user.externalAuthId, true);
+      entra.enabled = true;
+    } else {
+      entra.skipped = true;
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.ACTIVE },
+    });
+
+    return {
+      id: updated.id.toString(),
+      externalAuthId: updated.externalAuthId,
+      status: updated.status,
+      entra,
+    };
   }
 
   @Put(':id/estates')
