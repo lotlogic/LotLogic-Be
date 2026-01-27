@@ -4,9 +4,13 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "➡️ Running Prisma Migrations..."
-npx prisma migrate deploy
-echo "✅ Migrations complete."
+if [ "${AUTO_MIGRATE:-true}" = "true" ]; then
+  echo "➡️ Running Prisma Migrations..."
+  npx prisma migrate deploy
+  echo "✅ Migrations complete."
+else
+  echo "ℹ️  AUTO_MIGRATE=false; skipping migrations."
+fi
 
 if [ "${AUTO_SEED}" = "true" ]; then
   SHOULD_SEED="true"

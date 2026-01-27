@@ -1,4 +1,4 @@
-name: Build & Push to Azure ACR
+name: Deploy Backend (Prod)
 
 on:
   push:
@@ -9,6 +9,12 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      ACR_REGISTRY: lotcheck.azurecr.io
+      IMAGE_NAME: lotlogic-be
+      RESOURCE_GROUP: Production
+      CONTAINERAPP_NAME: lotcheck-be
+      PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
 
     steps:
       - name: Checkout
@@ -20,7 +26,7 @@ jobs:
       - name: Log in to ACR
         uses: docker/login-action@v3
         with:
-          registry: lotcheck.azurecr.io
+          registry: ${{ env.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
@@ -28,16 +34,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: lotcheck.azurecr.io/lotlogic-be
+          images: ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=short,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=prod-latest
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.azure
+          file: Dockerfile.runtime
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -67,7 +73,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          ENV_VARS=(
+            "AUTO_MIGRATE=true"
+            "AUTO_SEED=false"
+            "AUTO_SEED_SKIP_IF_DATA=true"
+            "AUTO_IMPORT_ACT_DATA=false"
+          )
+
+          if [ -n "${PROD_DATABASE_URL}" ]; then
+            ENV_VARS+=("DATABASE_URL=${PROD_DATABASE_URL}")
+          else
+            echo "ℹ️  PROD_DATABASE_URL secret not set; leaving DATABASE_URL unchanged."
+          fi
+
           az containerapp update \
-            --name lotcheck-be \
-            --resource-group Production \
-            --image "${{ steps.image.outputs.image }}"
+            --name "${CONTAINERAPP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --image "${{ steps.image.outputs.image }}" \
+            --set-env-vars "${ENV_VARS[@]}"

@@ -1,6 +1,6 @@
-# Azure-focused production image (backend only)
-# - No Postgres container bundled (expects managed PostgreSQL via DATABASE_URL)
-# - Excludes large ACT GeoJSON files; only ships the LotCheck rules CSV
+# Runtime image (production deploys)
+# - No Postgres server bundled (expects DATABASE_URL)
+# - Excludes large ACT GeoJSON files; only ships CSV rules
 
 # ----------------------
 # Stage 1: Build the app
@@ -18,7 +18,7 @@ COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src ./src
 COPY prisma ./prisma
 
-# Optional runtime scripts (used by prodEntrypoint.sh)
+# Optional runtime scripts (used by runtime-entrypoint.sh)
 COPY scripts ./scripts
 
 # Ship only CSV data (rules). GeoJSON imports are handled elsewhere for Azure.
@@ -45,7 +45,7 @@ RUN apk add --no-cache \
   ca-certificates \
   ttf-freefont
 
-# Copy node_modules (includes Prisma CLI for migrations in prodEntrypoint.sh)
+# Copy node_modules (includes Prisma CLI + tsx for optional seeding)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built app
@@ -55,6 +55,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 
+# Copy helper/data needed by TypeScript seed scripts
+COPY --from=builder /app/src/helper ./src/helper
+COPY --from=builder /app/src/data ./src/data
+
 # Copy CSV rules
 COPY --from=builder /app/data ./data
 
@@ -62,6 +66,5 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-# Runs migrations then starts the app (no Postgres server is started inside the container)
-CMD ["sh", "./scripts/prodEntrypoint.sh"]
-
+# Runs migrations + optional seeds then starts the app
+CMD ["sh", "./scripts/runtime-entrypoint.sh"]

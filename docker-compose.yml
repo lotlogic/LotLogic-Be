@@ -33,7 +33,9 @@ services:
 
   # NestJS Backend Application
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: lotlogic-backend
     env_file:
       - .env
