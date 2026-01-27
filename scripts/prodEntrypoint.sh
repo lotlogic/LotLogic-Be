@@ -8,6 +8,40 @@ echo "➡️ Running Prisma Migrations..."
 npx prisma migrate deploy
 echo "✅ Migrations complete."
 
+if [ "${AUTO_SEED}" = "true" ]; then
+  SHOULD_SEED="true"
+  if [ "${AUTO_SEED_SKIP_IF_DATA}" = "true" ]; then
+    HAS_DATA="$(node - <<'NODE'
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+(async () => {
+  try {
+    const floorPlanCount = await prisma.floorPlan.count();
+    process.stdout.write(floorPlanCount > 0 ? 'true' : 'false');
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+})();
+NODE
+)"
+    if [ "$HAS_DATA" = "true" ]; then
+      SHOULD_SEED="false"
+      echo "ℹ️  Seed data detected; skipping AUTO_SEED."
+    fi
+  fi
+
+  if [ "$SHOULD_SEED" = "true" ]; then
+    echo "➡️ Running seed scripts..."
+    npx tsx prisma/seeds/seed.ts
+    npx tsx prisma/seeds/geoData.ts
+    npx tsx prisma/seeds/lot.ts
+    echo "✅ Seeding complete."
+  fi
+fi
+
 # Optional: Import ACT GeoJSON datasets into PostGIS (runs in background so App Runner can pass health checks).
 # Enable by setting AUTO_IMPORT_ACT_DATA=true in the runtime environment.
 if [ "${AUTO_IMPORT_ACT_DATA}" = "true" ]; then

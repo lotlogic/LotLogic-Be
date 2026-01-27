@@ -12,6 +12,7 @@ import { GeoModule } from '@modules/geo/geo.module';
 import { GoogleSheetsModule } from '@modules/google-sheets/google-sheets.module';
 import { LotModule } from '@modules/lot/lot.module';
 import { MailModule } from '@modules/mail/mail.module';
+import { AdminModule } from '@modules/admin/admin.module';
 import { StripeModule } from '@modules/stripe/stripe.module';
 import { Module } from '@nestjs/common';
 
@@ -30,6 +31,7 @@ import { Module } from '@nestjs/common';
     GeoModule,
     GoogleSheetsModule,
     StripeModule.forRootAsync(),
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

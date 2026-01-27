@@ -9,6 +9,16 @@ datasource db {
   extensions = [postgis]
 }
 
+enum UserRole {
+  ADMIN
+  EDITOR
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
 model estate {
   id         BigInt   @id @default(autoincrement())
   name       String
@@ -20,6 +30,30 @@ model estate {
   phone      String?
   themeColor String?
   lots       lot[]
+  userEstates userEstate[]
+}
+
+model user {
+  id             BigInt     @id @default(autoincrement())
+  externalAuthId String     @unique
+  email          String?
+  displayName    String?
+  role           UserRole   @default(EDITOR)
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  estates        userEstate[]
+}
+
+model userEstate {
+  userId    BigInt
+  estateId  BigInt
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  estate    estate   @relation(fields: [estateId], references: [id], onDelete: Cascade)
+
+  @@id([userId, estateId])
+  @@index([estateId])
 }
 
 model lot {
