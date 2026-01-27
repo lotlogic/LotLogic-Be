@@ -19,6 +19,19 @@ const NAME_TYPE_ALIASES = [
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name',
 ];
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  try {
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), '=');
+    const decoded = Buffer.from(padded, 'base64').toString('utf8');
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 export function parseClientPrincipal(req: Request): ClientPrincipal | null {
   const headerValue = req.headers['x-ms-client-principal'];
   const raw = Array.isArray(headerValue) ? headerValue[0] : headerValue;
@@ -47,6 +60,17 @@ export function extractExternalAuthId(
 ): string | undefined {
   const claimId = extractClaim(principal, CLAIM_TYPE_ALIASES);
   if (claimId) return claimId;
+
+  // Fallback to the AAD id token if Easy Auth didn't project the oid claim.
+  const idTokenHeader = req.headers['x-ms-token-aad-id-token'];
+  const idToken = Array.isArray(idTokenHeader) ? idTokenHeader[0] : idTokenHeader;
+  if (idToken) {
+    const payload = decodeJwtPayload(idToken);
+    const oid = payload?.oid;
+    if (typeof oid === 'string' && oid.trim()) return oid;
+    const sub = payload?.sub;
+    if (typeof sub === 'string' && sub.trim()) return sub;
+  }
 
   if (principal?.userId) return principal.userId;
 
