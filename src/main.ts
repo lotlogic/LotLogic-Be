@@ -8,7 +8,19 @@ async function bootstrap() {
     rawBody: true,
   });
 
-  app.enableCors();
+  // Explicitly include PATCH/OPTIONS so admin mutations work in preflight.
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-zumo-auth',
+      'x-ms-client-principal',
+      'x-ms-token-aad-id-token',
+    ],
+    exposedHeaders: ['x-ms-client-principal', 'x-ms-token-aad-id-token'],
+  });
   app.useGlobalInterceptors(new BigIntInterceptor());
   
   // Set global prefix for all routes

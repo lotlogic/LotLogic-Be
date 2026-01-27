@@ -12,6 +12,8 @@ import { AdminBuilderController } from '@/modules/admin/admin-builder.controller
 import { AdminBrandSettingController } from '@/modules/admin/admin-brand-setting.controller';
 import { AdminUserController } from '@/modules/admin/admin-user.controller';
 import { AdminWhoamiController } from '@/modules/admin/admin-whoami.controller';
+import { AdminInvitationsController } from '@/modules/admin/admin-invitations.controller';
+import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -27,6 +29,8 @@ import { AdminWhoamiController } from '@/modules/admin/admin-whoami.controller';
     AdminBrandSettingController,
     AdminUserController,
     AdminWhoamiController,
+    AdminInvitationsController,
   ],
+  providers: [AdminEntraGraphService],
 })
 export class AdminModule {}
