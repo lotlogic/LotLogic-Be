@@ -6,6 +6,7 @@ export interface AuthUser {
   email?: string;
   displayName?: string;
   role: AuthRole;
+  registered?: boolean;
 }
 
 export interface ClientPrincipalClaim {
