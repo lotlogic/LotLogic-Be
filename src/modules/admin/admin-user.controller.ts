@@ -16,7 +16,10 @@ import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
-import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.service';
+import {
+  AdminEntraGraphService,
+  GraphNotFoundError,
+} from '@/modules/admin/admin-entra-graph.service';
 
 interface EstateAssignmentBody {
   estateIds?: string[];
@@ -75,16 +78,31 @@ export class AdminUserController {
       throw new BadRequestException('User not found');
     }
 
-    let entra: { attempted: boolean; deleted: boolean; skipped: boolean } = {
+    let entra: {
+      attempted: boolean;
+      deleted: boolean;
+      skipped: boolean;
+      notFound: boolean;
+    } = {
       attempted: false,
       deleted: false,
       skipped: false,
+      notFound: false,
     };
 
     if (this.graph.isConfigured()) {
       entra.attempted = true;
-      await this.graph.deleteUser(user.externalAuthId);
-      entra.deleted = true;
+      try {
+        await this.graph.deleteUser(user.externalAuthId);
+        entra.deleted = true;
+      } catch (error) {
+        if (error instanceof GraphNotFoundError) {
+          // Entra user is already gone; continue with local cleanup.
+          entra.notFound = true;
+        } else {
+          throw error;
+        }
+      }
     } else {
       entra.skipped = true;
     }

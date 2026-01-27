@@ -36,6 +36,13 @@ interface InviteUserParams {
   sendInvitationMessage?: boolean;
 }
 
+export class GraphNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GraphNotFoundError';
+  }
+}
+
 @Injectable()
 export class AdminEntraGraphService {
   private cachedToken: { token: string; expiresAt: number } | null = null;
@@ -142,6 +149,11 @@ export class AdminEntraGraphService {
         'message' in json.error
           ? String((json.error as { message?: unknown }).message || '')
           : '';
+      if (response.status === 404) {
+        throw new GraphNotFoundError(
+          detail || `Graph resource not found for ${path}`,
+        );
+      }
       throw new InternalServerErrorException(
         detail || `Graph request failed with status ${response.status}`,
       );
