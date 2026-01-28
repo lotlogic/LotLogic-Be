@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import proj4 from 'proj4';
+import * as proj4 from 'proj4';
 import { calculateDistance, calculateArea, getWidthHeight } from '@/helper/turf';
 
 interface ImportDxfOptions {
