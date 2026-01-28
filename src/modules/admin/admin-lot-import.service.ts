@@ -315,7 +315,7 @@ export class AdminLotImportService {
 
         const areaSqm = lot.areaSqm;
 
-        const sideLengths = [];
+        const sideLengths: Record<string, number>[] = [];
         for (let i = 0; i < ringSource.length - 1; i += 1) {
           const dist = isGeographic
             ? calculateDistance(ringSource[i], ringSource[i + 1])
