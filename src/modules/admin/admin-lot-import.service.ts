@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import proj4 from 'proj4';
+import { calculateDistance, calculateArea, getWidthHeight } from '@/helper/turf';
 
 interface ImportDxfOptions {
   zoning?: string;
@@ -31,6 +32,7 @@ interface LotPolygon {
 }
 
 const DEFAULT_SOURCE_SRID = 28355; // GDA94 / MGA zone 55 (matches sample DXF coords)
+const DEFAULT_TARGET_SRID = 4326; // WGS84 (matches existing geo queries)
 const LARGE_POLYLINE_RATIO = 5;
 const MIN_AREA_DEFAULT = 1;
 
@@ -171,11 +173,40 @@ function polygonArea(ring: [number, number][]) {
   return Math.abs(sum) / 2;
 }
 
+function planarDistance(a: [number, number], b: [number, number]) {
+  const dx = a[0] - b[0];
+  const dy = a[1] - b[1];
+  return Math.hypot(dx, dy);
+}
+
+function planarWidthHeight(ring: [number, number][]) {
+  if (!ring.length) {
+    return { width: 0, height: 0 };
+  }
+  let minX = ring[0][0];
+  let maxX = ring[0][0];
+  let minY = ring[0][1];
+  let maxY = ring[0][1];
+  for (const [x, y] of ring) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return {
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+}
+
 function extractLots(
   polylines: ParsedPolyline[],
-  options: Pick<ImportDxfOptions, 'layer' | 'minArea' | 'dropLargest'>,
+  options: Pick<ImportDxfOptions, 'layer' | 'minArea' | 'dropLargest'> & {
+    isGeographic?: boolean;
+  },
 ) {
   const minArea = options.minArea ?? MIN_AREA_DEFAULT;
+  const isGeographic = options.isGeographic ?? false;
 
   const candidates: LotPolygon[] = polylines
     .filter((polyline) => (options.layer ? polyline.layer === options.layer : true))
@@ -185,7 +216,9 @@ function extractLots(
         return null;
       }
       const closed = closeRing(ring);
-      const areaSqm = polygonArea(closed);
+      const areaSqm = isGeographic
+        ? calculateArea(closed)
+        : Number(polygonArea(closed).toFixed(2));
       if (areaSqm <= minArea) {
         return null;
       }
@@ -237,18 +270,20 @@ export class AdminLotImportService {
     options: ImportDxfOptions,
   ) {
     const polylines = parseDxfLwPolylines(text);
+    const sourceSrid = options.sourceSrid ?? DEFAULT_SOURCE_SRID;
+    const targetSrid = options.targetSrid ?? DEFAULT_TARGET_SRID;
+    const isGeographic = sourceSrid === 4326;
     const { lots, boundary } = extractLots(polylines, {
       layer: options.layer,
       minArea: options.minArea,
       dropLargest: options.dropLargest,
+      isGeographic,
     });
 
     if (!lots.length) {
       throw new BadRequestException('No closed lot polylines found in DXF.');
     }
 
-    const sourceSrid = options.sourceSrid ?? DEFAULT_SOURCE_SRID;
-    const targetSrid = options.targetSrid ?? sourceSrid;
     const shouldTransform = sourceSrid !== targetSrid;
 
     if (shouldTransform) {
@@ -266,8 +301,9 @@ export class AdminLotImportService {
         const lot = lots[index];
         const blockKey = `${blockKeyPrefix}${index + 1}`;
 
-        const ring = shouldTransform
-          ? lot.ring.map(([x, y]) => {
+        const ringSource = lot.ring;
+        const ringTarget = shouldTransform
+          ? ringSource.map(([x, y]) => {
               const [lng, lat] = proj4(
                 `EPSG:${sourceSrid}`,
                 `EPSG:${targetSrid}`,
@@ -275,20 +311,39 @@ export class AdminLotImportService {
               );
               return [lng, lat] as [number, number];
             })
-          : lot.ring;
+          : ringSource;
+
+        const areaSqm = lot.areaSqm;
+
+        const sideLengths = [];
+        for (let i = 0; i < ringSource.length - 1; i += 1) {
+          const dist = isGeographic
+            ? calculateDistance(ringSource[i], ringSource[i + 1])
+            : Number(planarDistance(ringSource[i], ringSource[i + 1]).toFixed(2));
+          sideLengths.push({ [`s${i + 1}`]: Number(dist.toFixed(2)) });
+        }
+
+        const { width, height } = isGeographic
+          ? getWidthHeight(ringSource)
+          : (() => {
+              const planar = planarWidthHeight(ringSource);
+              return {
+                width: Number(planar.width.toFixed(2)),
+                height: Number(planar.height.toFixed(2)),
+              };
+            })();
 
         const geometry = {
           type: 'Polygon',
-          coordinates: [ring],
+          coordinates: [ringTarget],
         };
 
         const geojson = {
-          type: 'Feature',
-          geometry,
-          properties: {
-            sourceLayer: lot.layer,
-            areaSqm: lot.areaSqm,
-          },
+          properties: sideLengths,
+          width: Number(width.toFixed(2)),
+          depth: Number(height.toFixed(2)),
+          sourceLayer: lot.layer,
+          sourceSrid,
         };
 
         const created = await tx.lot.create({
@@ -296,7 +351,7 @@ export class AdminLotImportService {
             blockKey,
             blockNumber: options.blockNumber ?? null,
             sectionNumber: options.sectionNumber ?? null,
-            areaSqm: lot.areaSqm,
+            areaSqm,
             zoning: options.zoning ?? '',
             address: options.address ?? null,
             district: options.district ?? null,
@@ -318,7 +373,7 @@ export class AdminLotImportService {
         createdLots.push({
           id: created.id.toString(),
           blockKey,
-          areaSqm: lot.areaSqm,
+          areaSqm,
         });
       }
     });
