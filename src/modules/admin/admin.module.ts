@@ -14,6 +14,7 @@ import { AdminUserController } from '@/modules/admin/admin-user.controller';
 import { AdminWhoamiController } from '@/modules/admin/admin-whoami.controller';
 import { AdminInvitationsController } from '@/modules/admin/admin-invitations.controller';
 import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.service';
+import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -31,6 +32,6 @@ import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.servic
     AdminWhoamiController,
     AdminInvitationsController,
   ],
-  providers: [AdminEntraGraphService],
+  providers: [AdminEntraGraphService, AdminLotImportService],
 })
 export class AdminModule {}

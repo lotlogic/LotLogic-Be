@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
@@ -8,11 +21,18 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { EstateScope } from '@/modules/auth/decorators/estate-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service';
+import { readFileSync } from 'fs';
 
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/estates')
 export class AdminEstateController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private lotImportService: AdminLotImportService,
+  ) {}
 
   @Get()
   @Roles('ADMIN', 'EDITOR')
@@ -63,5 +83,39 @@ export class AdminEstateController {
     return this.prisma.estate.delete({
       where: { id: parseBigIntId(id, 'id') },
     });
+  }
+
+  @Post(':id/lots/import-dxf')
+  @Roles('ADMIN', 'EDITOR')
+  @EstateScope({ estateIdParam: 'id' })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 25 * 1024 * 1024 },
+    }),
+  )
+  async importLotsFromDxf(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: Record<string, string>,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Missing DXF file');
+    }
+
+    const buffer =
+      file.buffer ??
+      (file.path ? readFileSync(file.path) : Buffer.alloc(0));
+    if (!buffer.length) {
+      throw new BadRequestException('Unable to read DXF file');
+    }
+
+    const estateId = parseBigIntId(id, 'id');
+    const options = this.lotImportService.parseOptions(body);
+    return this.lotImportService.importDxfLots(
+      estateId,
+      buffer.toString('utf8'),
+      options,
+    );
   }
 }
