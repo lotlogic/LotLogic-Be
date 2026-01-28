@@ -154,10 +154,10 @@ function isClosed(flags: number | null, ring: [number, number][], tolerance = 1e
 
 function closeRing(ring: [number, number][]) {
   if (ring.length < 3) return ring;
-  const [x1, y1] = ring[0];
-  const [x2, y2] = ring[ring.length - 1];
-  if (x1 === x2 && y1 === y2) return ring;
-  return [...ring, [x1, y1]];
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  if (first[0] === last[0] && first[1] === last[1]) return ring;
+  return [...ring, first];
 }
 
 function polygonArea(ring: [number, number][]) {
