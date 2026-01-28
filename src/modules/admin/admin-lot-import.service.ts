@@ -311,7 +311,7 @@ export class AdminLotImportService {
 
         await tx.$executeRaw`
           UPDATE lot
-          SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), ${targetSrid})
+          SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), ${targetSrid}::integer)
           WHERE id = ${created.id}
         `;
 
