@@ -9,6 +9,26 @@ import { EstateScope } from '@/modules/auth/decorators/estate-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
 
+type LotWithGeometryRow = {
+  id: bigint;
+  blockKey: string;
+  blockNumber: number | null;
+  sectionNumber: number | null;
+  areaSqm: number;
+  zoning: string;
+  overlays: string[];
+  address: string | null;
+  district: string | null;
+  division: string | null;
+  lifecycleStage: string | null;
+  geojson: Prisma.JsonValue | null;
+  geometry: string | null;
+  frontageCoordinate: string | null;
+  estateId: bigint | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/lots')
 export class AdminLotController {
@@ -23,10 +43,42 @@ export class AdminLotController {
     const estateIdFilter = estateId ? parseBigIntId(estateId, 'estateId') : null;
 
     if (req.auth?.role === 'ADMIN') {
-      return this.prisma.lot.findMany({
-        where: estateIdFilter ? { estateId: estateIdFilter } : undefined,
-        orderBy: { id: 'asc' },
-      });
+      const adminWhereClause = estateIdFilter
+        ? Prisma.sql`WHERE "estateId" = ${estateIdFilter}`
+        : Prisma.sql``;
+
+      const lots = await this.prisma.$queryRaw<LotWithGeometryRow[]>`
+        SELECT
+          id,
+          "blockKey",
+          "blockNumber",
+          "sectionNumber",
+          "areaSqm",
+          zoning,
+          address,
+          district,
+          division,
+          "lifecycleStage",
+          "estateId",
+          overlays,
+          geojson,
+          ST_AsGeoJSON(geometry) as geometry,
+          ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
+          "createdAt",
+          "updatedAt"
+        FROM
+          lot
+        ${adminWhereClause}
+        ORDER BY id
+      `;
+
+      return lots.map((lot) => ({
+        ...lot,
+        geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
+        frontageCoordinate: lot.frontageCoordinate
+          ? JSON.parse(lot.frontageCoordinate)
+          : null,
+      }));
     }
 
     const estateIds = await this.prisma.userEstate.findMany({
@@ -36,21 +88,94 @@ export class AdminLotController {
 
     const allowedEstateIds = estateIds.map((item) => item.estateId);
 
-    return this.prisma.lot.findMany({
-      where: {
-        estateId: {
-          in: estateIdFilter ? [estateIdFilter] : allowedEstateIds,
-        },
-      },
-      orderBy: { id: 'asc' },
-    });
+    const estateIdsForQuery = estateIdFilter ? [estateIdFilter] : allowedEstateIds;
+
+    if (estateIdsForQuery.length === 0) {
+      return [];
+    }
+
+    const userWhereClause = Prisma.sql`WHERE "estateId" IN (${Prisma.join(
+      estateIdsForQuery,
+    )})`;
+
+    const lots = await this.prisma.$queryRaw<LotWithGeometryRow[]>`
+      SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "estateId",
+        overlays,
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
+        "createdAt",
+        "updatedAt"
+      FROM
+        lot
+      ${userWhereClause}
+      ORDER BY id
+    `;
+
+    return lots.map((lot) => ({
+      ...lot,
+      geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
+      frontageCoordinate: lot.frontageCoordinate
+        ? JSON.parse(lot.frontageCoordinate)
+        : null,
+    }));
   }
 
   @Get(':id')
   @Roles('ADMIN', 'EDITOR')
   @EstateScope({ lotIdParam: 'id' })
   async findOne(@Param('id') id: string) {
-    return this.prisma.lot.findUnique({ where: { id: parseBigIntId(id, 'id') } });
+    const lotId = parseBigIntId(id, 'id');
+
+    const lots = await this.prisma.$queryRaw<LotWithGeometryRow[]>`
+      SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "estateId",
+        overlays,
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
+        "createdAt",
+        "updatedAt"
+      FROM
+        lot
+      WHERE
+        id = ${lotId}
+    `;
+
+    const lot = lots[0];
+
+    if (!lot) {
+      return null;
+    }
+
+    return {
+      ...lot,
+      geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
+      frontageCoordinate: lot.frontageCoordinate
+        ? JSON.parse(lot.frontageCoordinate)
+        : null,
+    };
   }
 
   @Post()
