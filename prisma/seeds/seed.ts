@@ -177,6 +177,22 @@ async function main(): Promise<void> {
     },
   });
 
+  console.log('🌱 Seeding builders...');
+  const builder1 = await prisma.builder.create({
+    data: {
+      name: 'Beyond Himalaya Pty Ltd',
+      email: 'info@beyondhimalayatech.com.au',
+      phone: '+610435581311',
+    },
+  });
+  const builder2 = await prisma.builder.create({
+    data: {
+      name: 'Lotlogic BlockPlanner Pty Ltd',
+      email: 'mitch@blockplanner.com.au',
+      phone: '+61 401 637 961',
+    },
+  });
+
   console.log('🌱 Seeding floor plans...');
   const floorPlan1 = await prisma.floorPlan.create({
     data: {
@@ -192,6 +208,7 @@ async function main(): Promise<void> {
       rumpus: false,
       alfresco: true,
       pergola: false,
+      builderId: builder1.id,
     },
   });
 
@@ -209,6 +226,7 @@ async function main(): Promise<void> {
       rumpus: false,
       alfresco: false,
       pergola: true,
+      builderId: builder1.id,
     },
   });
 
@@ -226,6 +244,7 @@ async function main(): Promise<void> {
       rumpus: false,
       alfresco: false,
       pergola: true,
+      builderId: builder2.id,
     },
   });
 
@@ -254,22 +273,6 @@ async function main(): Promise<void> {
       imageUrl:
         'https://loglogic-assets.s3.ap-southeast-2.amazonaws.com/dev/facade/facade3.png',
       floorPlanId: floorPlan3.id,
-    },
-  });
-
-  console.log('🌱 Seeding builders...');
-  await prisma.builder.create({
-    data: {
-      name: 'Beyond Himalaya Pty Ltd',
-      email: 'info@beyondhimalayatech.com.au',
-      phone: '+610435581311',
-    }
-  });
-  await prisma.builder.create({
-    data: {
-      name: 'Lotlogic BlockPlanner Pty Ltd',
-      email: 'mitch@blockplanner.com.au',
-      phone: '+61 401 637 961',
     },
   });
 

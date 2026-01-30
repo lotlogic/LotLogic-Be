@@ -144,9 +144,13 @@ model floorPlan {
   rumpus       Boolean
   alfresco     Boolean
   pergola      Boolean
+  builderId    BigInt
+  builder      builder       @relation(fields: [builderId], references: [id])
   designOnLots designOnLot[]
   enquiries    enquiry[]
   facades      facade[]
+
+  @@index([builderId])
 }
 
 model facade {
@@ -182,6 +186,7 @@ model builder {
   updatedAt       DateTime         @updatedAt
   enquiryBuilders enquiryBuilder[]
   builderUsers    builderUser[]
+  floorPlans      floorPlan[]
 }
 
 model enquiry {

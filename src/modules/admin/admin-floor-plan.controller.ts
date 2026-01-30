@@ -27,7 +27,7 @@ export class AdminFloorPlanController {
 
   @Post()
   @Roles('ADMIN')
-  async create(@Body() data: Prisma.floorPlanCreateInput) {
+  async create(@Body() data: Prisma.floorPlanUncheckedCreateInput) {
     return this.prisma.floorPlan.create({ data });
   }
 
@@ -35,7 +35,7 @@ export class AdminFloorPlanController {
   @Roles('ADMIN')
   async update(
     @Param('id') id: string,
-    @Body() data: Prisma.floorPlanUpdateInput,
+    @Body() data: Prisma.floorPlanUncheckedUpdateInput,
   ) {
     return this.prisma.floorPlan.update({
       where: { id: parseBigIntId(id, 'id') },
