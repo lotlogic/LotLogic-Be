@@ -43,6 +43,7 @@ model user {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   estates        userEstate[]
+  builderUsers   builderUser[]
 }
 
 model userEstate {
@@ -54,6 +55,17 @@ model userEstate {
 
   @@id([userId, estateId])
   @@index([estateId])
+}
+
+model builderUser {
+  userId    BigInt
+  builderId BigInt
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  builder   builder  @relation(fields: [builderId], references: [id], onDelete: Cascade)
+
+  @@id([userId, builderId])
+  @@index([builderId])
 }
 
 model lot {
@@ -168,6 +180,7 @@ model builder {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   enquiryBuilders enquiryBuilder[]
+  builderUsers    builderUser[]
 }
 
 model enquiry {
@@ -200,6 +213,7 @@ model enquiryBuilder {
 model brandSetting {
   // Single logical row — always id = "default"
   id                  String   @id @default("default")
+  guid                String   @unique @default(uuid()) @db.Uuid
 
   name                String
   title               String
