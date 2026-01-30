@@ -9,7 +9,7 @@ import { AllowUnregistered } from '@/modules/auth/decorators/allow-unregistered.
 @Controller('admin/whoami')
 export class AdminWhoamiController {
   @Get()
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @AllowUnregistered()
   get(@Req() req: AuthenticatedRequest) {
     const registered = req.auth?.registered !== false;

@@ -33,8 +33,8 @@ export class AdminInvitationsController {
       throw new BadRequestException('A valid email is required');
     }
 
-    const role = body.role || UserRole.EDITOR;
-    if (role !== UserRole.ADMIN && role !== UserRole.EDITOR) {
+    const role = body.role || UserRole.USER;
+    if (role !== UserRole.ADMIN && role !== UserRole.USER) {
       throw new BadRequestException('Invalid role');
     }
 
@@ -130,4 +130,3 @@ export class AdminInvitationsController {
     };
   }
 }
-

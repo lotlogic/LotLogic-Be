@@ -35,7 +35,7 @@ export class AdminLotController {
   constructor(private prisma: PrismaService) {}
 
   @Get()
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   async findAll(
     @Req() req: AuthenticatedRequest,
     @Query('estateId') estateId?: string,
@@ -133,7 +133,7 @@ export class AdminLotController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @EstateScope({ lotIdParam: 'id' })
   async findOne(@Param('id') id: string) {
     const lotId = parseBigIntId(id, 'id');
@@ -179,14 +179,14 @@ export class AdminLotController {
   }
 
   @Post()
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdBody: 'estateId' })
   async create(@Body() data: Prisma.lotUncheckedCreateInput) {
     return this.prisma.lot.create({ data });
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @EstateScope({ lotIdParam: 'id' })
   async update(
     @Param('id') id: string,

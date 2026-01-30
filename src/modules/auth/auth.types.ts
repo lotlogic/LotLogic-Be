@@ -1,4 +1,4 @@
-export type AuthRole = 'ADMIN' | 'EDITOR';
+export type AuthRole = 'ADMIN' | 'USER';
 
 export interface AuthUser {
   id: bigint;

@@ -69,7 +69,7 @@ export class EasyAuthGuard implements CanActivate {
         externalAuthId,
         email: extractEmail(principal),
         displayName: extractDisplayName(principal),
-        role: 'EDITOR',
+        role: 'USER',
         registered: false,
       };
 

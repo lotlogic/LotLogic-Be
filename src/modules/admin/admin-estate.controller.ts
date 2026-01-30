@@ -35,7 +35,7 @@ export class AdminEstateController {
   ) {}
 
   @Get()
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   async findAll(@Req() req: AuthenticatedRequest) {
     if (req.auth?.role === 'ADMIN') {
       return this.prisma.estate.findMany({ orderBy: { id: 'asc' } });
@@ -53,7 +53,7 @@ export class AdminEstateController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
   async findOne(@Param('id') id: string) {
     return this.prisma.estate.findUnique({ where: { id: parseBigIntId(id, 'id') } });
@@ -86,7 +86,7 @@ export class AdminEstateController {
   }
 
   @Post(':id/lots/import-dxf')
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
   @UseInterceptors(
     FileInterceptor('file', {
