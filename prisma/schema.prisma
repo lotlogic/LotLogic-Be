@@ -31,6 +31,7 @@ model estate {
   themeColor String?
   lots       lot[]
   userEstates userEstate[]
+  brandSetting brandSetting?
 }
 
 model user {
@@ -211,9 +212,9 @@ model enquiryBuilder {
 }
 
 model brandSetting {
-  // Single logical row — always id = "default"
-  id                  String   @id @default("default")
+  id                  String   @id @default(cuid())
   guid                String   @unique @default(uuid()) @db.Uuid
+  estateId            BigInt?  @unique
 
   name                String
   title               String
@@ -230,6 +231,8 @@ model brandSetting {
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  estate              estate?  @relation(fields: [estateId], references: [id], onDelete: Cascade)
 }
 
 model geoData {

@@ -21,14 +21,24 @@ export type BrandUpsertData = {
 export class BrandService {
   constructor(private prisma: PrismaService) {}
 
-  // Read the one-and-only brand record
-  async get() {
+  // Backwards-compatible default brand (if it exists)
+  async getDefault() {
     const data = await this.prisma.brandSetting.findUnique({ where: { id: BRAND_ID } });
     return data || {};
   }
 
-  // Create or update the singleton brand
-  upsert(data: BrandUpsertData) {
+  async getByGuid(guid: string) {
+    return this.prisma.brandSetting.findUnique({ where: { guid } });
+  }
+
+  async getByEstateId(estateId: string) {
+    return this.prisma.brandSetting.findUnique({
+      where: { estateId: BigInt(estateId) },
+    });
+  }
+
+  // Create or update the legacy singleton brand
+  upsertDefault(data: BrandUpsertData) {
     return this.prisma.brandSetting.upsert({
       where: { id: BRAND_ID },
       create: { id: BRAND_ID, ...data },
