@@ -45,7 +45,7 @@ export class LotCheckRulesService {
     const defaultPath = path.join(
       process.cwd(),
       'data',
-      'LotCheck - Public tool data   - Rules v3.csv',
+      '2. LotCheck - Reference Data - Rules v3.csv',
     );
 
     if (!configured) return [defaultPath];
@@ -143,6 +143,14 @@ export class LotCheckRulesService {
     return explanation.replace(/\bX\b(?=\s*(m²|m2|sqm)\b)/g, String(blockAreaSqm));
   }
 
+  private normalizeExplanation(explanation: string, parameterKey: string): string {
+    if (parameterKey !== 'allowed_boolean') return '';
+    const normalized = (explanation ?? '').trim();
+    if (!normalized) return '';
+    if (/^(blank|n\/a|na|none)$/i.test(normalized)) return '';
+    return normalized;
+  }
+
   /**
    * Best-effort extraction when zoning layer is unavailable.
    * Example: "RZ1: SUBURBAN; NUZ3: ..." -> "RZ1"
@@ -172,18 +180,20 @@ export class LotCheckRulesService {
     );
 
     return zoneRules.map((row) => {
-      const explanation = (row['User-Facing Explanation (Plain English for Reports)'] ?? '').trim();
+      const parameter = (row['Parameter'] ?? '').trim();
+      const parameterKey = parameter.toLowerCase();
+      const explanationRaw = row['User-Facing Explanation (Plain English for Reports)'] ?? '';
+      const explanation = this.normalizeExplanation(explanationRaw, parameterKey);
       const explanationResolved = this.resolveExplanation(explanation, blockAreaSqm);
 
       const current = this.parseRuleValue(row['Current Value/Operator'] ?? '');
       const draft = this.parseRuleValue(row['Draft DPA-04 Value/Operator'] ?? '');
-      const parameter = (row['Parameter'] ?? '').trim();
 
       const evaluate = (value: RuleValue): boolean | null => {
-        if (parameter === 'min_block_area_m2' && value.kind === 'numeric' && blockAreaSqm !== null) {
+        if (parameterKey === 'min_block_area_m2' && value.kind === 'numeric' && blockAreaSqm !== null) {
           return this.compareNumeric(value.operator, blockAreaSqm, value.value);
         }
-        if (parameter === 'allowed_boolean' && value.kind === 'boolean') {
+        if (parameterKey === 'allowed_boolean' && value.kind === 'boolean') {
           return value.value;
         }
         return null;

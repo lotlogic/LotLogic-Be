@@ -51,7 +51,7 @@ services:
       GOOGLE_MAPS_API_KEY: "AIzaSyCcNZsGEqV4sb_8-SfgunyeFb3qNEmbwlc"  
       GOOGLE_GEOCODING_REGION: "au"
       GOOGLE_GEOCODING_COMPONENTS: "country:AU|administrative_area:ACT"
-      LOT_CHECK_RULES_CSV_PATH: "data/LotCheck - Public tool data   - Rules v3.csv"
+      LOT_CHECK_RULES_CSV_PATH: "data/2. LotCheck - Reference Data - Rules v3.csv"
       AUTO_IMPORT_ACT_DATA: "true"
     ports:
       - "3000:3000"

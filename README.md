@@ -203,7 +203,7 @@ docker exec lotlogic-backend npx tsx prisma/seeds/actBlock.ts --skip-if-exists
 - By address: `GET http://localhost:3000/api/geo/act-zone?address=1%20Bunda%20St%20Canberra%20ACT`
 - By coordinates (no Google call): `GET http://localhost:3000/api/geo/act-zone?lat=-35.2809&lng=149.1310`
 - Response includes both `block` and `zone` (when available). `source` indicates which matched dataset is preferred (blocks first, then land-use zones).
-- If `data/LotCheck - Public tool data   - Rules v3.csv` exists, matching rules for the resolved zone are included under `lotCheckRules` (override path via `LOT_CHECK_RULES_CSV_PATH`).
+- If `data/2. LotCheck - Reference Data - Rules v3.csv` exists, matching rules for the resolved zone are included under `lotCheckRules` (override path via `LOT_CHECK_RULES_CSV_PATH`).
 
 ## 🔧 Development Tools
 
