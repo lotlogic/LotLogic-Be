@@ -88,7 +88,9 @@ export class AdminLotController {
 
     const allowedEstateIds = estateIds.map((item) => item.estateId);
 
-    const estateIdsForQuery = estateIdFilter ? [estateIdFilter] : allowedEstateIds;
+    const estateIdsForQuery = estateIdFilter
+      ? allowedEstateIds.filter((id) => id === estateIdFilter)
+      : allowedEstateIds;
 
     if (estateIdsForQuery.length === 0) {
       return [];
