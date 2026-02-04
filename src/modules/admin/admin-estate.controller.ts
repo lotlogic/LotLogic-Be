@@ -85,6 +85,29 @@ export class AdminEstateController {
     });
   }
 
+  @Get(':id/users')
+  @Roles('ADMIN', 'USER')
+  @EstateScope({ estateIdParam: 'id' })
+  async listUsers(@Param('id') id: string) {
+    const estateId = parseBigIntId(id, 'id');
+    const estate = await this.prisma.estate.findUnique({ where: { id: estateId } });
+    if (!estate) {
+      throw new BadRequestException('Estate not found');
+    }
+
+    const estateUsers = await this.prisma.userEstate.findMany({
+      where: { estateId },
+      include: { user: true },
+      orderBy: { userId: 'asc' },
+    });
+
+    return estateUsers.map((item) => ({
+      estateId: item.estateId.toString(),
+      userId: item.userId.toString(),
+      user: item.user,
+    }));
+  }
+
   @Post(':id/lots/import-dxf')
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
