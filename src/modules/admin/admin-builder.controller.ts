@@ -154,7 +154,8 @@ export class AdminBuilderController {
   }
 
   @Get(':id/users')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
   async listUsers(@Param('id') id: string) {
     const builderId = parseBigIntId(id, 'id');
     const builder = await this.prisma.builder.findUnique({ where: { id: builderId } });
@@ -176,7 +177,8 @@ export class AdminBuilderController {
   }
 
   @Put(':id/users')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
   async setUsers(
     @Param('id') id: string,
     @Body() body: BuilderUserAssignmentBody,
@@ -226,7 +228,8 @@ export class AdminBuilderController {
   }
 
   @Post(':id/users')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
   async addUsers(
     @Param('id') id: string,
     @Body() body: BuilderUserAssignmentBody,
@@ -261,7 +264,8 @@ export class AdminBuilderController {
   }
 
   @Delete(':id/users/:userId')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
   async removeUser(@Param('id') id: string, @Param('userId') userId: string) {
     const builderId = parseBigIntId(id, 'id');
     const parsedUserId = parseBigIntId(userId, 'userId');
