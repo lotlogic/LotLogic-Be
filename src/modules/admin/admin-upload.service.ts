@@ -165,20 +165,20 @@ export class AdminUploadService {
   }
 
   private getConnectionString_(): string {
-    const value = String(process.env.AZURE_STORAGE_CONNECTION_STRING || '').trim();
+    const value = String(process.env.AZURE_UPLOAD_STORAGE_CONNECTION_STRING || '').trim();
     if (!value) {
       throw new InternalServerErrorException(
-        'Missing env var AZURE_STORAGE_CONNECTION_STRING',
+        'Missing env var AZURE_UPLOAD_STORAGE_CONNECTION_STRING',
       );
     }
     return value;
   }
 
   private getContainerName_(): string {
-    const value = String(process.env.AZURE_STORAGE_CONTAINER || '').trim();
+    const value = String(process.env.AZURE_UPLOAD_STORAGE_CONTAINER || '').trim();
     if (!value) {
       throw new InternalServerErrorException(
-        'Missing env var AZURE_STORAGE_CONTAINER',
+        'Missing env var AZURE_UPLOAD_STORAGE_CONTAINER',
       );
     }
     return value;
@@ -228,7 +228,7 @@ export class AdminUploadService {
     const accountKey = pairs['accountkey'];
     if (!accountName || !accountKey) {
       throw new InternalServerErrorException(
-        'Invalid AZURE_STORAGE_CONNECTION_STRING',
+        'Invalid AZURE_UPLOAD_STORAGE_CONNECTION_STRING',
       );
     }
     return { accountName, accountKey };
