@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service';
 import { readFileSync } from 'fs';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/estates')
@@ -32,6 +33,7 @@ export class AdminEstateController {
   constructor(
     private prisma: PrismaService,
     private lotImportService: AdminLotImportService,
+    private designOnLotService: DesignOnLotService,
   ) {}
 
   @Get()
@@ -135,10 +137,23 @@ export class AdminEstateController {
 
     const estateId = parseBigIntId(id, 'id');
     const options = this.lotImportService.parseOptions(body);
-    return this.lotImportService.importDxfLots(
+    const importResult = await this.lotImportService.importDxfLots(
       estateId,
       buffer.toString('utf8'),
       options,
     );
+    const recompute = await this.designOnLotService.recomputeForEstate(estateId);
+    return {
+      ...importResult,
+      recompute,
+    };
+  }
+
+  @Post(':id/recompute-design-on-lot')
+  @Roles('ADMIN', 'USER')
+  @EstateScope({ estateIdParam: 'id' })
+  async recomputeDesignOnLotForEstate(@Param('id') id: string) {
+    const estateId = parseBigIntId(id, 'id');
+    return this.designOnLotService.recomputeForEstate(estateId);
   }
 }

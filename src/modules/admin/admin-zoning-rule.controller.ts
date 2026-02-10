@@ -5,11 +5,15 @@ import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/zoning-rules')
 export class AdminZoningRuleController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private designOnLotService: DesignOnLotService,
+  ) {}
 
   @Get()
   @Roles('ADMIN')
@@ -37,17 +41,38 @@ export class AdminZoningRuleController {
     @Param('id') id: string,
     @Body() data: Prisma.zoningRuleUpdateInput,
   ) {
-    return this.prisma.zoningRule.update({
-      where: { id: parseBigIntId(id, 'id') },
+    const ruleId = parseBigIntId(id, 'id');
+    const updated = await this.prisma.zoningRule.update({
+      where: { id: ruleId },
       data,
     });
+    const lotMappings = await this.prisma.lotZoningRule.findMany({
+      where: { zoningRuleId: ruleId },
+      select: { lotId: true },
+    });
+    for (const mapping of lotMappings) {
+      await this.designOnLotService.recomputeForLotId(mapping.lotId);
+    }
+    return updated;
   }
 
   @Delete(':id')
   @Roles('ADMIN')
   async remove(@Param('id') id: string) {
-    return this.prisma.zoningRule.delete({
-      where: { id: parseBigIntId(id, 'id') },
+    const ruleId = parseBigIntId(id, 'id');
+    const lotMappings = await this.prisma.lotZoningRule.findMany({
+      where: { zoningRuleId: ruleId },
+      select: { lotId: true },
     });
+
+    const deleted = await this.prisma.zoningRule.delete({
+      where: { id: ruleId },
+    });
+
+    for (const mapping of lotMappings) {
+      await this.designOnLotService.recomputeForLotId(mapping.lotId);
+    }
+
+    return deleted;
   }
 }

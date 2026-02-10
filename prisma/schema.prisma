@@ -19,30 +19,56 @@ enum UserStatus {
   DISABLED
 }
 
+enum Jurisdiction {
+  NSW
+  ACT
+}
+
+enum RuleSetStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BuilderEstateApprovalStatus {
+  APPROVED
+  REVOKED
+}
+
+enum DesignOnLotStatus {
+  PASS
+  FAIL
+  MANUAL_REVIEW
+}
+
 model estate {
-  id         BigInt   @id @default(autoincrement())
-  name       String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  address    String?
-  email      String?
-  logoUrl    String?
-  phone      String?
-  themeColor String?
-  lots       lot[]
-  userEstates userEstate[]
-  brandSetting brandSetting?
+  id                     BigInt                  @id @default(autoincrement())
+  name                   String
+  jurisdiction           Jurisdiction            @default(ACT)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  address                String?
+  email                  String?
+  logoUrl                String?
+  phone                  String?
+  themeColor             String?
+  lots                   lot[]
+  userEstates            userEstate[]
+  brandSetting           brandSetting?
+  builderEstateApprovals builderEstateApproval[]
+  estateRuleSets         estateRuleSet[]
+  lotConstraints         estateLotConstraint[]
 }
 
 model user {
-  id             BigInt     @id @default(autoincrement())
-  externalAuthId String     @unique
+  id             BigInt        @id @default(autoincrement())
+  externalAuthId String        @unique
   email          String?
   displayName    String?
-  role           UserRole   @default(USER)
-  status         UserStatus @default(ACTIVE)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  role           UserRole      @default(USER)
+  status         UserStatus    @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   estates        userEstate[]
   builderUsers   builderUser[]
 }
@@ -90,6 +116,7 @@ model lot {
   enquiries            enquiry[]
   estate               estate?                  @relation(fields: [estateId], references: [id])
   lotZoningRules       lotZoningRule[]
+  estateLotConstraints estateLotConstraint[]
   frontageCoordinate   Unsupported("geometry")?
 
   @@index([geometry], map: "geometry_index")
@@ -130,63 +157,154 @@ model lotZoningRule {
 }
 
 model floorPlan {
-  id           BigInt        @id @default(autoincrement())
-  name         String
-  floorplanUrl String?
-  bedrooms     Int
-  bathrooms    Int
-  garages      Int
-  areaSqm      Float
-  minLotWidth  Float
-  minLotDepth  Float
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  rumpus       Boolean
-  alfresco     Boolean
-  pergola      Boolean
-  builderId    BigInt
-  builder      builder       @relation(fields: [builderId], references: [id])
-  designOnLots designOnLot[]
-  enquiries    enquiry[]
-  facades      facade[]
+  id                         BigInt        @id @default(autoincrement())
+  name                       String
+  floorplanUrl               String?
+  bedrooms                   Int
+  bathrooms                  Int
+  garages                    Int
+  areaSqm                    Float
+  minLotWidth                Float
+  minLotDepth                Float
+  storeys                    Int?
+  buildingHeight_m           Float?
+  roofPitch_deg              Float?
+  architecturalStyle         String?
+  hasFrontFacingServiceAreas Boolean?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+  rumpus                     Boolean
+  alfresco                   Boolean
+  pergola                    Boolean
+  builderId                  BigInt
+  builder                    builder       @relation(fields: [builderId], references: [id])
+  designOnLots               designOnLot[]
+  enquiries                  enquiry[]
+  facades                    facade[]
 
   @@index([builderId])
 }
 
 model facade {
-  id            BigInt      @id @default(autoincrement())
-  label         String
-  imageUrl      String
-  floorPlanId   BigInt
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  enquiries     enquiry[]
-  floorPlan     floorPlan   @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  id          BigInt    @id @default(autoincrement())
+  label       String
+  imageUrl    String
+  floorPlanId BigInt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  enquiries   enquiry[]
+  floorPlan   floorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
 }
 
 model designOnLot {
-  id             BigInt      @id @default(autoincrement())
-  lotId          BigInt
-  floorPlanId    BigInt
-  isCompatible   Boolean
-  matchedFilters Json?
-  createdAt      DateTime    @default(now())
-  floorPlan      floorPlan   @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
-  lot            lot         @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  id                  BigInt            @id @default(autoincrement())
+  lotId               BigInt
+  floorPlanId         BigInt
+  isCompatible        Boolean
+  status              DesignOnLotStatus @default(FAIL)
+  failReasons         String[]          @default([])
+  manualReviewReasons String[]          @default([])
+  matchedFilters      Json?
+  assessedAt          DateTime          @default(now())
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  stateRuleSetId      BigInt?
+  estateRuleSetId     BigInt?
+  floorPlan           floorPlan         @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  lot                 lot               @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  stateRuleSet        stateRuleSet?     @relation(fields: [stateRuleSetId], references: [id], onDelete: SetNull)
+  estateRuleSet       estateRuleSet?    @relation(fields: [estateRuleSetId], references: [id], onDelete: SetNull)
 
   @@unique([lotId, floorPlanId])
+  @@index([lotId, isCompatible])
+  @@index([status])
+}
+
+model stateRuleSet {
+  id            BigInt        @id @default(autoincrement())
+  jurisdiction  Jurisdiction
+  name          String
+  version       Int           @default(1)
+  status        RuleSetStatus @default(DRAFT)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  rules         Json
+  sourceUrl     String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  designOnLots  designOnLot[]
+
+  @@unique([jurisdiction, version])
+  @@index([jurisdiction, status])
+}
+
+model estateRuleSet {
+  id             BigInt                @id @default(autoincrement())
+  estateId       BigInt
+  name           String
+  version        Int                   @default(1)
+  status         RuleSetStatus         @default(DRAFT)
+  effectiveFrom  DateTime?
+  effectiveTo    DateTime?
+  rules          Json
+  notes          String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  estate         estate                @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  lotConstraints estateLotConstraint[]
+  designOnLots   designOnLot[]
+
+  @@unique([estateId, version])
+  @@index([estateId, status])
+}
+
+model estateLotConstraint {
+  id              BigInt         @id @default(autoincrement())
+  estateId        BigInt
+  lotId           BigInt
+  estateRuleSetId BigInt?
+  name            String
+  isActive        Boolean        @default(true)
+  rules           Json
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  estate          estate         @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  lot             lot            @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  estateRuleSet   estateRuleSet? @relation(fields: [estateRuleSetId], references: [id], onDelete: SetNull)
+
+  @@index([estateId, lotId, isActive])
+}
+
+model builderEstateApproval {
+  id            BigInt                      @id @default(autoincrement())
+  builderId     BigInt
+  estateId      BigInt
+  status        BuilderEstateApprovalStatus @default(APPROVED)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  notes         String?
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  builder       builder                     @relation(fields: [builderId], references: [id], onDelete: Cascade)
+  estate        estate                      @relation(fields: [estateId], references: [id], onDelete: Cascade)
+
+  @@unique([builderId, estateId])
+  @@index([estateId, status])
 }
 
 model builder {
-  id              BigInt           @id @default(autoincrement())
+  id              BigInt                  @id @default(autoincrement())
   name            String
   email           String
   phone           String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
   enquiryBuilders enquiryBuilder[]
   builderUsers    builderUser[]
   floorPlans      floorPlan[]
+  estateApprovals builderEstateApproval[]
 }
 
 model enquiry {
@@ -217,13 +335,13 @@ model enquiryBuilder {
 }
 
 model brandSetting {
-  id                  String   @id @default(cuid())
-  guid                String   @unique @default(uuid()) @db.Uuid
-  estateId            BigInt?  @unique
+  id       String  @id @default(cuid())
+  guid     String  @unique @default(uuid()) @db.Uuid
+  estateId BigInt? @unique
 
-  name                String
-  title               String
-  logoUrl             String
+  name    String
+  title   String
+  logoUrl String
 
   primaryColor        String?
   secondaryColor      String?
@@ -234,21 +352,21 @@ model brandSetting {
   fontFamilyPrimary   String?
   fontFamilySecondary String?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  estate              estate?  @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  estate estate? @relation(fields: [estateId], references: [id], onDelete: Cascade)
 }
 
 model geoData {
   // Single logical row — always id = "default"
-  id                  Int      @id @default(autoincrement())
-  name                String?
-  color               String?
-  coordinates         String
-  geoType             String
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String?
+  color       String?
+  coordinates String
+  geoType     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model actLandUseZone {

@@ -73,7 +73,7 @@ export class LotService {
     }));
   }
 
-  async findLot(lotId: number) {
+  async findLot(lotId: number | bigint) {
     const lot: any = await this.prisma.$queryRawUnsafe(
       `SELECT
         id,

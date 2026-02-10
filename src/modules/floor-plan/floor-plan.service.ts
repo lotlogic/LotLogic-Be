@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/await-thenable */
 import { Injectable } from '@nestjs/common';
+import { DesignOnLotStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 
 export interface HouseDesignFilterResult   {
@@ -88,6 +89,78 @@ export class FloorPlanService {
             };
         });
         return filteredDesign;
+    }
+
+    async getPrecomputedHouseDesignsForLot(
+        lotId: bigint,
+        bedroom?: number[],
+        bathroom?: number[],
+        car?: number[],
+        min_size?: number,
+        max_size?: number,
+        rumpus?: boolean,
+        alfresco?: boolean,
+        pergola?: boolean
+    ): Promise<HouseDesignFilterResult[]> {
+        const floorPlanWhere: Prisma.floorPlanWhereInput = {};
+        if (bedroom !== undefined) floorPlanWhere.bedrooms = { in: bedroom };
+        if (bathroom !== undefined) floorPlanWhere.bathrooms = { in: bathroom };
+        if (car !== undefined) floorPlanWhere.garages = { in: car };
+        if (rumpus !== undefined) floorPlanWhere.rumpus = rumpus;
+        if (alfresco !== undefined) floorPlanWhere.alfresco = alfresco;
+        if (pergola !== undefined) floorPlanWhere.pergola = pergola;
+        if (min_size !== undefined || max_size !== undefined) {
+            const areaFilter: Prisma.FloatFilter = {};
+            if (min_size !== undefined) {
+                areaFilter.gte = min_size;
+            }
+            if (max_size !== undefined) {
+                areaFilter.lte = max_size;
+            }
+            floorPlanWhere.areaSqm = areaFilter;
+        }
+
+        const rows = await this.prisma.designOnLot.findMany({
+            where: {
+                lotId,
+                isCompatible: true,
+                status: DesignOnLotStatus.PASS,
+                floorPlan: floorPlanWhere,
+            },
+            include: {
+                floorPlan: {
+                    include: {
+                        facades: true,
+                    },
+                },
+            },
+            orderBy: { floorPlanId: 'asc' },
+        });
+
+        return rows.map((row) => {
+            const house = row.floorPlan as any;
+            const images = house.facades?.map((facade: any) => {
+                return {
+                    facadeId: facade.id,
+                    src: facade.imageUrl,
+                    faced: facade.label
+                };
+            }) || [];
+            return {
+                id: house.id.toString(),
+                title: house.name,
+                area: house.areaSqm,
+                minLotWidth: house.minLotWidth,
+                minLotDepth: house.minLotDepth,
+                image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
+                images,
+                bedrooms: house.bedrooms,
+                bathrooms: house.bathrooms,
+                cars: house.garages,
+                isFavorite: false,
+                floorPlanImage: house.floorplanUrl
+            };
+        });
     }
 
     async getHouseDesignById(house_design_id: string) {

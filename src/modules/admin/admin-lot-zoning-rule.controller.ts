@@ -5,11 +5,15 @@ import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/lot-zoning-rules')
 export class AdminLotZoningRuleController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private designOnLotService: DesignOnLotService,
+  ) {}
 
   @Get()
   @Roles('ADMIN')
@@ -43,7 +47,9 @@ export class AdminLotZoningRuleController {
   @Post()
   @Roles('ADMIN')
   async create(@Body() data: Prisma.lotZoningRuleUncheckedCreateInput) {
-    return this.prisma.lotZoningRule.create({ data });
+    const created = await this.prisma.lotZoningRule.create({ data });
+    await this.designOnLotService.recomputeForLotId(created.lotId);
+    return created;
   }
 
   @Patch(':lotId/:zoningRuleId')
@@ -53,7 +59,7 @@ export class AdminLotZoningRuleController {
     @Param('zoningRuleId') zoningRuleId: string,
     @Body() data: Prisma.lotZoningRuleUncheckedUpdateInput,
   ) {
-    return this.prisma.lotZoningRule.update({
+    const updated = await this.prisma.lotZoningRule.update({
       where: {
         lotId_zoningRuleId: {
           lotId: parseBigIntId(lotId, 'lotId'),
@@ -62,6 +68,8 @@ export class AdminLotZoningRuleController {
       },
       data,
     });
+    await this.designOnLotService.recomputeForLotId(updated.lotId);
+    return updated;
   }
 
   @Delete(':lotId/:zoningRuleId')
@@ -70,7 +78,7 @@ export class AdminLotZoningRuleController {
     @Param('lotId') lotId: string,
     @Param('zoningRuleId') zoningRuleId: string,
   ) {
-    return this.prisma.lotZoningRule.delete({
+    const removed = await this.prisma.lotZoningRule.delete({
       where: {
         lotId_zoningRuleId: {
           lotId: parseBigIntId(lotId, 'lotId'),
@@ -78,5 +86,7 @@ export class AdminLotZoningRuleController {
         },
       },
     });
+    await this.designOnLotService.recomputeForLotId(removed.lotId);
+    return removed;
   }
 }

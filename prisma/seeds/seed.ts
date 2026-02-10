@@ -8,16 +8,86 @@ async function main(): Promise<void> {
   console.log('🌱 Seeding estate...');
   await prisma.estate.upsert({
     where: { id: 1 },
-    update: {},
+    update: {
+      jurisdiction: 'NSW',
+    },
     create: {
       id: 1,
       name: 'Hamilton Rise Yass',
+      jurisdiction: 'NSW',
       logoUrl:
         'https://www.hamiltonriseyass.com.au/wp-content/uploads/2021/10/logo-768x82.png',
       themeColor: '#2F5D62',
       email: 'info@hamiltonriseyass.com.au',
       phone: '0417 710 772',
       address: '14 Mitchell St YASS NSW 2582',
+    },
+  });
+
+  console.log('🌱 Seeding state rule sets...');
+  await prisma.stateRuleSet.upsert({
+    where: {
+      jurisdiction_version: {
+        jurisdiction: 'NSW',
+        version: 1,
+      },
+    },
+    update: {
+      name: 'NSW baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 0.9,
+      },
+      sourceUrl:
+        'https://www.planning.nsw.gov.au/sites/default/files/2023-02/guide-to-complying-development.pdf',
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+    create: {
+      jurisdiction: 'NSW',
+      version: 1,
+      name: 'NSW baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 0.9,
+      },
+      sourceUrl:
+        'https://www.planning.nsw.gov.au/sites/default/files/2023-02/guide-to-complying-development.pdf',
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+  });
+
+  await prisma.stateRuleSet.upsert({
+    where: {
+      jurisdiction_version: {
+        jurisdiction: 'ACT',
+        version: 1,
+      },
+    },
+    update: {
+      name: 'ACT baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 3,
+      },
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+    create: {
+      jurisdiction: 'ACT',
+      version: 1,
+      name: 'ACT baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 3,
+      },
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
     },
   });
 
@@ -190,6 +260,26 @@ async function main(): Promise<void> {
       name: 'Lotlogic BlockPlanner Pty Ltd',
       email: 'mitch@blockplanner.com.au',
       phone: '+61 401 637 961',
+    },
+  });
+
+  await prisma.builderEstateApproval.upsert({
+    where: { builderId_estateId: { builderId: builder1.id, estateId: 1 } },
+    update: { status: 'APPROVED' },
+    create: {
+      builderId: builder1.id,
+      estateId: 1,
+      status: 'APPROVED',
+    },
+  });
+
+  await prisma.builderEstateApproval.upsert({
+    where: { builderId_estateId: { builderId: builder2.id, estateId: 1 } },
+    update: { status: 'APPROVED' },
+    create: {
+      builderId: builder2.id,
+      estateId: 1,
+      status: 'APPROVED',
     },
   });
 

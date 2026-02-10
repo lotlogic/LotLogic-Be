@@ -8,6 +8,7 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { EstateScope } from '@/modules/auth/decorators/estate-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
 type LotWithGeometryRow = {
   id: bigint;
@@ -32,7 +33,10 @@ type LotWithGeometryRow = {
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/lots')
 export class AdminLotController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private designOnLotService: DesignOnLotService,
+  ) {}
 
   @Get()
   @Roles('ADMIN', 'USER')
@@ -184,7 +188,11 @@ export class AdminLotController {
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdBody: 'estateId' })
   async create(@Body() data: Prisma.lotUncheckedCreateInput) {
-    return this.prisma.lot.create({ data });
+    const created = await this.prisma.lot.create({ data });
+    if (created.estateId) {
+      await this.designOnLotService.recomputeForLotId(created.id);
+    }
+    return created;
   }
 
   @Patch(':id')
@@ -194,10 +202,14 @@ export class AdminLotController {
     @Param('id') id: string,
     @Body() data: Prisma.lotUncheckedUpdateInput,
   ) {
-    return this.prisma.lot.update({
+    const updated = await this.prisma.lot.update({
       where: { id: parseBigIntId(id, 'id') },
       data,
     });
+    if (updated.estateId) {
+      await this.designOnLotService.recomputeForLotId(updated.id);
+    }
+    return updated;
   }
 
   @Delete(':id')

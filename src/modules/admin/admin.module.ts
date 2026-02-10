@@ -18,9 +18,14 @@ import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.servic
 import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service';
 import { AdminUploadController } from '@/modules/admin/admin-upload.controller';
 import { AdminUploadService } from '@/modules/admin/admin-upload.service';
+import { DesignOnLotModule } from '@/modules/design-on-lot/design-on-lot.module';
+import { AdminStateRuleSetController } from '@/modules/admin/admin-state-rule-set.controller';
+import { AdminEstateRuleSetController } from '@/modules/admin/admin-estate-rule-set.controller';
+import { AdminEstateLotConstraintController } from '@/modules/admin/admin-estate-lot-constraint.controller';
+import { AdminBuilderEstateApprovalController } from '@/modules/admin/admin-builder-estate-approval.controller';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, DesignOnLotModule],
   controllers: [
     AdminEstateController,
     AdminLotController,
@@ -36,6 +41,10 @@ import { AdminUploadService } from '@/modules/admin/admin-upload.service';
     AdminWhoamiController,
     AdminInvitationsController,
     AdminUploadController,
+    AdminStateRuleSetController,
+    AdminEstateRuleSetController,
+    AdminEstateLotConstraintController,
+    AdminBuilderEstateApprovalController,
   ],
   providers: [AdminEntraGraphService, AdminLotImportService, AdminUploadService],
 })

@@ -20,11 +20,15 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { BuilderScope } from '@/modules/auth/decorators/builder-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
 @UseGuards(EasyAuthGuard, RolesGuard, BuilderScopeGuard)
 @Controller('admin/floor-plans')
 export class AdminFloorPlanController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private designOnLotService: DesignOnLotService,
+  ) {}
 
   @Get()
   @Roles('ADMIN', 'USER')
@@ -74,7 +78,9 @@ export class AdminFloorPlanController {
   @Roles('ADMIN', 'USER')
   @BuilderScope({ builderIdBody: 'builderId' })
   async create(@Body() data: Prisma.floorPlanUncheckedCreateInput) {
-    return this.prisma.floorPlan.create({ data });
+    const created = await this.prisma.floorPlan.create({ data });
+    await this.designOnLotService.recomputeForFloorPlan(created.id);
+    return created;
   }
 
   @Patch(':id')
@@ -89,10 +95,12 @@ export class AdminFloorPlanController {
       throw new BadRequestException('builderId cannot be updated');
     }
 
-    return this.prisma.floorPlan.update({
+    const updated = await this.prisma.floorPlan.update({
       where: { id: parseBigIntId(id, 'id') },
       data,
     });
+    await this.designOnLotService.recomputeForFloorPlan(updated.id);
+    return updated;
   }
 
   @Delete(':id')
