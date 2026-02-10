@@ -15,6 +15,17 @@ type LotDimensions = {
   depth: number;
 };
 
+type LotRuleContext = {
+  lotAreaSqm: number;
+  lotWidthM: number;
+  lotDepthM: number;
+  frontageM: number | null;
+  lotType: string | null;
+  roadFacing: string | null;
+  lifecycleStage: string | null;
+  precinct: string | null;
+};
+
 type NormalizedRules = {
   minFrontSetbackM: number | null;
   minRearSetbackM: number | null;
@@ -48,6 +59,39 @@ type RuleSourceRefs = {
   stateRuleSetId: string | null;
   estateRuleSetId: string | null;
   lotConstraintIds: string[];
+  stateMatchedRuleLabels: string[];
+  estateMatchedRuleLabels: string[];
+  lotOverrideMatchedRuleLabels: string[];
+  lotConstraintMatchedRuleLabels: Array<{
+    constraintId: string;
+    labels: string[];
+  }>;
+};
+
+type ResolvedRules = {
+  rules: NormalizedRules;
+  matchedRuleLabels: string[];
+};
+
+type RangeCondition = {
+  min: number | null;
+  max: number | null;
+};
+
+type RuleWhenClause = {
+  lotAreaSqm?: RangeCondition;
+  lotWidthM?: RangeCondition;
+  frontageM?: RangeCondition;
+  lotTypeIn?: string[];
+  roadFacingIn?: string[];
+  lifecycleStageIn?: string[];
+  precinctIn?: string[];
+};
+
+type ConditionalRuleCandidate = {
+  label: string;
+  when: RuleWhenClause;
+  rulesRaw: unknown;
 };
 
 export interface LotRecomputeSummary {
@@ -363,22 +407,50 @@ export class DesignOnLotService {
       });
     }
 
-    const baseRules = this.normalizeRulesFromZoning_(zoningRule);
-    const stateRules = this.normalizeRulesFromJson_(stateRuleSet?.rules);
-    const estateRules = this.normalizeRulesFromJson_(estateRuleSet?.rules);
-    const constraintRules = lotConstraints.map((item) => this.normalizeRulesFromJson_(item.rules));
+    const frontageFromGeo = this.readNumber(this.asObject(lot.geojson), [
+      ['frontageM'],
+      ['frontage'],
+    ]);
 
-    let effectiveRules = this.mergeRules_(baseRules, stateRules);
-    effectiveRules = this.mergeRules_(effectiveRules, estateRules);
-    for (const rule of constraintRules) {
-      effectiveRules = this.mergeRules_(effectiveRules, rule);
+    const lotContext: LotRuleContext = {
+      lotAreaSqm: lot.areaSqm,
+      lotWidthM: dimensions.width,
+      lotDepthM: dimensions.depth,
+      frontageM: lot.frontageM ?? frontageFromGeo ?? null,
+      lotType: lot.lotType ?? null,
+      roadFacing: lot.roadFacing ?? null,
+      lifecycleStage: lot.lifecycleStage ?? null,
+      precinct: lot.precinct ?? null,
+    };
+
+    const baseRules = this.normalizeRulesFromZoning_(zoningRule);
+    const stateResolved = this.resolveRulesWithConditions_(stateRuleSet?.rules, lotContext);
+    const estateResolved = this.resolveRulesWithConditions_(estateRuleSet?.rules, lotContext);
+    const lotConstraintResolved = lotConstraints.map((item) => ({
+      constraintId: item.id.toString(),
+      resolved: this.resolveRulesWithConditions_(item.rules, lotContext),
+    }));
+    const lotOverrideResolved = this.resolveRulesWithConditions_(lot.ruleOverrides, lotContext);
+
+    let effectiveRules = this.mergeRules_(baseRules, stateResolved.rules);
+    effectiveRules = this.mergeRules_(effectiveRules, estateResolved.rules);
+    for (const item of lotConstraintResolved) {
+      effectiveRules = this.mergeRules_(effectiveRules, item.resolved.rules);
     }
+    effectiveRules = this.mergeRules_(effectiveRules, lotOverrideResolved.rules);
 
     const sourceRefs: RuleSourceRefs = {
       zoningRuleId: zoningRule ? zoningRule.id.toString() : null,
       stateRuleSetId: stateRuleSet ? stateRuleSet.id.toString() : null,
       estateRuleSetId: estateRuleSet ? estateRuleSet.id.toString() : null,
       lotConstraintIds: lotConstraints.map((item) => item.id.toString()),
+      stateMatchedRuleLabels: stateResolved.matchedRuleLabels,
+      estateMatchedRuleLabels: estateResolved.matchedRuleLabels,
+      lotOverrideMatchedRuleLabels: lotOverrideResolved.matchedRuleLabels,
+      lotConstraintMatchedRuleLabels: lotConstraintResolved.map((item) => ({
+        constraintId: item.constraintId,
+        labels: item.resolved.matchedRuleLabels,
+      })),
     };
 
     let processed = 0;
@@ -395,6 +467,7 @@ export class DesignOnLotService {
         outcome,
         effectiveRules,
         sourceRefs,
+        lotContext,
         stateRuleSetId: stateRuleSet?.id ?? null,
         estateRuleSetId: estateRuleSet?.id ?? null,
       });
@@ -435,6 +508,7 @@ export class DesignOnLotService {
         outcome,
         effectiveRules,
         sourceRefs,
+        lotContext,
         stateRuleSetId: stateRuleSet?.id ?? null,
         estateRuleSetId: estateRuleSet?.id ?? null,
       });
@@ -483,6 +557,7 @@ export class DesignOnLotService {
           matchedFilters: {
             effectiveRules,
             sourceRefs,
+            lotContext,
             spacing: {
               front: effectiveRules.minFrontSetbackM,
               rear: effectiveRules.minRearSetbackM,
@@ -511,6 +586,7 @@ export class DesignOnLotService {
     outcome: EvaluationOutcome;
     effectiveRules: NormalizedRules;
     sourceRefs: RuleSourceRefs;
+    lotContext: LotRuleContext;
     stateRuleSetId: bigint | null;
     estateRuleSetId: bigint | null;
   }) {
@@ -520,6 +596,7 @@ export class DesignOnLotService {
       outcome,
       effectiveRules,
       sourceRefs,
+      lotContext,
       stateRuleSetId,
       estateRuleSetId,
     } = params;
@@ -539,6 +616,7 @@ export class DesignOnLotService {
         matchedFilters: {
           effectiveRules,
           sourceRefs,
+          lotContext,
           spacing: outcome.spacing,
           maxCoverageArea: outcome.maxCoverageArea,
           usableWidth: outcome.usableWidth,
@@ -556,6 +634,7 @@ export class DesignOnLotService {
         matchedFilters: {
           effectiveRules,
           sourceRefs,
+          lotContext,
           spacing: outcome.spacing,
           maxCoverageArea: outcome.maxCoverageArea,
           usableWidth: outcome.usableWidth,
@@ -720,6 +799,461 @@ export class DesignOnLotService {
       requiresArchitecturalReview: false,
       architecturalNotes: [],
     };
+  }
+
+  private resolveRulesWithConditions_(
+    rawRules: unknown,
+    context: LotRuleContext,
+  ): ResolvedRules {
+    const rulesObj = this.asObject(rawRules);
+    if (!rulesObj) {
+      return { rules: { ...EMPTY_RULES }, matchedRuleLabels: [] };
+    }
+
+    let resolvedRules = this.normalizeRulesFromJson_(rulesObj);
+    const matchedRuleLabels: string[] = [];
+    const candidates = this.extractConditionalRuleCandidates_(rulesObj);
+
+    for (const candidate of candidates) {
+      if (!this.matchesWhenClause_(candidate.when, context)) {
+        continue;
+      }
+      const conditionalRules = this.normalizeRulesFromJson_(candidate.rulesRaw);
+      resolvedRules = this.mergeRules_(resolvedRules, conditionalRules);
+      matchedRuleLabels.push(candidate.label);
+    }
+
+    return {
+      rules: resolvedRules,
+      matchedRuleLabels,
+    };
+  }
+
+  private extractConditionalRuleCandidates_(rules: JsonObject): ConditionalRuleCandidate[] {
+    const candidates: ConditionalRuleCandidate[] = [];
+
+    const explicit = this.readPath_(rules, ['conditionalRules']);
+    if (Array.isArray(explicit)) {
+      explicit.forEach((item, index) => {
+        const itemObj = this.asObject(item);
+        if (!itemObj) return;
+
+        const when = this.normalizeWhenClause_(
+          this.asObject(itemObj.when) ??
+            this.asObject(itemObj.if) ??
+            itemObj,
+        );
+        if (!when) return;
+
+        const label =
+          this.readString(itemObj, [['label'], ['name'], ['id']]) ??
+          `conditional-${index + 1}`;
+
+        const rulesRaw =
+          itemObj.rules ??
+          itemObj.then ??
+          this.stripConditionKeys_(itemObj);
+
+        candidates.push({
+          label,
+          when,
+          rulesRaw,
+        });
+      });
+    }
+
+    candidates.push(
+      ...this.extractBandCandidates_(rules, {
+        arrayKey: 'lotAreaBands',
+        labelPrefix: 'lot-area-band',
+        whenField: 'lotAreaSqm',
+        minPaths: [
+          ['minAreaSqm'],
+          ['minLotAreaSqm'],
+          ['min'],
+          ['from'],
+        ],
+        maxPaths: [
+          ['maxAreaSqm'],
+          ['maxLotAreaSqm'],
+          ['max'],
+          ['to'],
+        ],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractBandCandidates_(rules, {
+        arrayKey: 'lotWidthBands',
+        labelPrefix: 'lot-width-band',
+        whenField: 'lotWidthM',
+        minPaths: [
+          ['minLotWidthM'],
+          ['minWidthM'],
+          ['min'],
+          ['from'],
+        ],
+        maxPaths: [
+          ['maxLotWidthM'],
+          ['maxWidthM'],
+          ['max'],
+          ['to'],
+        ],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractBandCandidates_(rules, {
+        arrayKey: 'frontageBands',
+        labelPrefix: 'frontage-band',
+        whenField: 'frontageM',
+        minPaths: [
+          ['minFrontageM'],
+          ['min'],
+          ['from'],
+        ],
+        maxPaths: [
+          ['maxFrontageM'],
+          ['max'],
+          ['to'],
+        ],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractCategoricalCandidates_(rules, {
+        arrayKey: 'lotTypeRules',
+        labelPrefix: 'lot-type-rule',
+        whenField: 'lotTypeIn',
+        valuePaths: [['lotTypeIn'], ['lotTypes'], ['lotType'], ['values'], ['in']],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractCategoricalCandidates_(rules, {
+        arrayKey: 'roadFacingRules',
+        labelPrefix: 'road-facing-rule',
+        whenField: 'roadFacingIn',
+        valuePaths: [['roadFacingIn'], ['roadFacing'], ['roadNames'], ['values'], ['in']],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractCategoricalCandidates_(rules, {
+        arrayKey: 'stageRules',
+        labelPrefix: 'stage-rule',
+        whenField: 'lifecycleStageIn',
+        valuePaths: [['lifecycleStageIn'], ['lifecycleStage'], ['stages'], ['stage'], ['values'], ['in']],
+      }),
+    );
+
+    candidates.push(
+      ...this.extractCategoricalCandidates_(rules, {
+        arrayKey: 'precinctRules',
+        labelPrefix: 'precinct-rule',
+        whenField: 'precinctIn',
+        valuePaths: [['precinctIn'], ['precinct'], ['precincts'], ['values'], ['in']],
+      }),
+    );
+
+    return candidates;
+  }
+
+  private extractBandCandidates_(
+    rules: JsonObject,
+    options: {
+      arrayKey: string;
+      labelPrefix: string;
+      whenField: 'lotAreaSqm' | 'lotWidthM' | 'frontageM';
+      minPaths: string[][];
+      maxPaths: string[][];
+    },
+  ): ConditionalRuleCandidate[] {
+    const result: ConditionalRuleCandidate[] = [];
+    const rawBands = this.readPath_(rules, [options.arrayKey]);
+    if (!Array.isArray(rawBands)) {
+      return result;
+    }
+
+    rawBands.forEach((item, index) => {
+      const itemObj = this.asObject(item);
+      if (!itemObj) return;
+
+      const min = this.readNumber(itemObj, options.minPaths);
+      const max = this.readNumber(itemObj, options.maxPaths);
+      if (min === null && max === null) {
+        return;
+      }
+
+      const label =
+        this.readString(itemObj, [['label'], ['name'], ['id']]) ??
+        `${options.labelPrefix}-${index + 1}`;
+
+      const when: RuleWhenClause = {
+        [options.whenField]: {
+          min,
+          max,
+        },
+      };
+
+      const rulesRaw =
+        itemObj.rules ??
+        itemObj.then ??
+        this.stripConditionKeys_(itemObj);
+
+      result.push({
+        label,
+        when,
+        rulesRaw,
+      });
+    });
+
+    return result;
+  }
+
+  private extractCategoricalCandidates_(
+    rules: JsonObject,
+    options: {
+      arrayKey: string;
+      labelPrefix: string;
+      whenField: 'lotTypeIn' | 'roadFacingIn' | 'lifecycleStageIn' | 'precinctIn';
+      valuePaths: string[][];
+    },
+  ): ConditionalRuleCandidate[] {
+    const result: ConditionalRuleCandidate[] = [];
+    const rawList = this.readPath_(rules, [options.arrayKey]);
+    if (!Array.isArray(rawList)) {
+      return result;
+    }
+
+    rawList.forEach((item, index) => {
+      const itemObj = this.asObject(item);
+      if (!itemObj) return;
+
+      const values = this.readStringArray(itemObj, options.valuePaths);
+      if (!values.length) {
+        return;
+      }
+
+      const label =
+        this.readString(itemObj, [['label'], ['name'], ['id']]) ??
+        `${options.labelPrefix}-${index + 1}`;
+
+      const when: RuleWhenClause = {
+        [options.whenField]: values,
+      };
+
+      const rulesRaw =
+        itemObj.rules ??
+        itemObj.then ??
+        this.stripConditionKeys_(itemObj);
+
+      result.push({
+        label,
+        when,
+        rulesRaw,
+      });
+    });
+
+    return result;
+  }
+
+  private normalizeWhenClause_(rawWhen: JsonObject | null): RuleWhenClause | null {
+    if (!rawWhen) {
+      return null;
+    }
+
+    const lotAreaSqm = this.parseRangeCondition_(rawWhen, {
+      containerPaths: [['lotAreaSqm'], ['lotArea']],
+      minPaths: [['lotAreaMinSqm'], ['minLotAreaSqm'], ['minAreaSqm']],
+      maxPaths: [['lotAreaMaxSqm'], ['maxLotAreaSqm'], ['maxAreaSqm']],
+    });
+    const lotWidthM = this.parseRangeCondition_(rawWhen, {
+      containerPaths: [['lotWidthM'], ['lotWidth']],
+      minPaths: [['lotWidthMinM'], ['minLotWidthM'], ['minWidthM']],
+      maxPaths: [['lotWidthMaxM'], ['maxLotWidthM'], ['maxWidthM']],
+    });
+    const frontageM = this.parseRangeCondition_(rawWhen, {
+      containerPaths: [['frontageM'], ['frontage']],
+      minPaths: [['frontageMinM'], ['minFrontageM']],
+      maxPaths: [['frontageMaxM'], ['maxFrontageM']],
+    });
+
+    const lotTypeIn = this.readStringArray(rawWhen, [['lotTypeIn'], ['lotTypes'], ['lotType']]);
+    const roadFacingIn = this.readStringArray(rawWhen, [['roadFacingIn'], ['roadNames'], ['roadFacing']]);
+    const lifecycleStageIn = this.readStringArray(rawWhen, [['lifecycleStageIn'], ['stages'], ['stage'], ['lifecycleStage']]);
+    const precinctIn = this.readStringArray(rawWhen, [['precinctIn'], ['precincts'], ['precinct']]);
+
+    const clause: RuleWhenClause = {};
+    if (lotAreaSqm) clause.lotAreaSqm = lotAreaSqm;
+    if (lotWidthM) clause.lotWidthM = lotWidthM;
+    if (frontageM) clause.frontageM = frontageM;
+    if (lotTypeIn.length) clause.lotTypeIn = lotTypeIn;
+    if (roadFacingIn.length) clause.roadFacingIn = roadFacingIn;
+    if (lifecycleStageIn.length) clause.lifecycleStageIn = lifecycleStageIn;
+    if (precinctIn.length) clause.precinctIn = precinctIn;
+
+    if (
+      !clause.lotAreaSqm &&
+      !clause.lotWidthM &&
+      !clause.frontageM &&
+      !clause.lotTypeIn &&
+      !clause.roadFacingIn &&
+      !clause.lifecycleStageIn &&
+      !clause.precinctIn
+    ) {
+      return null;
+    }
+
+    return clause;
+  }
+
+  private parseRangeCondition_(
+    value: JsonObject,
+    options: {
+      containerPaths: string[][];
+      minPaths: string[][];
+      maxPaths: string[][];
+    },
+  ): RangeCondition | null {
+    let min: number | null = null;
+    let max: number | null = null;
+
+    for (const path of options.containerPaths) {
+      const container = this.asObject(this.readPath_(value, path));
+      if (!container) continue;
+
+      min =
+        this.readNumber(container, [['min'], ['from'], ['gte'], ['greaterThanOrEqual']]) ??
+        min;
+      max =
+        this.readNumber(container, [['max'], ['to'], ['lte'], ['lessThanOrEqual']]) ??
+        max;
+    }
+
+    min = this.readNumber(value, options.minPaths) ?? min;
+    max = this.readNumber(value, options.maxPaths) ?? max;
+
+    if (min === null && max === null) {
+      return null;
+    }
+
+    return { min, max };
+  }
+
+  private matchesWhenClause_(clause: RuleWhenClause, context: LotRuleContext): boolean {
+    if (clause.lotAreaSqm && !this.rangeMatches_(context.lotAreaSqm, clause.lotAreaSqm)) {
+      return false;
+    }
+    if (clause.lotWidthM && !this.rangeMatches_(context.lotWidthM, clause.lotWidthM)) {
+      return false;
+    }
+    if (clause.frontageM) {
+      if (context.frontageM === null || !this.rangeMatches_(context.frontageM, clause.frontageM)) {
+        return false;
+      }
+    }
+    if (clause.lotTypeIn && !this.stringInList_(context.lotType, clause.lotTypeIn, false)) {
+      return false;
+    }
+    if (clause.roadFacingIn && !this.stringInList_(context.roadFacing, clause.roadFacingIn, true)) {
+      return false;
+    }
+    if (
+      clause.lifecycleStageIn &&
+      !this.stringInList_(context.lifecycleStage, clause.lifecycleStageIn, false)
+    ) {
+      return false;
+    }
+    if (clause.precinctIn && !this.stringInList_(context.precinct, clause.precinctIn, false)) {
+      return false;
+    }
+    return true;
+  }
+
+  private rangeMatches_(value: number, range: RangeCondition): boolean {
+    if (range.min !== null && value < range.min) {
+      return false;
+    }
+    if (range.max !== null && value > range.max) {
+      return false;
+    }
+    return true;
+  }
+
+  private stringInList_(value: string | null, list: string[], useContains: boolean): boolean {
+    if (!value) return false;
+    const current = value.trim().toLowerCase();
+    if (!current) return false;
+    const normalized = list.map((item) => item.trim().toLowerCase()).filter(Boolean);
+    if (!normalized.length) return false;
+
+    if (useContains) {
+      return normalized.some((item) => current.includes(item) || item.includes(current));
+    }
+
+    return normalized.includes(current);
+  }
+
+  private stripConditionKeys_(value: JsonObject): JsonObject {
+    const ignored = new Set([
+      'label',
+      'name',
+      'id',
+      'description',
+      'when',
+      'if',
+      'rules',
+      'then',
+      'min',
+      'max',
+      'from',
+      'to',
+      'lotAreaSqm',
+      'lotArea',
+      'lotAreaMinSqm',
+      'lotAreaMaxSqm',
+      'minAreaSqm',
+      'maxAreaSqm',
+      'minLotAreaSqm',
+      'maxLotAreaSqm',
+      'lotWidthM',
+      'lotWidth',
+      'lotWidthMinM',
+      'lotWidthMaxM',
+      'minLotWidthM',
+      'maxLotWidthM',
+      'minWidthM',
+      'maxWidthM',
+      'frontageM',
+      'frontage',
+      'frontageMinM',
+      'frontageMaxM',
+      'minFrontageM',
+      'maxFrontageM',
+      'lotTypeIn',
+      'lotTypes',
+      'lotType',
+      'roadFacingIn',
+      'roadNames',
+      'roadFacing',
+      'lifecycleStageIn',
+      'lifecycleStage',
+      'stage',
+      'stages',
+      'precinctIn',
+      'precinct',
+      'precincts',
+      'values',
+      'in',
+    ]);
+
+    const output: JsonObject = {};
+    for (const [key, itemValue] of Object.entries(value)) {
+      if (ignored.has(key)) continue;
+      output[key] = itemValue;
+    }
+    return output;
   }
 
   private normalizeRulesFromJson_(rawRules: unknown): NormalizedRules {
@@ -916,6 +1450,17 @@ export class DesignOnLotService {
       const parsed = this.toNumber_(candidate);
       if (parsed !== null) {
         return parsed;
+      }
+    }
+    return null;
+  }
+
+  private readString(value: JsonObject | null, paths: string[][]): string | null {
+    if (!value) return null;
+    for (const path of paths) {
+      const candidate = this.readPath_(value, path);
+      if (typeof candidate === 'string' && candidate.trim()) {
+        return candidate.trim();
       }
     }
     return null;

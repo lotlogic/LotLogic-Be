@@ -16,12 +16,17 @@ type LotWithGeometryRow = {
   blockNumber: number | null;
   sectionNumber: number | null;
   areaSqm: number;
+  frontageM: number | null;
+  lotType: string | null;
+  roadFacing: string | null;
+  precinct: string | null;
   zoning: string;
   overlays: string[];
   address: string | null;
   district: string | null;
   division: string | null;
   lifecycleStage: string | null;
+  ruleOverrides: Prisma.JsonValue | null;
   geojson: Prisma.JsonValue | null;
   geometry: string | null;
   frontageCoordinate: string | null;
@@ -58,11 +63,16 @@ export class AdminLotController {
           "blockNumber",
           "sectionNumber",
           "areaSqm",
+          "frontageM",
+          "lotType",
+          "roadFacing",
+          "precinct",
           zoning,
           address,
           district,
           division,
           "lifecycleStage",
+          "ruleOverrides",
           "estateId",
           overlays,
           geojson,
@@ -111,11 +121,16 @@ export class AdminLotController {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "frontageM",
+        "lotType",
+        "roadFacing",
+        "precinct",
         zoning,
         address,
         district,
         division,
         "lifecycleStage",
+        "ruleOverrides",
         "estateId",
         overlays,
         geojson,
@@ -151,11 +166,16 @@ export class AdminLotController {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "frontageM",
+        "lotType",
+        "roadFacing",
+        "precinct",
         zoning,
         address,
         district,
         division,
         "lifecycleStage",
+        "ruleOverrides",
         "estateId",
         overlays,
         geojson,

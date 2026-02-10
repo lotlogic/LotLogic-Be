@@ -91,6 +91,96 @@ async function main(): Promise<void> {
     },
   });
 
+  console.log('🌱 Seeding estate rule sets...');
+  await prisma.estateRuleSet.upsert({
+    where: {
+      estateId_version: {
+        estateId: 1,
+        version: 1,
+      },
+    },
+    update: {
+      name: 'Hamilton Rise guidelines v1',
+      status: 'PUBLISHED',
+      rules: {
+        minGfaM2: 170,
+        maxStoreys: 2,
+        maxBuildingHeightM: 10.5,
+        lotAreaBands: [
+          {
+            label: '700-900sqm',
+            minAreaSqm: 700,
+            maxAreaSqm: 900,
+            maxGfaM2: 380,
+            maxSiteCoverageRatio: 0.5,
+          },
+          {
+            label: '900-1500sqm',
+            minAreaSqm: 900,
+            maxAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.4,
+          },
+          {
+            label: '1500sqm+',
+            minAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.3,
+          },
+        ],
+        requiresArchitecturalReview: true,
+        architecturalNotes: [
+          'Roof pitch minimum 22.5 degrees (single storey)',
+          'Traditional Australian vernacular style',
+          'Garages integrated within main roofline',
+          'Service areas must not face Yass Valley Way',
+        ],
+      },
+      notes: 'Seed baseline for conditional estate rules',
+    },
+    create: {
+      estateId: 1,
+      version: 1,
+      name: 'Hamilton Rise guidelines v1',
+      status: 'PUBLISHED',
+      rules: {
+        minGfaM2: 170,
+        maxStoreys: 2,
+        maxBuildingHeightM: 10.5,
+        lotAreaBands: [
+          {
+            label: '700-900sqm',
+            minAreaSqm: 700,
+            maxAreaSqm: 900,
+            maxGfaM2: 380,
+            maxSiteCoverageRatio: 0.5,
+          },
+          {
+            label: '900-1500sqm',
+            minAreaSqm: 900,
+            maxAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.4,
+          },
+          {
+            label: '1500sqm+',
+            minAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.3,
+          },
+        ],
+        requiresArchitecturalReview: true,
+        architecturalNotes: [
+          'Roof pitch minimum 22.5 degrees (single storey)',
+          'Traditional Australian vernacular style',
+          'Garages integrated within main roofline',
+          'Service areas must not face Yass Valley Way',
+        ],
+      },
+      notes: 'Seed baseline for conditional estate rules',
+    },
+  });
+
   console.log('🌱 Seeding zoning rules...');
   await prisma.zoningRule.upsert({
     where: { code: 'RZ1' },
