@@ -1,4 +1,4 @@
-﻿# LotCheck Backend
+# LotCheck Backend
 
 A NestJS-based backend service for managing land lots, estates, and zoning information with geospatial capabilities and house design compatibility analysis.
 
