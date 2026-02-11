@@ -23,9 +23,10 @@ import { AdminStateRuleSetController } from '@/modules/admin/admin-state-rule-se
 import { AdminEstateRuleSetController } from '@/modules/admin/admin-estate-rule-set.controller';
 import { AdminEstateLotConstraintController } from '@/modules/admin/admin-estate-lot-constraint.controller';
 import { AdminBuilderEstateApprovalController } from '@/modules/admin/admin-builder-estate-approval.controller';
+import { MailModule } from '@/modules/mail/mail.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, DesignOnLotModule],
+  imports: [PrismaModule, AuthModule, DesignOnLotModule, MailModule],
   controllers: [
     AdminEstateController,
     AdminLotController,

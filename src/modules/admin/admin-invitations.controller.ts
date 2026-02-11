@@ -1,4 +1,11 @@
-import { BadRequestException, Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Logger,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
@@ -6,6 +13,7 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
 import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.service';
 import { UserRole, UserStatus } from '@prisma/client';
+import { MailService } from '@/modules/mail/mail.service';
 
 interface AdminInviteBody {
   email?: string;
@@ -20,9 +28,12 @@ interface AdminInviteBody {
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/invitations')
 export class AdminInvitationsController {
+  private readonly logger = new Logger(AdminInvitationsController.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly graph: AdminEntraGraphService,
+    private readonly mailService: MailService,
   ) {}
 
   @Post()
@@ -71,12 +82,18 @@ export class AdminInvitationsController {
       email,
       redirectUrl,
       displayName: body.displayName,
-      sendInvitationMessage: body.sendInvitationMessage,
+      // We send our own custom invitation email from this backend.
+      sendInvitationMessage: body.sendInvitationMessage ?? false,
     });
 
     if (!invitation.invitedUserId) {
       throw new BadRequestException(
         'Invitation succeeded but no invitedUserId was returned by Graph',
+      );
+    }
+    if (!invitation.inviteRedeemUrl) {
+      throw new BadRequestException(
+        'Invitation succeeded but no inviteRedeemUrl was returned by Graph',
       );
     }
 
@@ -110,11 +127,56 @@ export class AdminInvitationsController {
 
     const estates = await this.prisma.userEstate.findMany({
       where: { userId: user.id },
+      include: {
+        estate: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { estateId: 'asc' },
     });
 
+    const appName = String(process.env.SMTP_FROM_NAME || 'LotLogic').trim() || 'LotLogic';
+    const inviteeName = String(body.displayName || '').trim() || email;
+    const assignedEstateNames = estates
+      .map((item) => item.estate?.name?.trim() || '')
+      .filter(Boolean);
+
+    let customEmailSent = true;
+    let customEmailError: string | null = null;
+
+    try {
+      await this.mailService.sendEmailOrThrow({
+        subject: `You're invited to ${appName}`,
+        template: 'admin-invitation-email',
+        context: {
+          appName,
+          inviteeName,
+          inviteeEmail: email,
+          inviteRedeemUrl: invitation.inviteRedeemUrl,
+          redirectUrl,
+          role,
+          status,
+          assignedEstateNames,
+        },
+        emailsList: email,
+      });
+    } catch (error) {
+      customEmailSent = false;
+      customEmailError = error instanceof Error ? error.message : 'Unknown mail error';
+      this.logger.error(
+        `Invitation email failed for ${email}: ${customEmailError}`,
+      );
+    }
+
     return {
       invitation,
+      customEmail: {
+        sent: customEmailSent,
+        error: customEmailError,
+      },
       user: {
         id: user.id.toString(),
         externalAuthId: user.externalAuthId,
@@ -126,6 +188,7 @@ export class AdminInvitationsController {
       estates: estates.map((item) => ({
         userId: item.userId.toString(),
         estateId: item.estateId.toString(),
+        estateName: item.estate?.name ?? null,
       })),
     };
   }

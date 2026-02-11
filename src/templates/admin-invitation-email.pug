@@ -1,0 +1,94 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    title Invitation
+    style.
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f5f7fa;
+        color: #222;
+      }
+      .container {
+        max-width: 640px;
+        margin: 24px auto;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .header {
+        background: #1f2937;
+        color: #fff;
+        padding: 20px 24px;
+      }
+      .content {
+        padding: 24px;
+      }
+      .button {
+        display: inline-block;
+        margin: 16px 0;
+        padding: 12px 18px;
+        background: #2563eb;
+        color: #fff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+      .meta {
+        margin-top: 16px;
+        padding: 12px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+      }
+      .meta p {
+        margin: 6px 0;
+      }
+      .footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-size: 13px;
+      }
+      ul {
+        margin-top: 8px;
+      }
+  body
+    .container
+      .header
+        h2(style='margin:0') #{appName} Invitation
+      .content
+        p Hi #{inviteeName},
+        p You have been invited to access #{appName}.
+        p Use the link below to accept your invitation and sign in:
+        a.button(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') Accept Invitation
+        p If the button does not work, copy and paste this URL into your browser:
+        p
+          a(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') #{inviteRedeemUrl}
+
+        .meta
+          p
+            strong Email:
+            |  #{inviteeEmail}
+          p
+            strong Role:
+            |  #{role}
+          p
+            strong Status:
+            |  #{status}
+          p
+            strong Post-accept redirect:
+            |  #{redirectUrl}
+
+        if assignedEstateNames && assignedEstateNames.length > 0
+          p
+            strong Estate access:
+          ul
+            each estateName in assignedEstateNames
+              li #{estateName}
+      .footer
+        p(style='margin:0') This is an automated invitation email from #{appName}.
