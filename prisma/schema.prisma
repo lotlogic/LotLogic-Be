@@ -169,8 +169,8 @@ model floorPlan {
   bathrooms                  Int
   garages                    Int
   areaSqm                    Float
-  minLotWidth                Float
-  minLotDepth                Float
+  width                      Float
+  depth                      Float
   storeys                    Int?
   buildingHeight_m           Float?
   roofPitch_deg              Float?

@@ -10,8 +10,8 @@ export interface HouseDesignFilterResult   {
     id: string,
     title: string,
     area: number,
-    minLotWidth: number,
-    minLotDepth: number,
+    width: number,
+    depth: number,
     image: string,
     images: Images[] | [],
     bedrooms: number,
@@ -56,8 +56,8 @@ export class FloorPlanService {
             if (min_size !== undefined) whereClause.areaSqm = { gte: min_size };
             if (max_size !== undefined) whereClause.areaSqm = { lte: max_size };
         }
-        if (width !== undefined) whereClause.minLotWidth = {lt: width };
-        if (depth !== undefined) whereClause.minLotDepth = {lt: depth };
+        if (width !== undefined) whereClause.width = { lt: width };
+        if (depth !== undefined) whereClause.depth = { lt: depth };
 
         const houseDesigns = await this.prisma.floorPlan.findMany({
             where: whereClause,
@@ -77,8 +77,8 @@ export class FloorPlanService {
                 id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
-                minLotWidth: house.minLotWidth,
-                minLotDepth: house.minLotDepth,
+                width: house.width,
+                depth: house.depth,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
                 images,
                 bedrooms: house.bedrooms,
@@ -150,8 +150,8 @@ export class FloorPlanService {
                 id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
-                minLotWidth: house.minLotWidth,
-                minLotDepth: house.minLotDepth,
+                width: house.width,
+                depth: house.depth,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
                 images,
                 bedrooms: house.bedrooms,
@@ -174,3 +174,4 @@ export class FloorPlanService {
         });
     }
 }
+

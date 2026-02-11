@@ -391,7 +391,7 @@ export class DesignOnLotService {
           })
         : [];
 
-    let requestedFloorPlans: Array<{ id: bigint; builderId: bigint; areaSqm: number; minLotWidth: number; minLotDepth: number; storeys: number | null; buildingHeight_m: number | null }> = [];
+    let requestedFloorPlans: Array<{ id: bigint; builderId: bigint; areaSqm: number; width: number; depth: number; storeys: number | null; buildingHeight_m: number | null }> = [];
     if (options?.floorPlanIds?.length) {
       requestedFloorPlans = await this.prisma.floorPlan.findMany({
         where: { id: { in: options.floorPlanIds } },
@@ -399,8 +399,8 @@ export class DesignOnLotService {
           id: true,
           builderId: true,
           areaSqm: true,
-          minLotWidth: true,
-          minLotDepth: true,
+          width: true,
+          depth: true,
           storeys: true,
           buildingHeight_m: true,
         },
@@ -647,8 +647,8 @@ export class DesignOnLotService {
   private evaluateFloorPlan_(
     floorPlan: {
       areaSqm: number;
-      minLotWidth: number;
-      minLotDepth: number;
+      width: number;
+      depth: number;
       storeys: number | null;
       buildingHeight_m: number | null;
     },
@@ -672,14 +672,14 @@ export class DesignOnLotService {
       failReasons.push('Lot depth is missing or invalid');
     }
 
-    if (floorPlan.minLotWidth > lotDimensions.width) {
+    if (floorPlan.width > usableWidth) {
       failReasons.push(
-        `Requires minimum lot width ${floorPlan.minLotWidth}m (lot: ${lotDimensions.width}m)`,
+        `Design width ${floorPlan.width}m exceeds usable width ${usableWidth}m`,
       );
     }
-    if (floorPlan.minLotDepth > lotDimensions.depth) {
+    if (floorPlan.depth > usableDepth) {
       failReasons.push(
-        `Requires minimum lot depth ${floorPlan.minLotDepth}m (lot: ${lotDimensions.depth}m)`,
+        `Design depth ${floorPlan.depth}m exceeds usable depth ${usableDepth}m`,
       );
     }
 
