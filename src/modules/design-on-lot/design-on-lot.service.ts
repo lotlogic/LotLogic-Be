@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   BuilderEstateApprovalStatus,
   DesignOnLotStatus,
@@ -52,6 +52,11 @@ type EvaluationOutcome = {
   maxCoverageArea: number | null;
   usableWidth: number;
   usableDepth: number;
+};
+
+type EvaluationLogContext = {
+  lotId: string;
+  floorPlanId: string;
 };
 
 type RuleSourceRefs = {
@@ -148,6 +153,8 @@ const EMPTY_RULES: NormalizedRules = {
 
 @Injectable()
 export class DesignOnLotService {
+  private readonly logger = new Logger(DesignOnLotService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async calculateCompatibility(lotId: string): Promise<DesignOnLotResult> {
@@ -460,7 +467,16 @@ export class DesignOnLotService {
     const touchedFloorPlanIds = new Set<string>();
 
     for (const floorPlan of approvedFloorPlans) {
-      const outcome = this.evaluateFloorPlan_(floorPlan, lot.areaSqm, dimensions, effectiveRules);
+      const outcome = this.evaluateFloorPlan_(
+        floorPlan,
+        lot.areaSqm,
+        dimensions,
+        effectiveRules,
+        {
+          lotId: lot.id.toString(),
+          floorPlanId: floorPlan.id.toString(),
+        },
+      );
       await this.upsertDesignOnLot_({
         lotId: lot.id,
         floorPlanId: floorPlan.id,
@@ -483,6 +499,17 @@ export class DesignOnLotService {
       if (approvedBuilderSet.has(floorPlan.builderId.toString())) {
         continue;
       }
+
+      this.logger.log(
+        `[design-on-lot:evaluation] ${JSON.stringify({
+          event: 'design_on_lot_not_evaluated',
+          lotId: lot.id.toString(),
+          floorPlanId: floorPlan.id.toString(),
+          reason: 'Builder is not approved for this estate',
+          builderId: floorPlan.builderId.toString(),
+          approvedBuilderIds: approvedBuilderIds.map((value) => value.toString()),
+        })}`,
+      );
 
       const outcome: EvaluationOutcome = {
         status: DesignOnLotStatus.FAIL,
@@ -655,42 +682,98 @@ export class DesignOnLotService {
     lotAreaSqm: number,
     lotDimensions: LotDimensions,
     rules: NormalizedRules,
+    evaluationContext: EvaluationLogContext,
   ): EvaluationOutcome {
     const failReasons: string[] = [];
     const manualReviewReasons: string[] = [];
+    const checks: Array<{
+      check: string;
+      passed: boolean;
+      details: string;
+    }> = [];
+    const addCheck = (check: string, passed: boolean, details: string) => {
+      checks.push({ check, passed, details });
+    };
 
     const front = rules.minFrontSetbackM ?? 0;
     const rear = rules.minRearSetbackM ?? 0;
     const side = rules.minSideSetbackM ?? 0;
     const usableWidth = Number((lotDimensions.width - 2 * side).toFixed(2));
     const usableDepth = Number((lotDimensions.depth - (front + rear)).toFixed(2));
+    const envelopeArea =
+      usableWidth > 0 && usableDepth > 0
+        ? Number((usableWidth * usableDepth).toFixed(2))
+        : null;
 
-    if (!Number.isFinite(lotDimensions.width) || lotDimensions.width <= 0) {
+    const lotWidthValid = Number.isFinite(lotDimensions.width) && lotDimensions.width > 0;
+    addCheck(
+      'lotWidthValid',
+      lotWidthValid,
+      `lotWidth=${lotDimensions.width}`,
+    );
+    if (!lotWidthValid) {
       failReasons.push('Lot width is missing or invalid');
     }
-    if (!Number.isFinite(lotDimensions.depth) || lotDimensions.depth <= 0) {
+
+    const lotDepthValid = Number.isFinite(lotDimensions.depth) && lotDimensions.depth > 0;
+    addCheck(
+      'lotDepthValid',
+      lotDepthValid,
+      `lotDepth=${lotDimensions.depth}`,
+    );
+    if (!lotDepthValid) {
       failReasons.push('Lot depth is missing or invalid');
     }
 
-    if (floorPlan.width > usableWidth) {
+    const designWidthFits = floorPlan.width <= usableWidth;
+    addCheck(
+      'designWidthWithinUsableWidth',
+      designWidthFits,
+      `designWidth=${floorPlan.width}, usableWidth=${usableWidth}`,
+    );
+    if (!designWidthFits) {
       failReasons.push(
         `Design width ${floorPlan.width}m exceeds usable width ${usableWidth}m`,
       );
     }
-    if (floorPlan.depth > usableDepth) {
+
+    const designDepthFits = floorPlan.depth <= usableDepth;
+    addCheck(
+      'designDepthWithinUsableDepth',
+      designDepthFits,
+      `designDepth=${floorPlan.depth}, usableDepth=${usableDepth}`,
+    );
+    if (!designDepthFits) {
       failReasons.push(
         `Design depth ${floorPlan.depth}m exceeds usable depth ${usableDepth}m`,
       );
     }
 
     if (usableWidth <= 0 || usableDepth <= 0) {
-      failReasons.push('Setbacks leave no valid building envelope');
-    } else if (floorPlan.areaSqm > usableWidth * usableDepth) {
-      failReasons.push(
-        `House area ${floorPlan.areaSqm}m2 exceeds setback envelope area ${Number(
-          (usableWidth * usableDepth).toFixed(2),
-        )}m2`,
+      addCheck(
+        'setbackEnvelopePositive',
+        false,
+        `usableWidth=${usableWidth}, usableDepth=${usableDepth}`,
       );
+      failReasons.push('Setbacks leave no valid building envelope');
+    } else {
+      addCheck(
+        'setbackEnvelopePositive',
+        true,
+        `usableWidth=${usableWidth}, usableDepth=${usableDepth}`,
+      );
+
+      const areaFitsEnvelope = floorPlan.areaSqm <= (envelopeArea ?? 0);
+      addCheck(
+        'houseAreaWithinSetbackEnvelope',
+        areaFitsEnvelope,
+        `houseArea=${floorPlan.areaSqm}, envelopeArea=${envelopeArea}`,
+      );
+      if (!areaFitsEnvelope) {
+        failReasons.push(
+          `House area ${floorPlan.areaSqm}m2 exceeds setback envelope area ${envelopeArea}m2`,
+        );
+      }
     }
 
     const maxCoverageArea =
@@ -698,49 +781,129 @@ export class DesignOnLotService {
         ? Number((lotAreaSqm * rules.maxSiteCoverageRatio).toFixed(2))
         : null;
 
-    if (maxCoverageArea !== null && floorPlan.areaSqm > maxCoverageArea) {
-      failReasons.push(
-        `House area ${floorPlan.areaSqm}m2 exceeds max site coverage ${maxCoverageArea}m2`,
+    if (maxCoverageArea !== null) {
+      const coverageOk = floorPlan.areaSqm <= maxCoverageArea;
+      addCheck(
+        'houseAreaWithinMaxSiteCoverage',
+        coverageOk,
+        `houseArea=${floorPlan.areaSqm}, maxCoverageArea=${maxCoverageArea}, maxCoverageRatio=${rules.maxSiteCoverageRatio}`,
+      );
+      if (!coverageOk) {
+        failReasons.push(
+          `House area ${floorPlan.areaSqm}m2 exceeds max site coverage ${maxCoverageArea}m2`,
+        );
+      }
+    } else {
+      addCheck(
+        'houseAreaWithinMaxSiteCoverage',
+        true,
+        'maxSiteCoverageRatio not configured',
       );
     }
 
-    if (rules.minGfaM2 !== null && floorPlan.areaSqm < rules.minGfaM2) {
-      failReasons.push(
-        `House area ${floorPlan.areaSqm}m2 is below minimum GFA ${rules.minGfaM2}m2`,
+    if (rules.minGfaM2 !== null) {
+      const minGfaOk = floorPlan.areaSqm >= rules.minGfaM2;
+      addCheck(
+        'houseAreaAboveMinGfa',
+        minGfaOk,
+        `houseArea=${floorPlan.areaSqm}, minGfa=${rules.minGfaM2}`,
       );
+      if (!minGfaOk) {
+        failReasons.push(
+          `House area ${floorPlan.areaSqm}m2 is below minimum GFA ${rules.minGfaM2}m2`,
+        );
+      }
+    } else {
+      addCheck('houseAreaAboveMinGfa', true, 'minGfaM2 not configured');
     }
 
-    if (rules.maxGfaM2 !== null && floorPlan.areaSqm > rules.maxGfaM2) {
-      failReasons.push(
-        `House area ${floorPlan.areaSqm}m2 exceeds maximum GFA ${rules.maxGfaM2}m2`,
+    if (rules.maxGfaM2 !== null) {
+      const maxGfaOk = floorPlan.areaSqm <= rules.maxGfaM2;
+      addCheck(
+        'houseAreaBelowMaxGfa',
+        maxGfaOk,
+        `houseArea=${floorPlan.areaSqm}, maxGfa=${rules.maxGfaM2}`,
       );
+      if (!maxGfaOk) {
+        failReasons.push(
+          `House area ${floorPlan.areaSqm}m2 exceeds maximum GFA ${rules.maxGfaM2}m2`,
+        );
+      }
+    } else {
+      addCheck('houseAreaBelowMaxGfa', true, 'maxGfaM2 not configured');
     }
 
     if (rules.maxStoreys !== null) {
       if (floorPlan.storeys === null) {
+        addCheck(
+          'storeysWithinMaxStoreys',
+          false,
+          `storeys missing, maxStoreys=${rules.maxStoreys}`,
+        );
         manualReviewReasons.push('Storey count is required to validate max storeys');
       } else if (floorPlan.storeys > rules.maxStoreys) {
+        addCheck(
+          'storeysWithinMaxStoreys',
+          false,
+          `storeys=${floorPlan.storeys}, maxStoreys=${rules.maxStoreys}`,
+        );
         failReasons.push(`Storeys ${floorPlan.storeys} exceed max storeys ${rules.maxStoreys}`);
+      } else {
+        addCheck(
+          'storeysWithinMaxStoreys',
+          true,
+          `storeys=${floorPlan.storeys}, maxStoreys=${rules.maxStoreys}`,
+        );
       }
+    } else {
+      addCheck('storeysWithinMaxStoreys', true, 'maxStoreys not configured');
     }
 
     if (rules.maxBuildingHeightM !== null) {
       if (floorPlan.buildingHeight_m === null) {
+        addCheck(
+          'heightWithinMaxHeight',
+          false,
+          `buildingHeight missing, maxBuildingHeight=${rules.maxBuildingHeightM}`,
+        );
         manualReviewReasons.push('Building height is required to validate max building height');
       } else if (floorPlan.buildingHeight_m > rules.maxBuildingHeightM) {
+        addCheck(
+          'heightWithinMaxHeight',
+          false,
+          `buildingHeight=${floorPlan.buildingHeight_m}, maxBuildingHeight=${rules.maxBuildingHeightM}`,
+        );
         failReasons.push(
           `Building height ${floorPlan.buildingHeight_m}m exceeds max height ${rules.maxBuildingHeightM}m`,
         );
+      } else {
+        addCheck(
+          'heightWithinMaxHeight',
+          true,
+          `buildingHeight=${floorPlan.buildingHeight_m}, maxBuildingHeight=${rules.maxBuildingHeightM}`,
+        );
       }
+    } else {
+      addCheck('heightWithinMaxHeight', true, 'maxBuildingHeightM not configured');
     }
 
     if (rules.requiresArchitecturalReview) {
+      addCheck('architecturalReviewRequired', false, 'requiresArchitecturalReview=true');
       manualReviewReasons.push('Architectural/style requirements require manual review');
+    } else {
+      addCheck('architecturalReviewRequired', true, 'requiresArchitecturalReview=false');
     }
     if (rules.architecturalNotes.length > 0) {
+      addCheck(
+        'architecturalNotesPresent',
+        false,
+        `architecturalNotesCount=${rules.architecturalNotes.length}`,
+      );
       for (const note of rules.architecturalNotes) {
         manualReviewReasons.push(`Manual review: ${note}`);
       }
+    } else {
+      addCheck('architecturalNotesPresent', true, 'no architecturalNotes');
     }
 
     const status =
@@ -749,6 +912,25 @@ export class DesignOnLotService {
         : manualReviewReasons.length > 0
           ? DesignOnLotStatus.MANUAL_REVIEW
           : DesignOnLotStatus.PASS;
+
+    this.logFloorPlanEvaluation_({
+      evaluationContext,
+      lotAreaSqm,
+      lotDimensions,
+      floorPlan,
+      rules,
+      front,
+      rear,
+      side,
+      usableWidth,
+      usableDepth,
+      envelopeArea,
+      maxCoverageArea,
+      checks,
+      failReasons,
+      manualReviewReasons,
+      status,
+    });
 
     return {
       status,
@@ -1392,6 +1574,65 @@ export class DesignOnLotService {
       take: 1,
     });
     return candidates[0] ?? null;
+  }
+
+  private logFloorPlanEvaluation_(params: {
+    evaluationContext: EvaluationLogContext;
+    lotAreaSqm: number;
+    lotDimensions: LotDimensions;
+    floorPlan: {
+      areaSqm: number;
+      width: number;
+      depth: number;
+      storeys: number | null;
+      buildingHeight_m: number | null;
+    };
+    rules: NormalizedRules;
+    front: number;
+    rear: number;
+    side: number;
+    usableWidth: number;
+    usableDepth: number;
+    envelopeArea: number | null;
+    maxCoverageArea: number | null;
+    checks: Array<{ check: string; passed: boolean; details: string }>;
+    failReasons: string[];
+    manualReviewReasons: string[];
+    status: DesignOnLotStatus;
+  }) {
+    const payload = {
+      event: 'design_on_lot_evaluation',
+      lotId: params.evaluationContext.lotId,
+      floorPlanId: params.evaluationContext.floorPlanId,
+      input: {
+        lotAreaSqm: params.lotAreaSqm,
+        lotWidth: params.lotDimensions.width,
+        lotDepth: params.lotDimensions.depth,
+        floorPlanAreaSqm: params.floorPlan.areaSqm,
+        floorPlanWidth: params.floorPlan.width,
+        floorPlanDepth: params.floorPlan.depth,
+        floorPlanStoreys: params.floorPlan.storeys,
+        floorPlanBuildingHeightM: params.floorPlan.buildingHeight_m,
+      },
+      derived: {
+        setbacks: {
+          front: params.front,
+          rear: params.rear,
+          side: params.side,
+        },
+        usableWidth: params.usableWidth,
+        usableDepth: params.usableDepth,
+        envelopeArea: params.envelopeArea,
+        maxCoverageArea: params.maxCoverageArea,
+      },
+      rules: params.rules,
+      checks: params.checks,
+      failReasons: params.failReasons,
+      manualReviewReasons: params.manualReviewReasons,
+      status: params.status,
+    };
+
+    this.logger.log(`[design-on-lot:evaluation] ${JSON.stringify(payload)}`);
   }
 
   private extractLotDimensions(geojson: unknown): LotDimensions {
