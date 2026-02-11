@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
@@ -6,8 +6,9 @@ export class AppService {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'LotLogic Backend',
+      service: 'LotCheck Backend',
       version: '1.0.0'
     };
   }
 }
+

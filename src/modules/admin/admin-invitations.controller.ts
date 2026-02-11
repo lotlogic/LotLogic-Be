@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Body,
   Controller,
@@ -138,7 +138,7 @@ export class AdminInvitationsController {
       orderBy: { estateId: 'asc' },
     });
 
-    const appName = String(process.env.SMTP_FROM_NAME || 'LotLogic').trim() || 'LotLogic';
+    const appName = String(process.env.SMTP_FROM_NAME || 'LotCheck').trim() || 'LotCheck';
     const inviteeName = String(body.displayName || '').trim() || email;
     const assignedEstateNames = estates
       .map((item) => item.estate?.name?.trim() || '')
@@ -193,3 +193,4 @@ export class AdminInvitationsController {
     };
   }
 }
+

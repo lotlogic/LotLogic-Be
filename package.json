@@ -1,5 +1,5 @@
-{
-  "name": "lotlogic-be",
+﻿{
+  "name": "lotcheck-be",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -60,3 +60,4 @@
     "typescript": "^5.7.3"
   }
 }
+

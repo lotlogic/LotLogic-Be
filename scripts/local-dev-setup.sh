@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ dc() {
   docker compose -f "$COMPOSE_FILE" "$@"
 }
 
-echo "🚀 Setting up LotLogic local Docker environment..."
+echo "🚀 Setting up LotCheck local Docker environment..."
 echo "   compose file: $COMPOSE_FILE"
 
 if ! docker info >/dev/null 2>&1; then
@@ -19,7 +19,7 @@ fi
 
 wait_for_db() {
   echo "⏳ Waiting for PostgreSQL to be ready..."
-  until dc exec -T postgres pg_isready -U postgres -d lotlogic >/dev/null 2>&1; do
+  until dc exec -T postgres pg_isready -U postgres -d lotcheck >/dev/null 2>&1; do
     sleep 2
   done
   echo "✅ PostgreSQL is ready!"
@@ -77,7 +77,7 @@ run_migrations
 seed_database
 
 echo ""
-echo "🎉 LotLogic Docker environment is ready!"
+echo "🎉 LotCheck Docker environment is ready!"
 echo ""
 echo "📊 Services:"
 echo "   Backend API: http://localhost:3000/api"
@@ -88,3 +88,4 @@ echo "📝 Useful commands:"
 echo "   View logs: docker compose -f $COMPOSE_FILE logs -f backend"
 echo "   Stop services: docker compose -f $COMPOSE_FILE down"
 echo "   Reset volumes: docker compose -f $COMPOSE_FILE down -v"
+
