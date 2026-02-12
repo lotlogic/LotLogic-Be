@@ -13,7 +13,7 @@ export class AdminUploadController {
   constructor(private readonly uploadService: AdminUploadService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
   async createUpload(@Body() body: AdminUploadRequest) {
     return this.uploadService.createUploadUrl(body);
   }
