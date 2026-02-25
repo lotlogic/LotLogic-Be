@@ -268,6 +268,32 @@ GET /design-on-lot/calculate?lotId={lotId}
 }
 ```
 
+#### Get In Touch (Feasibility Enquiry)
+```http
+POST /api/enquiry/get-in-touch
+```
+
+Request body (JSON):
+
+```json
+{
+  "address": "13 Meehan Gardens, Griffith ACT",
+  "email": "client@example.com",
+  "phone": "+61 400 000 000",
+  "message": "Please call me this week",
+  "company": "",
+  "recaptchaToken": "optional-if-configured"
+}
+```
+
+Behavior:
+
+- `phone` is required.
+- Subject is auto-generated as: `Feasibility assessment enquiry — [address]`.
+- Email is sent from backend to `GET_IN_TOUCH_RECIPIENT_EMAIL` (defaults to `mitch@blockplanner.com.au`).
+- Honeypot support: if `company` is populated, submission is treated as spam and ignored.
+- Optional reCAPTCHA verification is enabled when `RECAPTCHA_SECRET_KEY` is set.
+
 ## 🐳 Docker Services
 
 | Service | Port | Description |
