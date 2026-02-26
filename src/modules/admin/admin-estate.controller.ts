@@ -27,6 +27,39 @@ import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service'
 import { readFileSync } from 'fs';
 import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
+const normalizeBooleanFlag = (
+  value: unknown,
+  fieldName: string,
+): boolean | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'number' && (value === 0 || value === 1)) {
+    return value === 1;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') {
+      return true;
+    }
+    if (normalized === 'false' || normalized === '0') {
+      return false;
+    }
+  }
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.hasOwnProperty.call(value, 'set')
+  ) {
+    return normalizeBooleanFlag((value as { set?: unknown }).set, fieldName);
+  }
+  throw new BadRequestException(`Invalid ${fieldName}`);
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/estates')
 export class AdminEstateController {
@@ -64,7 +97,26 @@ export class AdminEstateController {
   @Post()
   @Roles('ADMIN')
   async create(@Body() data: Prisma.estateCreateInput) {
-    return this.prisma.estate.create({ data });
+    const normalizedIsPrototype = normalizeBooleanFlag(
+      (data as { isPrototype?: unknown }).isPrototype,
+      'isPrototype',
+    );
+    const createData =
+      normalizedIsPrototype === undefined
+        ? data
+        : { ...data, isPrototype: normalizedIsPrototype };
+
+    if (normalizedIsPrototype === true) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.estate.updateMany({
+          where: { isPrototype: true },
+          data: { isPrototype: false },
+        });
+        return tx.estate.create({ data: createData });
+      });
+    }
+
+    return this.prisma.estate.create({ data: createData });
   }
 
   @Patch(':id')
@@ -73,9 +125,35 @@ export class AdminEstateController {
     @Param('id') id: string,
     @Body() data: Prisma.estateUpdateInput,
   ) {
+    const estateId = parseBigIntId(id, 'id');
+    const normalizedIsPrototype = normalizeBooleanFlag(
+      (data as { isPrototype?: unknown }).isPrototype,
+      'isPrototype',
+    );
+    const updateData =
+      normalizedIsPrototype === undefined
+        ? data
+        : { ...data, isPrototype: normalizedIsPrototype };
+
+    if (normalizedIsPrototype === true) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.estate.updateMany({
+          where: {
+            isPrototype: true,
+            id: { not: estateId },
+          },
+          data: { isPrototype: false },
+        });
+        return tx.estate.update({
+          where: { id: estateId },
+          data: updateData,
+        });
+      });
+    }
+
     return this.prisma.estate.update({
-      where: { id: parseBigIntId(id, 'id') },
-      data,
+      where: { id: estateId },
+      data: updateData,
     });
   }
 

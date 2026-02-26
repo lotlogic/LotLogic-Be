@@ -21,8 +21,20 @@ export type BrandUpsertData = {
 export class BrandService {
   constructor(private prisma: PrismaService) {}
 
-  // Backwards-compatible default brand (if it exists)
+  // Default brand prefers the prototype estate brand when configured.
   async getDefault() {
+    const prototypeBrand = await this.prisma.brandSetting.findFirst({
+      where: {
+        estate: {
+          isPrototype: true,
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (prototypeBrand) {
+      return prototypeBrand;
+    }
+
     const data = await this.prisma.brandSetting.findUnique({ where: { id: BRAND_ID } });
     return data || {};
   }
