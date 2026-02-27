@@ -204,6 +204,7 @@ export class DashboardReportService {
             contentType: 'application/pdf',
           },
         ],
+        senderProfile: 'blockplanner',
       });
 
       this.logger.log(

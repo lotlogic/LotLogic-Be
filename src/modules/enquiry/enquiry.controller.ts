@@ -73,6 +73,7 @@ export class EnquiryController {
 
                     },
                     emailsList: builder.email,
+                    senderProfile: 'lotcheck',
                 });
             }
         }
@@ -126,6 +127,7 @@ export class EnquiryController {
                 sourceIp: this.normalizeText(req.ip) || 'unknown',
             },
             emailsList: recipientEmail,
+            senderProfile: 'blockplanner',
         });
 
         return { message: 'Enquiry submitted' };

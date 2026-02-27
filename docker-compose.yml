@@ -47,7 +47,6 @@ services:
       SMTP_PORT: 587
       SMTP_USER: dev@beyondhimalayatech.com.au
       SMTP_PASS: "ZqcG(1*tY5oE[ @"
-      SMTP_FROM: dev@beyondhimalayatech.com.au    
       GOOGLE_MAPS_API_KEY: "AIzaSyCcNZsGEqV4sb_8-SfgunyeFb3qNEmbwlc"  
       GOOGLE_GEOCODING_REGION: "au"
       GOOGLE_GEOCODING_COMPONENTS: "country:AU|administrative_area:ACT"
