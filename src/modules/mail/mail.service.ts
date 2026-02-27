@@ -1,68 +1,47 @@
 import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
 
+type SendEmailParams = {
+    subject: string;
+    template: string;
+    context: ISendMailOptions['context'];
+    emailsList: string;
+    attachments?: ISendMailOptions['attachments'];
+    from?: string;
+};
+
 @Injectable()
 export class MailService {
     private readonly logger = new Logger(MailService.name);
 
     constructor(private readonly mailerService: MailerService) {}
 
-    async sendEmail(params: {
-        subject: string;
-        template: string;
-        context: ISendMailOptions['context'];
-        emailsList: string;
-        attachments?: ISendMailOptions['attachments'];
-    }) {
-        try {
-            // Parse the emails list (comma-separated string)
-            const emailArray = params.emailsList.split(',').map(email => email.trim());
-            
-            // Send individual emails to each recipient
-            const emailPromises = emailArray.map(async (email) => {
-                const sendMailParams = {
-                    to: email, // Send to individual builder
-                    from: `${process.env.SMTP_FROM_NAME || 'LotCheck'} <${process.env.SMTP_FROM}>`,
-                    subject: params.subject,
-                    template: params.template,
-                    context: params.context,
-                    attachments: params.attachments,
-                };
-                
-                return await this.mailerService.sendMail(sendMailParams);
-            });
-            
-            // Wait for all emails to be sent
-            const responses = await Promise.all(emailPromises);
-            
-            this.logger.log(
-                `Emails sent successfully to ${emailArray.length} recipients individually: ${emailArray.join(', ')}`,
-                responses,
-            );
-        } catch (error) {
-            this.logger.error(
-                `Error while sending mail with the following parameters : ${JSON.stringify(
-                    params,
-                )}`,
-                error,
-            );
-        }
+    private parseEmailList(emailsList: string): string[] {
+        return emailsList
+            .split(',')
+            .map((email) => email.trim())
+            .filter(Boolean);
     }
 
-    async sendEmailOrThrow(params: {
-        subject: string;
-        template: string;
-        context: ISendMailOptions['context'];
-        emailsList: string;
-        attachments?: ISendMailOptions['attachments'];
-    }) {
-        // Parse the emails list (comma-separated string)
-        const emailArray = params.emailsList.split(',').map(email => email.trim());
+    private resolveFromAddress(explicitFrom?: string): string {
+        const from = String(explicitFrom || '').trim();
+        if (from) {
+            return from;
+        }
+
+        const fromName = String(process.env.SMTP_FROM_NAME || 'LotCheck').trim() || 'LotCheck';
+        const fromEmail = String(process.env.SMTP_FROM || '').trim();
+        return fromEmail ? `${fromName} <${fromEmail}>` : fromName;
+    }
+
+    private async sendToRecipientsOrThrow(params: SendEmailParams) {
+        const emailArray = this.parseEmailList(params.emailsList);
+        const fromAddress = this.resolveFromAddress(params.from);
 
         const emailPromises = emailArray.map(async (email) => {
             const sendMailParams = {
                 to: email,
-                from: `${process.env.SMTP_FROM_NAME || 'BlockPlanner'} <${process.env.SMTP_FROM}>`,
+                from: fromAddress,
                 subject: params.subject,
                 template: params.template,
                 context: params.context,
@@ -77,6 +56,23 @@ export class MailService {
             `Emails sent successfully to ${emailArray.length} recipients individually: ${emailArray.join(', ')}`,
             responses,
         );
+    }
+
+    async sendEmail(params: SendEmailParams) {
+        try {
+            await this.sendToRecipientsOrThrow(params);
+        } catch (error) {
+            this.logger.error(
+                `Error while sending mail with the following parameters : ${JSON.stringify(
+                    params,
+                )}`,
+                error,
+            );
+        }
+    }
+
+    async sendEmailOrThrow(params: SendEmailParams) {
+        await this.sendToRecipientsOrThrow(params);
     }
 
     // Alternative method using BCC (sends one email with BCC recipients)

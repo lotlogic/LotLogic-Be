@@ -138,11 +138,16 @@ export class AdminInvitationsController {
       orderBy: { estateId: 'asc' },
     });
 
-    const appName = String(process.env.SMTP_FROM_NAME || 'LotCheck').trim() || 'LotCheck';
     const inviteeName = String(body.displayName || '').trim() || email;
     const assignedEstateNames = estates
       .map((item) => item.estate?.name?.trim() || '')
       .filter(Boolean);
+
+    // Invitation flows are LotCheck-only (admin endpoints are not used by Free Assessment).
+    const appName = 'LotCheck';
+    const fromEmail = String(process.env.SMTP_FROM || '').trim();
+    const fromName = String(process.env.SMTP_FROM_NAME || 'LotCheck').trim() || 'LotCheck';
+    const fromAddress = fromEmail ? `${fromName} <${fromEmail}>` : undefined;
 
     let customEmailSent = true;
     let customEmailError: string | null = null;
@@ -162,6 +167,7 @@ export class AdminInvitationsController {
           assignedEstateNames,
         },
         emailsList: email,
+        from: fromAddress,
       });
     } catch (error) {
       customEmailSent = false;
