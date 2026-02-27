@@ -5,6 +5,7 @@ import { calculateDistance, calculateArea, getWidthHeight } from '@/helper/turf'
 
 interface ImportDxfOptions {
   zoning?: string;
+  lotType?: string | null;
   blockKeyPrefix?: string;
   blockNumber?: number | null;
   sectionNumber?: number | null;
@@ -448,6 +449,7 @@ export class AdminLotImportService {
             sectionNumber: options.sectionNumber ?? null,
             areaSqm,
             zoning: options.zoning ?? '',
+            lotType: options.lotType ?? null,
             address: options.address ?? null,
             district: options.district ?? null,
             division: options.division ?? null,
@@ -502,6 +504,7 @@ export class AdminLotImportService {
   parseOptions(body: Record<string, string | undefined>): ImportDxfOptions {
     return {
       zoning: body.zoning,
+      lotType: body.lotType ?? null,
       blockKeyPrefix: body.blockKeyPrefix,
       blockNumber: parseNumber(body.blockNumber) ?? null,
       sectionNumber: parseNumber(body.sectionNumber) ?? null,
