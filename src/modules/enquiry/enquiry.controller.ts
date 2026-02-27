@@ -8,6 +8,7 @@ import { Request } from 'express';
 
 interface GetInTouchBody {
     address?: string;
+    name?: string;
     email?: string;
     phone?: string;
     message?: string;
@@ -81,6 +82,7 @@ export class EnquiryController {
     @Post('get-in-touch')
     async postGetInTouch(@Body() body: GetInTouchBody, @Req() req: Request) {
         const address = this.normalizeText(body.address);
+        const name = this.normalizeText(body.name);
         const email = this.normalizeText(body.email).toLowerCase();
         const phone = this.normalizeText(body.phone);
         const message = this.normalizeText(body.message);
@@ -116,6 +118,7 @@ export class EnquiryController {
             template: 'feasibility-assessment-enquiry',
             context: {
                 address,
+                name: name || 'Not provided',
                 email,
                 phone,
                 message: message || 'Not provided',
