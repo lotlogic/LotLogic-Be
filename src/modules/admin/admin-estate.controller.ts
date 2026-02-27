@@ -165,6 +165,19 @@ export class AdminEstateController {
     });
   }
 
+  @Delete(':id/lots')
+  @Roles('ADMIN')
+  async removeLots(@Param('id') id: string) {
+    const estateId = parseBigIntId(id, 'id');
+    const result = await this.prisma.lot.deleteMany({
+      where: { estateId },
+    });
+    return {
+      estateId: estateId.toString(),
+      deleted: result.count,
+    };
+  }
+
   @Get(':id/users')
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
