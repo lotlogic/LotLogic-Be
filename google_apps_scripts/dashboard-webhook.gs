@@ -8,6 +8,17 @@ const TEMPLATE_ROW = 3;
 const REPORT_ID_BASE = 15000;
 const TRIGGER_COLUMN_AB = 28; // Column AB ("send for QA?")
 const TRIGGER_COLUMN_AE = 31; // Column AE ("Delivery status")
+const APPEND_PAYLOAD_FIELD_MAP = [
+  { header: 'Client name', key: 'clientName' },
+  { header: 'Client email', key: 'clientEmail' },
+  { header: 'Client phone', key: 'clientPhone' },
+  { header: 'Address', key: 'address' },
+  { header: 'Suburb', key: 'suburb' },
+  { header: 'Block size (m²)', key: 'blockSizeM2' },
+  { header: 'Zone', key: 'zone' },
+  { header: 'Intention', key: 'intention' },
+  { header: 'Stripe payment id', key: 'stripePaymentId' },
+];
 
 function doGet() {
   return ContentService.createTextOutput('OK').setMimeType(
@@ -275,7 +286,51 @@ function doPost(e) {
       return updateRow_(sheet, lastCol, headerIndex, payload, rowNumber);
     }
 
-    return appendRow_(sheet, lastCol, headerIndex, payload);
+    // For append flow, lock + dedupe by Stripe payment id to avoid duplicate rows
+    // when Stripe retries webhooks or sends overlapping event types.
+    const lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+    try {
+      const stripePaymentId = getStripePaymentId_(payload);
+      if (stripePaymentId) {
+        const existingRowNumber = findRowByStripePaymentId_(
+          sheet,
+          headerIndex,
+          stripePaymentId,
+        );
+        if (existingRowNumber) {
+          const applied = applyMappedPayloadFields_(
+            sheet,
+            existingRowNumber,
+            headerIndex,
+            payload,
+            false,
+          );
+          const reportId = getCellByHeader_(
+            sheet,
+            existingRowNumber,
+            headerIndex,
+            'Report ID',
+          );
+          debugLog_('doPost: deduped by Stripe payment id', {
+            stripePaymentId,
+            rowNumber: existingRowNumber,
+            applied,
+          });
+          return json_({
+            ok: true,
+            deduplicated: true,
+            rowNumber: existingRowNumber,
+            reportId: reportId || '',
+            applied,
+          });
+        }
+      }
+
+      return appendRow_(sheet, lastCol, headerIndex, payload);
+    } finally {
+      lock.releaseLock();
+    }
   } catch (err) {
     return json_({ ok: false, error: String(err?.message || err) });
   }
@@ -283,55 +338,49 @@ function doPost(e) {
 
 function appendRow_(sheet, lastCol, headerIndex, payload) {
   // Determine append row number
-  const targetRowNumber = sheet.getLastRow() + 1;
+  const lastRow = sheet.getLastRow();
+  const targetRowNumber = lastRow + 1;
 
   // Create the new row
-  sheet.insertRowAfter(sheet.getLastRow());
+  sheet.insertRowsAfter(lastRow, 1);
 
-  // Copy template row (values, formatting, data validation, etc.) into the new row
-  sheet
-    .getRange(TEMPLATE_ROW, 1, 1, lastCol)
-    .copyTo(sheet.getRange(targetRowNumber, 1, 1, lastCol), {
-      contentsOnly: false,
-    });
-
-  // Now set the values you want to override
+  // Copy template row exactly (values, formulas, formatting, data validation, etc.)
+  const templateRange = sheet.getRange(TEMPLATE_ROW, 1, 1, lastCol);
   const targetRange = sheet.getRange(targetRowNumber, 1, 1, lastCol);
-  const targetRow = targetRange.getValues()[0];
+  templateRange.copyTo(
+    targetRange,
+    SpreadsheetApp.CopyPasteType.PASTE_NORMAL,
+    false,
+  );
+
+  // Apply only explicit overrides so template formulas/validations remain intact.
+  const updates = [];
 
   // Timestamp
   const tsIdx = headerIndex.get('Timestamp');
   if (tsIdx === undefined)
     return json_({ ok: false, error: 'missing_timestamp_header' });
-  targetRow[tsIdx] = new Date();
+  updates.push({ col: tsIdx + 1, value: new Date() });
 
   // Auto Report ID
   const reportIdIdx = headerIndex.get('Report ID');
   if (reportIdIdx !== undefined) {
-    targetRow[reportIdIdx] = REPORT_ID_BASE + targetRowNumber;
+    updates.push({
+      col: reportIdIdx + 1,
+      value: REPORT_ID_BASE + targetRowNumber,
+    });
   }
 
-  // Payload field mapping
-  const fieldMap = [
-    { header: 'Client name', key: 'clientName' },
-    { header: 'Client email', key: 'clientEmail' },
-    { header: 'Client phone', key: 'clientPhone' },
-    { header: 'Address', key: 'address' },
-    { header: 'Suburb', key: 'suburb' },
-    { header: 'Block size (m²)', key: 'blockSizeM2' },
-    { header: 'Zone', key: 'zone' },
-    { header: 'Intention', key: 'intention' },
-    { header: 'Stripe payment id', key: 'stripePaymentId' },
-  ];
+  const mappedUpdates = collectMappedPayloadUpdates_(
+    headerIndex,
+    payload,
+    true,
+  );
+  for (const update of mappedUpdates) updates.push(update);
 
-  for (const { header, key } of fieldMap) {
-    const idx = headerIndex.get(header);
-    if (idx === undefined) continue;
-    targetRow[idx] = normalize_(payload[key]);
+  for (const { col, value } of updates) {
+    sheet.getRange(targetRowNumber, col).setValue(value);
   }
-
-  // Write updated values back into the copied row
-  targetRange.setValues([targetRow]);
 
   debugLog_('appendRow_: created', {
     rowNumber: targetRowNumber,
@@ -351,9 +400,6 @@ function updateRow_(sheet, lastCol, headerIndex, payload, rowNumber) {
     return json_({ ok: false, error: 'invalid_row_number' });
   if (rowNumber > sheet.getLastRow())
     return json_({ ok: false, error: 'row_out_of_range' });
-
-  const range = sheet.getRange(rowNumber, 1, 1, lastCol);
-  const row = range.getValues()[0];
 
   const updates =
     payload.updates &&
@@ -385,11 +431,10 @@ function updateRow_(sheet, lastCol, headerIndex, payload, rowNumber) {
   for (const header in updates) {
     const idx = headerIndex.get(header);
     if (idx === undefined) continue;
-    row[idx] = normalize_(updates[header]);
+    // Update only requested cells to avoid replacing template formulas.
+    sheet.getRange(rowNumber, idx + 1).setValue(normalize_(updates[header]));
     applied++;
   }
-
-  range.setValues([row]);
 
   debugLog_('updateRow_: updated', { rowNumber, applied });
 
@@ -575,6 +620,78 @@ function getHeader_(e, name) {
   return (
     (e?.headers && (e.headers[name] || e.headers[name.toLowerCase()])) || ''
   );
+}
+
+function getStripePaymentId_(payload) {
+  const raw =
+    payload && payload.stripePaymentId !== undefined
+      ? payload.stripePaymentId
+      : payload && payload['Stripe payment id'] !== undefined
+        ? payload['Stripe payment id']
+        : '';
+  return String(raw || '').trim();
+}
+
+function findRowByStripePaymentId_(sheet, headerIndex, stripePaymentId) {
+  const target = String(stripePaymentId || '').trim();
+  if (!target) return null;
+
+  const idx = headerIndex.get('Stripe payment id');
+  if (idx === undefined) {
+    debugLog_('findRowByStripePaymentId_: stripe column not found', {
+      expected: 'Stripe payment id',
+      headers: Array.from(headerIndex.keys()),
+    });
+    return null;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < TEMPLATE_ROW) return null;
+
+  const col = idx + 1;
+  const numRows = lastRow - TEMPLATE_ROW + 1;
+  const values = sheet.getRange(TEMPLATE_ROW, col, numRows, 1).getValues();
+  for (let i = 0; i < values.length; i++) {
+    const cell = String(values[i][0] || '').trim();
+    if (cell && cell === target) return TEMPLATE_ROW + i;
+  }
+  return null;
+}
+
+function collectMappedPayloadUpdates_(headerIndex, payload, includeEmpty) {
+  const updates = [];
+  const hasOwn = Object.prototype.hasOwnProperty;
+  for (const { header, key } of APPEND_PAYLOAD_FIELD_MAP) {
+    const idx = headerIndex.get(header);
+    if (idx === undefined) continue;
+
+    if (!includeEmpty && !hasOwn.call(payload, key)) continue;
+
+    const value = normalize_(payload[key]);
+    if (!includeEmpty && !String(value).trim()) continue;
+    updates.push({ col: idx + 1, value });
+  }
+  return updates;
+}
+
+function applyMappedPayloadFields_(
+  sheet,
+  rowNumber,
+  headerIndex,
+  payload,
+  includeEmpty,
+) {
+  const updates = collectMappedPayloadUpdates_(headerIndex, payload, includeEmpty);
+  for (const { col, value } of updates) {
+    sheet.getRange(rowNumber, col).setValue(value);
+  }
+  return updates.length;
+}
+
+function getCellByHeader_(sheet, rowNumber, headerIndex, header) {
+  const idx = headerIndex.get(header);
+  if (idx === undefined) return '';
+  return normalize_(sheet.getRange(rowNumber, idx + 1).getValue());
 }
 
 function json_(obj) {
