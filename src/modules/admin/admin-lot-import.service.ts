@@ -35,6 +35,7 @@ const DEFAULT_SOURCE_SRID = 28355; // GDA94 / MGA zone 55 (matches sample DXF co
 const DEFAULT_TARGET_SRID = 4326; // WGS84 (matches existing geo queries)
 const LARGE_POLYLINE_RATIO = 5;
 const MIN_AREA_DEFAULT = 1;
+const EDGE_KEY_DECIMALS = 6;
 
 function ensureProj4Defs(srid: number) {
   if (srid === 28355) {
@@ -199,6 +200,77 @@ function planarWidthHeight(ring: [number, number][]) {
   };
 }
 
+function coordinateKey(
+  point: [number, number],
+  decimals = EDGE_KEY_DECIMALS,
+) {
+  return `${point[0].toFixed(decimals)},${point[1].toFixed(decimals)}`;
+}
+
+function edgeKey(a: [number, number], b: [number, number]) {
+  const aKey = coordinateKey(a);
+  const bKey = coordinateKey(b);
+  return aKey < bKey ? `${aKey}|${bKey}` : `${bKey}|${aKey}`;
+}
+
+function buildEdgeUsageMap(lots: LotPolygon[]) {
+  const usage = new Map<string, number>();
+  for (const lot of lots) {
+    for (let i = 0; i < lot.ring.length - 1; i += 1) {
+      const key = edgeKey(lot.ring[i], lot.ring[i + 1]);
+      usage.set(key, (usage.get(key) ?? 0) + 1);
+    }
+  }
+  return usage;
+}
+
+function edgeLength(
+  a: [number, number],
+  b: [number, number],
+  isGeographic: boolean,
+) {
+  return isGeographic ? calculateDistance(a, b) : planarDistance(a, b);
+}
+
+function pickFrontageEdgeIndex(
+  ring: [number, number][],
+  edgeUsageMap: Map<string, number>,
+  isGeographic: boolean,
+) {
+  let selectedIndex: number | null = null;
+  let selectedLength = -Infinity;
+
+  for (let i = 0; i < ring.length - 1; i += 1) {
+    const key = edgeKey(ring[i], ring[i + 1]);
+    if ((edgeUsageMap.get(key) ?? 0) !== 1) {
+      continue;
+    }
+    const length = edgeLength(ring[i], ring[i + 1], isGeographic);
+    if (length > selectedLength) {
+      selectedLength = length;
+      selectedIndex = i;
+    }
+  }
+
+  if (selectedIndex !== null) {
+    return selectedIndex;
+  }
+
+  for (let i = 0; i < ring.length - 1; i += 1) {
+    const length = edgeLength(ring[i], ring[i + 1], isGeographic);
+    if (length > selectedLength) {
+      selectedLength = length;
+      selectedIndex = i;
+    }
+  }
+
+  return selectedIndex;
+}
+
+function toLineStringWkt(a: [number, number], b: [number, number]) {
+  return `LINESTRING(${a[0]} ${a[1]}, ${b[0]} ${b[1]})`;
+}
+
 function extractLots(
   polylines: ParsedPolyline[],
   options: Pick<ImportDxfOptions, 'layer' | 'minArea' | 'dropLargest'> & {
@@ -285,6 +357,7 @@ export class AdminLotImportService {
     }
 
     const shouldTransform = sourceSrid !== targetSrid;
+    const edgeUsageMap = buildEdgeUsageMap(lots);
 
     if (shouldTransform) {
       ensureProj4Defs(sourceSrid);
@@ -314,6 +387,28 @@ export class AdminLotImportService {
           : ringSource;
 
         const areaSqm = lot.areaSqm;
+        const frontageEdgeIndex = pickFrontageEdgeIndex(
+          ringSource,
+          edgeUsageMap,
+          isGeographic,
+        );
+        const frontageM =
+          frontageEdgeIndex === null
+            ? null
+            : Number(
+                edgeLength(
+                  ringSource[frontageEdgeIndex],
+                  ringSource[frontageEdgeIndex + 1],
+                  isGeographic,
+                ).toFixed(2),
+              );
+        const frontageWkt =
+          frontageEdgeIndex === null
+            ? null
+            : toLineStringWkt(
+                ringTarget[frontageEdgeIndex],
+                ringTarget[frontageEdgeIndex + 1],
+              );
 
         const sideLengths: Record<string, number>[] = [];
         for (let i = 0; i < ringSource.length - 1; i += 1) {
@@ -360,15 +455,25 @@ export class AdminLotImportService {
             geojson,
             estateId,
             overlays: [],
+            frontageM,
           },
           select: { id: true },
         });
 
-        await tx.$executeRaw`
-          UPDATE lot
-          SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), ${targetSrid}::integer)
-          WHERE id = ${created.id}
-        `;
+        if (frontageWkt) {
+          await tx.$executeRaw`
+            UPDATE lot
+            SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), ${targetSrid}::integer),
+                "frontageCoordinate" = ST_SetSRID(ST_GeomFromText(${frontageWkt}), ${targetSrid}::integer)
+            WHERE id = ${created.id}
+          `;
+        } else {
+          await tx.$executeRaw`
+            UPDATE lot
+            SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), ${targetSrid}::integer)
+            WHERE id = ${created.id}
+          `;
+        }
 
         createdLots.push({
           id: created.id.toString(),
