@@ -367,6 +367,10 @@ export class AdminLotImportService {
 
     const blockKeyPrefix =
       options.blockKeyPrefix ?? `EST-${estateId.toString()}-LOT-`;
+    const startingBlockNumber =
+      options.blockNumber === null || options.blockNumber === undefined
+        ? null
+        : Math.trunc(options.blockNumber);
 
     const createdLots: { id: string; blockKey: string; areaSqm: number }[] = [];
 
@@ -445,7 +449,10 @@ export class AdminLotImportService {
         const created = await tx.lot.create({
           data: {
             blockKey,
-            blockNumber: options.blockNumber ?? null,
+            blockNumber:
+              startingBlockNumber === null
+                ? null
+                : startingBlockNumber + index,
             sectionNumber: options.sectionNumber ?? null,
             areaSqm,
             zoning: options.zoning ?? '',
