@@ -367,7 +367,7 @@ export class AdminLotImportService {
 
     const blockKeyPrefix =
       options.blockKeyPrefix ?? `EST-${estateId.toString()}-LOT-`;
-    const startingBlockNumber =
+    const explicitStartingBlockNumber =
       options.blockNumber === null || options.blockNumber === undefined
         ? null
         : Math.trunc(options.blockNumber);
@@ -375,9 +375,19 @@ export class AdminLotImportService {
     const createdLots: { id: string; blockKey: string; areaSqm: number }[] = [];
 
     await this.prisma.$transaction(async (tx) => {
+      let startingBlockNumber = explicitStartingBlockNumber;
+      if (startingBlockNumber === null) {
+        const maxBlock = await tx.lot.aggregate({
+          where: { estateId },
+          _max: { blockNumber: true },
+        });
+        startingBlockNumber = (maxBlock._max.blockNumber ?? 0) + 1;
+      }
+
       for (let index = 0; index < lots.length; index += 1) {
         const lot = lots[index];
-        const blockKey = `${blockKeyPrefix}${index + 1}`;
+        const blockNumber = startingBlockNumber + index;
+        const blockKey = `${blockKeyPrefix}${blockNumber}`;
 
         const ringSource = lot.ring;
         const ringTarget = shouldTransform
@@ -449,10 +459,7 @@ export class AdminLotImportService {
         const created = await tx.lot.create({
           data: {
             blockKey,
-            blockNumber:
-              startingBlockNumber === null
-                ? null
-                : startingBlockNumber + index,
+            blockNumber,
             sectionNumber: options.sectionNumber ?? null,
             areaSqm,
             zoning: options.zoning ?? '',
@@ -496,6 +503,7 @@ export class AdminLotImportService {
       estateId: estateId.toString(),
       created: createdLots.length,
       blockKeyPrefix,
+      startingBlockNumber: explicitStartingBlockNumber ?? undefined,
       sourceSrid,
       targetSrid,
       boundary: boundary
