@@ -52,7 +52,6 @@ model estate {
   email                  String?
   logoUrl                String?
   phone                  String?
-  themeColor             String?
   lots                   lot[]
   userEstates            userEstate[]
   brandSetting           brandSetting?

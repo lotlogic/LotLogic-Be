@@ -1020,21 +1020,15 @@ export class DesignOnLotService {
         const itemObj = this.asObject(item);
         if (!itemObj) return;
 
-        const when = this.normalizeWhenClause_(
-          this.asObject(itemObj.when) ??
-            this.asObject(itemObj.if) ??
-            itemObj,
-        );
+        const when = this.normalizeWhenClause_(this.asObject(itemObj.when));
         if (!when) return;
 
-        const label =
-          this.readString(itemObj, [['label'], ['name'], ['id']]) ??
-          `conditional-${index + 1}`;
+        const label = this.readString(itemObj, [['label']]) ?? `conditional-${index + 1}`;
 
-        const rulesRaw =
-          itemObj.rules ??
-          itemObj.then ??
-          this.stripConditionKeys_(itemObj);
+        const rulesRaw = this.asObject(itemObj.rules);
+        if (!rulesRaw) {
+          return;
+        }
 
         candidates.push({
           label,
@@ -1049,18 +1043,8 @@ export class DesignOnLotService {
         arrayKey: 'lotAreaBands',
         labelPrefix: 'lot-area-band',
         whenField: 'lotAreaSqm',
-        minPaths: [
-          ['minAreaSqm'],
-          ['minLotAreaSqm'],
-          ['min'],
-          ['from'],
-        ],
-        maxPaths: [
-          ['maxAreaSqm'],
-          ['maxLotAreaSqm'],
-          ['max'],
-          ['to'],
-        ],
+        minPaths: [['minAreaSqm']],
+        maxPaths: [['maxAreaSqm']],
       }),
     );
 
@@ -1069,18 +1053,8 @@ export class DesignOnLotService {
         arrayKey: 'lotWidthBands',
         labelPrefix: 'lot-width-band',
         whenField: 'lotWidthM',
-        minPaths: [
-          ['minLotWidthM'],
-          ['minWidthM'],
-          ['min'],
-          ['from'],
-        ],
-        maxPaths: [
-          ['maxLotWidthM'],
-          ['maxWidthM'],
-          ['max'],
-          ['to'],
-        ],
+        minPaths: [['minLotWidthM']],
+        maxPaths: [['maxLotWidthM']],
       }),
     );
 
@@ -1089,16 +1063,8 @@ export class DesignOnLotService {
         arrayKey: 'frontageBands',
         labelPrefix: 'frontage-band',
         whenField: 'frontageM',
-        minPaths: [
-          ['minFrontageM'],
-          ['min'],
-          ['from'],
-        ],
-        maxPaths: [
-          ['maxFrontageM'],
-          ['max'],
-          ['to'],
-        ],
+        minPaths: [['minFrontageM']],
+        maxPaths: [['maxFrontageM']],
       }),
     );
 
@@ -1107,7 +1073,7 @@ export class DesignOnLotService {
         arrayKey: 'lotTypeRules',
         labelPrefix: 'lot-type-rule',
         whenField: 'lotTypeIn',
-        valuePaths: [['lotTypeIn'], ['lotTypes'], ['lotType'], ['values'], ['in']],
+        valuePaths: [['lotTypeIn']],
       }),
     );
 
@@ -1116,7 +1082,7 @@ export class DesignOnLotService {
         arrayKey: 'roadFacingRules',
         labelPrefix: 'road-facing-rule',
         whenField: 'roadFacingIn',
-        valuePaths: [['roadFacingIn'], ['roadFacing'], ['roadNames'], ['values'], ['in']],
+        valuePaths: [['roadFacingIn']],
       }),
     );
 
@@ -1125,7 +1091,7 @@ export class DesignOnLotService {
         arrayKey: 'stageRules',
         labelPrefix: 'stage-rule',
         whenField: 'lifecycleStageIn',
-        valuePaths: [['lifecycleStageIn'], ['lifecycleStage'], ['stages'], ['stage'], ['values'], ['in']],
+        valuePaths: [['lifecycleStageIn']],
       }),
     );
 
@@ -1134,7 +1100,7 @@ export class DesignOnLotService {
         arrayKey: 'precinctRules',
         labelPrefix: 'precinct-rule',
         whenField: 'precinctIn',
-        valuePaths: [['precinctIn'], ['precinct'], ['precincts'], ['values'], ['in']],
+        valuePaths: [['precinctIn']],
       }),
     );
 
@@ -1167,9 +1133,7 @@ export class DesignOnLotService {
         return;
       }
 
-      const label =
-        this.readString(itemObj, [['label'], ['name'], ['id']]) ??
-        `${options.labelPrefix}-${index + 1}`;
+      const label = this.readString(itemObj, [['label']]) ?? `${options.labelPrefix}-${index + 1}`;
 
       const when: RuleWhenClause = {
         [options.whenField]: {
@@ -1178,10 +1142,10 @@ export class DesignOnLotService {
         },
       };
 
-      const rulesRaw =
-        itemObj.rules ??
-        itemObj.then ??
-        this.stripConditionKeys_(itemObj);
+      const rulesRaw = this.asObject(itemObj.rules);
+      if (!rulesRaw) {
+        return;
+      }
 
       result.push({
         label,
@@ -1217,18 +1181,16 @@ export class DesignOnLotService {
         return;
       }
 
-      const label =
-        this.readString(itemObj, [['label'], ['name'], ['id']]) ??
-        `${options.labelPrefix}-${index + 1}`;
+      const label = this.readString(itemObj, [['label']]) ?? `${options.labelPrefix}-${index + 1}`;
 
       const when: RuleWhenClause = {
         [options.whenField]: values,
       };
 
-      const rulesRaw =
-        itemObj.rules ??
-        itemObj.then ??
-        this.stripConditionKeys_(itemObj);
+      const rulesRaw = this.asObject(itemObj.rules);
+      if (!rulesRaw) {
+        return;
+      }
 
       result.push({
         label,
@@ -1246,25 +1208,25 @@ export class DesignOnLotService {
     }
 
     const lotAreaSqm = this.parseRangeCondition_(rawWhen, {
-      containerPaths: [['lotAreaSqm'], ['lotArea']],
-      minPaths: [['lotAreaMinSqm'], ['minLotAreaSqm'], ['minAreaSqm']],
-      maxPaths: [['lotAreaMaxSqm'], ['maxLotAreaSqm'], ['maxAreaSqm']],
+      containerPaths: [['lotAreaSqm']],
+      minPaths: [],
+      maxPaths: [],
     });
     const lotWidthM = this.parseRangeCondition_(rawWhen, {
-      containerPaths: [['lotWidthM'], ['lotWidth']],
-      minPaths: [['lotWidthMinM'], ['minLotWidthM'], ['minWidthM']],
-      maxPaths: [['lotWidthMaxM'], ['maxLotWidthM'], ['maxWidthM']],
+      containerPaths: [['lotWidthM']],
+      minPaths: [],
+      maxPaths: [],
     });
     const frontageM = this.parseRangeCondition_(rawWhen, {
-      containerPaths: [['frontageM'], ['frontage']],
-      minPaths: [['frontageMinM'], ['minFrontageM']],
-      maxPaths: [['frontageMaxM'], ['maxFrontageM']],
+      containerPaths: [['frontageM']],
+      minPaths: [],
+      maxPaths: [],
     });
 
-    const lotTypeIn = this.readStringArray(rawWhen, [['lotTypeIn'], ['lotTypes'], ['lotType']]);
-    const roadFacingIn = this.readStringArray(rawWhen, [['roadFacingIn'], ['roadNames'], ['roadFacing']]);
-    const lifecycleStageIn = this.readStringArray(rawWhen, [['lifecycleStageIn'], ['stages'], ['stage'], ['lifecycleStage']]);
-    const precinctIn = this.readStringArray(rawWhen, [['precinctIn'], ['precincts'], ['precinct']]);
+    const lotTypeIn = this.readStringArray(rawWhen, [['lotTypeIn']]);
+    const roadFacingIn = this.readStringArray(rawWhen, [['roadFacingIn']]);
+    const lifecycleStageIn = this.readStringArray(rawWhen, [['lifecycleStageIn']]);
+    const precinctIn = this.readStringArray(rawWhen, [['precinctIn']]);
 
     const clause: RuleWhenClause = {};
     if (lotAreaSqm) clause.lotAreaSqm = lotAreaSqm;
@@ -1305,12 +1267,8 @@ export class DesignOnLotService {
       const container = this.asObject(this.readPath_(value, path));
       if (!container) continue;
 
-      min =
-        this.readNumber(container, [['min'], ['from'], ['gte'], ['greaterThanOrEqual']]) ??
-        min;
-      max =
-        this.readNumber(container, [['max'], ['to'], ['lte'], ['lessThanOrEqual']]) ??
-        max;
+      min = this.readNumber(container, [['min']]) ?? min;
+      max = this.readNumber(container, [['max']]) ?? max;
     }
 
     min = this.readNumber(value, options.minPaths) ?? min;
@@ -1377,118 +1335,29 @@ export class DesignOnLotService {
     return normalized.includes(current);
   }
 
-  private stripConditionKeys_(value: JsonObject): JsonObject {
-    const ignored = new Set([
-      'label',
-      'name',
-      'id',
-      'description',
-      'when',
-      'if',
-      'rules',
-      'then',
-      'min',
-      'max',
-      'from',
-      'to',
-      'lotAreaSqm',
-      'lotArea',
-      'lotAreaMinSqm',
-      'lotAreaMaxSqm',
-      'minAreaSqm',
-      'maxAreaSqm',
-      'minLotAreaSqm',
-      'maxLotAreaSqm',
-      'lotWidthM',
-      'lotWidth',
-      'lotWidthMinM',
-      'lotWidthMaxM',
-      'minLotWidthM',
-      'maxLotWidthM',
-      'minWidthM',
-      'maxWidthM',
-      'frontageM',
-      'frontage',
-      'frontageMinM',
-      'frontageMaxM',
-      'minFrontageM',
-      'maxFrontageM',
-      'lotTypeIn',
-      'lotTypes',
-      'lotType',
-      'roadFacingIn',
-      'roadNames',
-      'roadFacing',
-      'lifecycleStageIn',
-      'lifecycleStage',
-      'stage',
-      'stages',
-      'precinctIn',
-      'precinct',
-      'precincts',
-      'values',
-      'in',
-    ]);
-
-    const output: JsonObject = {};
-    for (const [key, itemValue] of Object.entries(value)) {
-      if (ignored.has(key)) continue;
-      output[key] = itemValue;
-    }
-    return output;
-  }
-
   private normalizeRulesFromJson_(rawRules: unknown): NormalizedRules {
     const rules = this.asObject(rawRules);
     if (!rules) {
       return { ...EMPTY_RULES };
     }
 
-    const architecturalNotes = [
-      ...this.readStringArray(rules, [['architecturalNotes'], ['architecturalRequirements'], ['styleRequirements']]),
-      ...this.readStringArray(rules, [['architectural', 'notes'], ['architectural', 'requirements']]),
-    ];
+    const architecturalNotes = this.readStringArray(rules, [['architecturalNotes']]);
 
     const requiresArchitecturalReview =
-      this.readBoolean(rules, [
-        ['requiresArchitecturalReview'],
-        ['architecturalReviewRequired'],
-        ['architectural', 'manualReview'],
-      ]) || architecturalNotes.length > 0;
+      this.readBoolean(rules, [['requiresArchitecturalReview']]) ||
+      architecturalNotes.length > 0;
 
     return {
-      minFrontSetbackM: this.readNumber(rules, [
-        ['minFrontSetbackM'],
-        ['minFrontSetback_m'],
-        ['setbacks', 'front'],
-        ['setbacks', 'frontMinM'],
-      ]),
-      minRearSetbackM: this.readNumber(rules, [
-        ['minRearSetbackM'],
-        ['minRearSetback_m'],
-        ['setbacks', 'rear'],
-        ['setbacks', 'rearMinM'],
-      ]),
-      minSideSetbackM: this.readNumber(rules, [
-        ['minSideSetbackM'],
-        ['minSideSetback_m'],
-        ['setbacks', 'side'],
-        ['setbacks', 'sideMinM'],
-      ]),
+      minFrontSetbackM: this.readNumber(rules, [['minFrontSetbackM']]),
+      minRearSetbackM: this.readNumber(rules, [['minRearSetbackM']]),
+      minSideSetbackM: this.readNumber(rules, [['minSideSetbackM']]),
       maxSiteCoverageRatio: this.normalizeRatio_(
-        this.readNumber(rules, [
-          ['maxSiteCoverageRatio'],
-          ['maxSiteCoverage'],
-          ['siteCoverageRatio'],
-          ['siteCoverage', 'max'],
-          ['siteCoverage', 'maxRatio'],
-          ['maxFSR'],
-        ]),
+        this.readNumber(rules, [['maxSiteCoverageRatio']]),
       ),
-      minGfaM2: this.readNumber(rules, [['minGfaM2'], ['minGFA'], ['minimumGfaM2']]),
-      maxGfaM2: this.readNumber(rules, [['maxGfaM2'], ['maxGFA'], ['maximumGfaM2']]),
+      minGfaM2: this.readNumber(rules, [['minGfaM2']]),
+      maxGfaM2: this.readNumber(rules, [['maxGfaM2']]),
       maxStoreys: this.readNumber(rules, [['maxStoreys']]),
-      maxBuildingHeightM: this.readNumber(rules, [['maxBuildingHeightM'], ['maxBuildingHeight_m']]),
+      maxBuildingHeightM: this.readNumber(rules, [['maxBuildingHeightM']]),
       requiresArchitecturalReview,
       architecturalNotes: [...new Set(architecturalNotes)],
     };
@@ -1714,15 +1583,6 @@ export class DesignOnLotService {
       if (typeof candidate === 'boolean') {
         return candidate;
       }
-      if (typeof candidate === 'string') {
-        const normalized = candidate.trim().toLowerCase();
-        if (normalized === 'true' || normalized === 'yes' || normalized === '1') {
-          return true;
-        }
-        if (normalized === 'false' || normalized === 'no' || normalized === '0') {
-          return false;
-        }
-      }
     }
     return false;
   }
@@ -1738,8 +1598,6 @@ export class DesignOnLotService {
             results.push(item.trim());
           }
         }
-      } else if (typeof candidate === 'string' && candidate.trim()) {
-        results.push(candidate.trim());
       }
     }
     return results;
@@ -1759,12 +1617,6 @@ export class DesignOnLotService {
   private toNumber_(value: unknown): number | null {
     if (typeof value === 'number' && Number.isFinite(value)) {
       return value;
-    }
-    if (typeof value === 'string') {
-      const parsed = Number(value.trim());
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
     }
     return null;
   }

@@ -17,7 +17,6 @@ async function main(): Promise<void> {
       jurisdiction: 'NSW',
       logoUrl:
         'https://www.hamiltonriseyass.com.au/wp-content/uploads/2021/10/logo-768x82.png',
-      themeColor: '#2F5D62',
       email: 'info@hamiltonriseyass.com.au',
       phone: '0417 710 772',
       address: '14 Mitchell St YASS NSW 2582',
