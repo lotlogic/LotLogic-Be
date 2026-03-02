@@ -41,6 +41,11 @@ enum DesignOnLotStatus {
   MANUAL_REVIEW
 }
 
+enum EnquiryStatus {
+  PENDING
+  PROCESSED
+}
+
 model estate {
   id                     BigInt                  @id @default(autoincrement())
   name                   String
@@ -58,6 +63,7 @@ model estate {
   builderEstateApprovals builderEstateApproval[]
   estateRuleSets         estateRuleSet[]
   lotConstraints         estateLotConstraint[]
+  enquiries              enquiry[]
 }
 
 model user {
@@ -319,14 +325,20 @@ model enquiry {
   phone           String
   comments        String?
   hotLead         Boolean          @default(false)
+  status          EnquiryStatus    @default(PENDING)
+  estateId        BigInt?
   lotId           BigInt?
   floorPlanId     BigInt?
   facadeId        BigInt?
   createdAt       DateTime         @default(now())
   facade          facade?          @relation(fields: [facadeId], references: [id])
+  estate          estate?          @relation(fields: [estateId], references: [id])
   floorPlan       floorPlan?       @relation(fields: [floorPlanId], references: [id])
   lot             lot?             @relation(fields: [lotId], references: [id])
   enquiryBuilders enquiryBuilder[]
+
+  @@index([estateId])
+  @@index([status])
 }
 
 model enquiryBuilder {

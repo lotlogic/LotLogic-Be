@@ -33,14 +33,21 @@ export class EnquiryController {
         @Body('name') name: string,
         @Body('email') email: string,
         @Body('number') number: string,
-        @Body('builders') builders: string[],
+        @Body('builders') builders: string[] | string,
         @Body('comments') comments: string,
-        @Body('lot_id') lot_id: number,
-        @Body('house_design_id') house_design_id: string,
-        @Body('facade_id') facade_id: string,
+        @Body('lot_id') lot_id: string | number,
+        @Body('house_design_id') house_design_id: string | number,
+        @Body('facade_id') facade_id: string | number,
         @Body('hot_lead') hot_lead: boolean
     ) {
-        await this.enquiryService.postEnquiry(
+        const normalizedBuilders = Array.isArray(builders)
+            ? builders.map((item) => String(item ?? '').trim()).filter(Boolean)
+            : String(builders ?? '')
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean);
+
+        const created = await this.enquiryService.postEnquiry(
             name,
             email,
             number,
@@ -48,12 +55,16 @@ export class EnquiryController {
             lot_id,
             house_design_id,
             facade_id,
-            builders,
+            normalizedBuilders,
             hot_lead
         );
-        const lotData = await this.lotService.findLot(lot_id);
-        const houseDesignData = await this.FloorPlanService.getHouseDesignById(house_design_id);
-        const builderData = await this.builderService.findByIds(builders);
+        const lotData = created.enquiry.lotId
+            ? await this.lotService.findLot(created.enquiry.lotId)
+            : null;
+        const houseDesignData = created.enquiry.floorPlanId
+            ? await this.FloorPlanService.getHouseDesignById(created.enquiry.floorPlanId.toString())
+            : null;
+        const builderData = await this.builderService.findByIds(created.builderIds);
         if(lotData && houseDesignData && builderData.length) {
             // Send individual emails to each builder
             for(const builder of builderData) {

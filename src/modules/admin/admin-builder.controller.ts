@@ -1,6 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { EnquiryStatus, Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { BuilderScopeGuard } from '@/modules/auth/guards/builder-scope.guard';
@@ -8,6 +8,7 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { BuilderScope } from '@/modules/auth/decorators/builder-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { Response } from 'express';
 
 interface BuilderUserAssignmentBody {
   userIds?: string[];
@@ -55,10 +56,136 @@ const parseOptionalBooleanQuery = (
   throw new BadRequestException(`Invalid ${fieldName}. Expected true or false.`);
 };
 
+const ENQUIRY_STATUSES = new Set<EnquiryStatus>([
+  EnquiryStatus.PENDING,
+  EnquiryStatus.PROCESSED,
+]);
+
+const parseOptionalEnquiryStatusQuery = (
+  rawValue: string | undefined,
+  fieldName: string,
+): EnquiryStatus | null => {
+  if (rawValue === undefined || rawValue === null || String(rawValue).trim() === '') {
+    return null;
+  }
+
+  const normalized = String(rawValue).trim().toUpperCase() as EnquiryStatus;
+  if (!ENQUIRY_STATUSES.has(normalized)) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected one of: ${Array.from(ENQUIRY_STATUSES).join(', ')}`,
+    );
+  }
+  return normalized;
+};
+
+const parseRequiredEnquiryStatus = (
+  rawValue: unknown,
+  fieldName: string,
+): EnquiryStatus => {
+  const parsed = parseOptionalEnquiryStatusQuery(
+    rawValue === undefined ? undefined : String(rawValue),
+    fieldName,
+  );
+  if (!parsed) {
+    throw new BadRequestException(
+      `Missing ${fieldName}. Expected one of: ${Array.from(ENQUIRY_STATUSES).join(', ')}`,
+    );
+  }
+  return parsed;
+};
+
+const toCsvCell = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  const text = String(value).replace(/"/g, '""');
+  return `"${text}"`;
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, BuilderScopeGuard)
 @Controller('admin/builders')
 export class AdminBuilderController {
   constructor(private prisma: PrismaService) {}
+
+  private buildLeadWhere(
+    builderId: bigint,
+    hotLeadFilter: boolean | null,
+    statusFilter: EnquiryStatus | null,
+  ): Prisma.enquiryBuilderWhereInput {
+    const enquiryFilter: Prisma.enquiryWhereInput = {};
+    if (hotLeadFilter !== null) {
+      enquiryFilter.hotLead = hotLeadFilter;
+    }
+    if (statusFilter !== null) {
+      enquiryFilter.status = statusFilter;
+    }
+
+    if (Object.keys(enquiryFilter).length === 0) {
+      return { builderId };
+    }
+
+    return {
+      builderId,
+      enquiry: enquiryFilter,
+    };
+  }
+
+  private mapLeadRow(row: {
+    id: bigint;
+    builderId: bigint;
+    createdAt: Date;
+    enquiry: {
+      id: bigint;
+      name: string;
+      email: string;
+      phone: string;
+      comments: string | null;
+      hotLead: boolean;
+      status: EnquiryStatus;
+      estateId: bigint | null;
+      lotId: bigint | null;
+      floorPlanId: bigint | null;
+      facadeId: bigint | null;
+      createdAt: Date;
+      lot: {
+        id: bigint;
+        blockKey: string;
+        blockNumber: number | null;
+        address: string | null;
+        lifecycleStage: string | null;
+        estateId: bigint | null;
+      } | null;
+      floorPlan: {
+        id: bigint;
+        name: string;
+        builderId: bigint;
+      } | null;
+    } | null;
+  }) {
+    return {
+      id: row.id,
+      builderId: row.builderId,
+      createdAt: row.createdAt,
+      enquiry: row.enquiry
+        ? {
+            id: row.enquiry.id,
+            name: row.enquiry.name,
+            email: row.enquiry.email,
+            phone: row.enquiry.phone,
+            comments: row.enquiry.comments,
+            hotLead: row.enquiry.hotLead,
+            status: row.enquiry.status,
+            estateId: row.enquiry.estateId,
+            lotId: row.enquiry.lotId,
+            floorPlanId: row.enquiry.floorPlanId,
+            facadeId: row.enquiry.facadeId,
+            createdAt: row.enquiry.createdAt,
+            lot: row.enquiry.lot,
+            floorPlan: row.enquiry.floorPlan,
+          }
+        : null,
+    };
+  }
 
   @Get()
   @Roles('ADMIN', 'USER')
@@ -111,6 +238,7 @@ export class AdminBuilderController {
     @Query('page') pageQuery?: string,
     @Query('pageSize') pageSizeQuery?: string,
     @Query('hotLead') hotLeadQuery?: string,
+    @Query('status') statusQuery?: string,
   ) {
     const builderId = parseBigIntId(id, 'id');
     const page = parsePositiveIntQuery(pageQuery, 'page', {
@@ -122,16 +250,11 @@ export class AdminBuilderController {
       maxValue: 200,
     });
     const hotLeadFilter = parseOptionalBooleanQuery(hotLeadQuery, 'hotLead');
+    const statusFilter = parseOptionalEnquiryStatusQuery(statusQuery, 'status');
     const skip = (page - 1) * pageSize;
 
     const baseWhere: Prisma.enquiryBuilderWhereInput = { builderId };
-    const filteredWhere: Prisma.enquiryBuilderWhereInput =
-      hotLeadFilter === null
-        ? baseWhere
-        : {
-            ...baseWhere,
-            enquiry: { hotLead: hotLeadFilter },
-          };
+    const filteredWhere = this.buildLeadWhere(builderId, hotLeadFilter, statusFilter);
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -143,6 +266,8 @@ export class AdminBuilderController {
       hotLeadSubmitted,
       submittedLast7Days,
       submittedLast30Days,
+      pendingSubmitted,
+      processedSubmitted,
       rows,
     ] = await this.prisma.$transaction([
       this.prisma.builder.findUnique({
@@ -167,6 +292,18 @@ export class AdminBuilderController {
         where: {
           ...baseWhere,
           enquiry: { createdAt: { gte: thirtyDaysAgo } },
+        },
+      }),
+      this.prisma.enquiryBuilder.count({
+        where: {
+          ...baseWhere,
+          enquiry: { status: EnquiryStatus.PENDING },
+        },
+      }),
+      this.prisma.enquiryBuilder.count({
+        where: {
+          ...baseWhere,
+          enquiry: { status: EnquiryStatus.PROCESSED },
         },
       }),
       this.prisma.enquiryBuilder.findMany({
@@ -194,12 +331,6 @@ export class AdminBuilderController {
                   builderId: true,
                 },
               },
-              facade: {
-                select: {
-                  id: true,
-                  label: true,
-                },
-              },
             },
           },
         },
@@ -214,6 +345,7 @@ export class AdminBuilderController {
       builder,
       filters: {
         hotLead: hotLeadFilter,
+        status: statusFilter,
       },
       pagination: {
         page,
@@ -226,29 +358,145 @@ export class AdminBuilderController {
         hotLeadSubmitted,
         submittedLast7Days,
         submittedLast30Days,
+        pendingSubmitted,
+        processedSubmitted,
       },
-      items: rows.map((row) => ({
-        id: row.id,
-        builderId: row.builderId,
-        createdAt: row.createdAt,
-        enquiry: row.enquiry
-          ? {
-              id: row.enquiry.id,
-              name: row.enquiry.name,
-              email: row.enquiry.email,
-              phone: row.enquiry.phone,
-              comments: row.enquiry.comments,
-              hotLead: row.enquiry.hotLead,
-              lotId: row.enquiry.lotId,
-              floorPlanId: row.enquiry.floorPlanId,
-              facadeId: row.enquiry.facadeId,
-              createdAt: row.enquiry.createdAt,
-              lot: row.enquiry.lot,
-              floorPlan: row.enquiry.floorPlan,
-              facade: row.enquiry.facade,
-            }
-          : null,
-      })),
+      items: rows.map((row) => this.mapLeadRow(row)),
+    };
+  }
+
+  @Get(':id/leads/export')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
+  async exportLeadsCsv(
+    @Param('id') id: string,
+    @Query('hotLead') hotLeadQuery?: string,
+    @Query('status') statusQuery?: string,
+    @Res({ passthrough: true }) res?: Response,
+  ) {
+    const builderId = parseBigIntId(id, 'id');
+    const hotLeadFilter = parseOptionalBooleanQuery(hotLeadQuery, 'hotLead');
+    const statusFilter = parseOptionalEnquiryStatusQuery(statusQuery, 'status');
+    const filteredWhere = this.buildLeadWhere(builderId, hotLeadFilter, statusFilter);
+
+    const rows = await this.prisma.enquiryBuilder.findMany({
+      where: filteredWhere,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: {
+        enquiry: {
+          include: {
+            lot: {
+              select: {
+                id: true,
+                blockKey: true,
+                blockNumber: true,
+                address: true,
+                lifecycleStage: true,
+                estateId: true,
+              },
+            },
+            floorPlan: {
+              select: {
+                id: true,
+                name: true,
+                builderId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const header = [
+      'Submitted',
+      'Status',
+      'Lead',
+      'Email',
+      'Phone',
+      'Estate ID',
+      'Lot',
+      'Floor Plan',
+      'Hot Lead',
+      'Comments',
+    ];
+
+    const csvRows = rows.map((row) => {
+      const enquiry = row.enquiry;
+      const lot = enquiry?.lot;
+      const lotLabel =
+        typeof lot?.blockNumber === 'number'
+          ? `Lot ${lot.blockNumber}`
+          : (lot?.blockKey || lot?.address || '').trim();
+      const estateId = enquiry?.estateId?.toString() || lot?.estateId?.toString() || '';
+      const floorPlanLabel = (enquiry?.floorPlan?.name || enquiry?.floorPlan?.id?.toString() || '').trim();
+      return [
+        toCsvCell(enquiry?.createdAt ? enquiry.createdAt.toISOString() : ''),
+        toCsvCell(enquiry?.status || ''),
+        toCsvCell(enquiry?.name || ''),
+        toCsvCell(enquiry?.email || ''),
+        toCsvCell(enquiry?.phone || ''),
+        toCsvCell(estateId),
+        toCsvCell(lotLabel),
+        toCsvCell(floorPlanLabel),
+        toCsvCell(enquiry?.hotLead ? 'Yes' : 'No'),
+        toCsvCell(enquiry?.comments || ''),
+      ].join(',');
+    });
+
+    const csvContent = [header.map((value) => toCsvCell(value)).join(','), ...csvRows].join('\n');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+    if (res) {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=\"builder-${id}-leads-${timestamp}.csv\"`,
+      );
+    }
+
+    return csvContent;
+  }
+
+  @Patch(':id/leads/:leadId')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
+  async updateLeadStatus(
+    @Param('id') id: string,
+    @Param('leadId') leadId: string,
+    @Body('status') statusRaw: string,
+  ) {
+    const builderId = parseBigIntId(id, 'id');
+    const leadAssignmentId = parseBigIntId(leadId, 'leadId');
+    const status = parseRequiredEnquiryStatus(statusRaw, 'status');
+
+    const leadAssignment = await this.prisma.enquiryBuilder.findFirst({
+      where: {
+        id: leadAssignmentId,
+        builderId,
+      },
+      select: {
+        id: true,
+        enquiryId: true,
+      },
+    });
+
+    if (!leadAssignment) {
+      throw new BadRequestException('Lead not found for this builder');
+    }
+
+    const updated = await this.prisma.enquiry.update({
+      where: { id: leadAssignment.enquiryId },
+      data: { status },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    return {
+      leadId: leadAssignment.id,
+      enquiryId: updated.id,
+      status: updated.status,
     };
   }
 
