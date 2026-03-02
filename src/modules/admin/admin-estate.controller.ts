@@ -63,6 +63,7 @@ const normalizeBooleanFlag = (
 };
 
 const MIXPANEL_EXPORT_URL = 'https://data.mixpanel.com/api/2.0/export';
+const MIXPANEL_PROJECT_ID = '3834941';
 const MIXPANEL_PERFORMANCE_EVENTS = ['House Design Viewed', 'House Design Opened'];
 const PERFORMANCE_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -249,6 +250,7 @@ export class AdminEstateController {
     }
 
     const params = new URLSearchParams({
+      project_id: MIXPANEL_PROJECT_ID,
       from_date: fromDate,
       to_date: toDate,
       event: JSON.stringify(MIXPANEL_PERFORMANCE_EVENTS),
