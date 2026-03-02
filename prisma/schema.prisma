@@ -318,6 +318,7 @@ model enquiry {
   email           String
   phone           String
   comments        String?
+  hotLead         Boolean          @default(false)
   lotId           BigInt?
   floorPlanId     BigInt?
   facadeId        BigInt?

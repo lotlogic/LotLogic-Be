@@ -24,6 +24,7 @@ export class EnquiryService {
                         email: email,
                         phone: number,
                         comments: comments,
+                        hotLead: Boolean(hot_lead),
                         lotId: lot_id ? BigInt(lot_id) : null,
                         floorPlanId: house_design_id ? BigInt(house_design_id) : null,
                         facadeId: facade_id ? BigInt(facade_id) : null
