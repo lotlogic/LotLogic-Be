@@ -10,6 +10,8 @@ export interface HouseDesignFilterResult   {
     id: string,
     title: string,
     area: number,
+    builderId?: string,
+    builderName?: string | null,
     width: number,
     depth: number,
     image: string,
@@ -62,7 +64,13 @@ export class FloorPlanService {
         const houseDesigns = await this.prisma.floorPlan.findMany({
             where: whereClause,
             include: {
-                facades: true
+                facades: true,
+                builder: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             }
         }) as any;
         const filteredDesign = houseDesigns.map((house: any) => {
@@ -77,6 +85,8 @@ export class FloorPlanService {
                 id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
+                builderId: house.builderId ? house.builderId.toString() : undefined,
+                builderName: house.builder?.name ?? null,
                 width: house.width,
                 depth: house.depth,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
@@ -131,6 +141,12 @@ export class FloorPlanService {
                 floorPlan: {
                     include: {
                         facades: true,
+                        builder: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
                     },
                 },
             },
@@ -150,6 +166,8 @@ export class FloorPlanService {
                 id: house.id.toString(),
                 title: house.name,
                 area: house.areaSqm,
+                builderId: house.builderId ? house.builderId.toString() : undefined,
+                builderName: house.builder?.name ?? null,
                 width: house.width,
                 depth: house.depth,
                 image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
