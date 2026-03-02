@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { EnquiryStatus, Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
@@ -102,10 +102,248 @@ const toCsvCell = (value: unknown): string => {
   return `"${text}"`;
 };
 
+const MIXPANEL_EXPORT_URL = 'https://data.mixpanel.com/api/2.0/export';
+const MIXPANEL_PERFORMANCE_EVENTS = ['House Design Viewed', 'House Design Opened'];
+const PERFORMANCE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type MixpanelEventRecord = {
+  event?: string;
+  properties?: Record<string, unknown>;
+};
+
+type BuilderPerformanceSummary = {
+  builderId: string;
+  range: {
+    from: string;
+    to: string;
+  };
+  source: {
+    provider: 'mixpanel';
+    configured: boolean;
+    available: boolean;
+    message?: string;
+  };
+  stats: {
+    viewsTotal: number;
+    viewsLast7Days: number;
+    viewsLast30Days: number;
+    uniqueLotsViewed: number;
+    uniqueDesignsViewed: number;
+  };
+  viewsByLot: Array<{
+    lotId: string;
+    views: number;
+  }>;
+  viewsByDesign: Array<{
+    designId: string;
+    designName?: string;
+    views: number;
+  }>;
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, BuilderScopeGuard)
 @Controller('admin/builders')
 export class AdminBuilderController {
+  private readonly logger = new Logger(AdminBuilderController.name);
+  private static readonly performanceCache = new Map<
+    string,
+    { expiresAt: number; payload: BuilderPerformanceSummary }
+  >();
+
   constructor(private prisma: PrismaService) {}
+
+  private normalizeText(value: unknown): string {
+    return String(value ?? '').trim();
+  }
+
+  private parseDateQuery(
+    rawValue: string | undefined,
+    fieldName: string,
+    fallback: Date,
+  ): Date {
+    const trimmed = this.normalizeText(rawValue);
+    if (!trimmed) {
+      return fallback;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      throw new BadRequestException(`Invalid ${fieldName}. Use YYYY-MM-DD.`);
+    }
+
+    const parsed = new Date(`${trimmed}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException(`Invalid ${fieldName}. Use YYYY-MM-DD.`);
+    }
+
+    return parsed;
+  }
+
+  private toDateOnly(value: Date): string {
+    return value.toISOString().slice(0, 10);
+  }
+
+  private getMixpanelAuthorizationHeader(): string | null {
+    const serviceAccountUsername = this.normalizeText(
+      process.env.MIXPANEL_SERVICE_ACCOUNT_USERNAME,
+    );
+    const serviceAccountSecret = this.normalizeText(
+      process.env.MIXPANEL_SERVICE_ACCOUNT_SECRET,
+    );
+    if (serviceAccountUsername && serviceAccountSecret) {
+      return `Basic ${Buffer.from(`${serviceAccountUsername}:${serviceAccountSecret}`).toString(
+        'base64',
+      )}`;
+    }
+
+    const apiSecret = this.normalizeText(process.env.MIXPANEL_API_SECRET);
+    if (apiSecret) {
+      return `Basic ${Buffer.from(`${apiSecret}:`).toString('base64')}`;
+    }
+
+    return null;
+  }
+
+  private resolveEventTimestampMs(event: MixpanelEventRecord): number | null {
+    const properties = event.properties ?? {};
+    const timeValue = properties.time;
+    if (typeof timeValue === 'number' && Number.isFinite(timeValue)) {
+      return timeValue > 1e12 ? timeValue : Math.floor(timeValue * 1000);
+    }
+
+    const timestampValue = properties.timestamp;
+    if (typeof timestampValue === 'string') {
+      const parsed = Date.parse(timestampValue);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  private eventMatchesBuilder(event: MixpanelEventRecord, builderId: string): boolean {
+    const properties = event.properties ?? {};
+    const direct = this.normalizeText(properties.builderId);
+    if (direct === builderId) {
+      return true;
+    }
+
+    const ids = properties.builderIds;
+    if (Array.isArray(ids)) {
+      const normalizedIds = ids.map((value) => this.normalizeText(value)).filter(Boolean);
+      if (normalizedIds.includes(builderId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private async fetchMixpanelEvents(
+    fromDate: string,
+    toDate: string,
+  ): Promise<MixpanelEventRecord[]> {
+    const authHeader = this.getMixpanelAuthorizationHeader();
+    if (!authHeader) {
+      return [];
+    }
+
+    const params = new URLSearchParams({
+      from_date: fromDate,
+      to_date: toDate,
+      event: JSON.stringify(MIXPANEL_PERFORMANCE_EVENTS),
+    });
+
+    const response = await fetch(`${MIXPANEL_EXPORT_URL}?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        Authorization: authHeader,
+        Accept: 'text/plain',
+      },
+    });
+
+    if (!response.ok) {
+      const bodyText = await response.text();
+      throw new BadRequestException(
+        `Mixpanel export request failed (${response.status}): ${bodyText || 'unknown error'}`,
+      );
+    }
+
+    const bodyText = await response.text();
+    if (!bodyText.trim()) {
+      return [];
+    }
+
+    const rows: MixpanelEventRecord[] = [];
+    for (const line of bodyText.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      try {
+        rows.push(JSON.parse(trimmed) as MixpanelEventRecord);
+      } catch {
+        // Skip malformed records to avoid failing the entire response.
+      }
+    }
+    return rows;
+  }
+
+  private buildEmptyPerformanceSummary(
+    builderId: string,
+    fromDate: string,
+    toDate: string,
+    configured: boolean,
+    available: boolean,
+    message?: string,
+  ): BuilderPerformanceSummary {
+    return {
+      builderId,
+      range: {
+        from: fromDate,
+        to: toDate,
+      },
+      source: {
+        provider: 'mixpanel',
+        configured,
+        available,
+        message,
+      },
+      stats: {
+        viewsTotal: 0,
+        viewsLast7Days: 0,
+        viewsLast30Days: 0,
+        uniqueLotsViewed: 0,
+        uniqueDesignsViewed: 0,
+      },
+      viewsByLot: [],
+      viewsByDesign: [],
+    };
+  }
+
+  private buildPerformanceCacheKey(builderId: string, fromDate: string, toDate: string): string {
+    return `${builderId}|${fromDate}|${toDate}`;
+  }
+
+  private readPerformanceCache(
+    cacheKey: string,
+  ): BuilderPerformanceSummary | null {
+    const entry = AdminBuilderController.performanceCache.get(cacheKey);
+    if (!entry) {
+      return null;
+    }
+    if (Date.now() > entry.expiresAt) {
+      AdminBuilderController.performanceCache.delete(cacheKey);
+      return null;
+    }
+    return entry.payload;
+  }
+
+  private writePerformanceCache(cacheKey: string, payload: BuilderPerformanceSummary) {
+    AdminBuilderController.performanceCache.set(cacheKey, {
+      expiresAt: Date.now() + PERFORMANCE_CACHE_TTL_MS,
+      payload,
+    });
+  }
 
   private buildLeadWhere(
     builderId: bigint,
@@ -363,6 +601,160 @@ export class AdminBuilderController {
       },
       items: rows.map((row) => this.mapLeadRow(row)),
     };
+  }
+
+  @Get(':id/performance')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
+  async getBuilderPerformance(
+    @Param('id') id: string,
+    @Query('from') fromDateQuery?: string,
+    @Query('to') toDateQuery?: string,
+  ): Promise<BuilderPerformanceSummary> {
+    const builderIdValue = parseBigIntId(id, 'id');
+    const builderId = builderIdValue.toString();
+
+    const builder = await this.prisma.builder.findUnique({
+      where: { id: builderIdValue },
+      select: { id: true },
+    });
+    if (!builder) {
+      throw new BadRequestException('Builder not found');
+    }
+
+    const today = new Date();
+    const defaultFromDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const fromDate = this.parseDateQuery(fromDateQuery, 'from', defaultFromDate);
+    const toDate = this.parseDateQuery(toDateQuery, 'to', today);
+
+    if (fromDate.getTime() > toDate.getTime()) {
+      throw new BadRequestException('Invalid range. "from" must be before or equal to "to".');
+    }
+
+    const fromDateOnly = this.toDateOnly(fromDate);
+    const toDateOnly = this.toDateOnly(toDate);
+    const cacheKey = this.buildPerformanceCacheKey(builderId, fromDateOnly, toDateOnly);
+    const cached = this.readPerformanceCache(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const configured = Boolean(this.getMixpanelAuthorizationHeader());
+    if (!configured) {
+      return this.buildEmptyPerformanceSummary(
+        builderId,
+        fromDateOnly,
+        toDateOnly,
+        false,
+        false,
+        'Mixpanel credentials are not configured in backend environment variables.',
+      );
+    }
+
+    let events: MixpanelEventRecord[] = [];
+    try {
+      events = await this.fetchMixpanelEvents(fromDateOnly, toDateOnly);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Unable to fetch Mixpanel performance data: ${reason}`);
+      return this.buildEmptyPerformanceSummary(
+        builderId,
+        fromDateOnly,
+        toDateOnly,
+        true,
+        false,
+        reason,
+      );
+    }
+
+    const nowMs = Date.now();
+    const cutoff7Days = nowMs - 7 * 24 * 60 * 60 * 1000;
+    const cutoff30Days = nowMs - 30 * 24 * 60 * 60 * 1000;
+    const lotCounts = new Map<string, number>();
+    const designCounts = new Map<string, { designId: string; designName?: string; views: number }>();
+
+    let viewsTotal = 0;
+    let viewsLast7Days = 0;
+    let viewsLast30Days = 0;
+
+    for (const event of events) {
+      const eventName = this.normalizeText(event.event);
+      if (!MIXPANEL_PERFORMANCE_EVENTS.includes(eventName)) {
+        continue;
+      }
+
+      if (!this.eventMatchesBuilder(event, builderId)) {
+        continue;
+      }
+
+      viewsTotal += 1;
+      const timestampMs = this.resolveEventTimestampMs(event);
+      if (timestampMs !== null) {
+        if (timestampMs >= cutoff7Days) {
+          viewsLast7Days += 1;
+        }
+        if (timestampMs >= cutoff30Days) {
+          viewsLast30Days += 1;
+        }
+      }
+
+      const properties = event.properties ?? {};
+      const lotId = this.normalizeText(properties.lotId);
+      if (lotId) {
+        lotCounts.set(lotId, (lotCounts.get(lotId) || 0) + 1);
+      }
+
+      const designId = this.normalizeText(properties.designId);
+      const designName = this.normalizeText(properties.designName) || undefined;
+      const designKey = designId || (designName ? `name:${designName.toLowerCase()}` : '');
+      if (designKey) {
+        const existing = designCounts.get(designKey);
+        if (existing) {
+          existing.views += 1;
+          if (!existing.designName && designName) {
+            existing.designName = designName;
+          }
+        } else {
+          designCounts.set(designKey, {
+            designId: designId || designName || 'unknown',
+            designName,
+            views: 1,
+          });
+        }
+      }
+    }
+
+    const viewsByLot = Array.from(lotCounts.entries())
+      .map(([lotId, views]) => ({ lotId, views }))
+      .sort((a, b) => b.views - a.views || a.lotId.localeCompare(b.lotId));
+
+    const viewsByDesign = Array.from(designCounts.values())
+      .sort((a, b) => b.views - a.views || a.designId.localeCompare(b.designId));
+
+    const payload: BuilderPerformanceSummary = {
+      builderId,
+      range: {
+        from: fromDateOnly,
+        to: toDateOnly,
+      },
+      source: {
+        provider: 'mixpanel',
+        configured: true,
+        available: true,
+      },
+      stats: {
+        viewsTotal,
+        viewsLast7Days,
+        viewsLast30Days,
+        uniqueLotsViewed: lotCounts.size,
+        uniqueDesignsViewed: designCounts.size,
+      },
+      viewsByLot: viewsByLot.slice(0, 50),
+      viewsByDesign: viewsByDesign.slice(0, 50),
+    };
+
+    this.writePerformanceCache(cacheKey, payload);
+    return payload;
   }
 
   @Get(':id/leads/export')
