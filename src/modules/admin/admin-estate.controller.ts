@@ -396,6 +396,7 @@ export class AdminEstateController {
     @Param('id') id: string,
     @Query('from') fromDateQuery?: string,
     @Query('to') toDateQuery?: string,
+    @Query('forceRefresh') forceRefreshQuery?: string,
   ): Promise<EstatePerformanceSummary> {
     const estateIdValue = parseBigIntId(id, 'id');
     const estateId = estateIdValue.toString();
@@ -418,10 +419,17 @@ export class AdminEstateController {
 
     const fromDateOnly = this.toDateOnly(fromDate);
     const toDateOnly = this.toDateOnly(toDate);
+    const normalizedForceRefresh = this.normalizeText(forceRefreshQuery).toLowerCase();
+    const forceRefresh =
+      normalizedForceRefresh === 'true' ||
+      normalizedForceRefresh === '1' ||
+      normalizedForceRefresh === 'yes';
     const cacheKey = this.buildPerformanceCacheKey(estateId, fromDateOnly, toDateOnly);
-    const cached = this.readPerformanceCache(cacheKey);
-    if (cached) {
-      return cached;
+    if (!forceRefresh) {
+      const cached = this.readPerformanceCache(cacheKey);
+      if (cached) {
+        return cached;
+      }
     }
 
     const lots = await this.prisma.lot.findMany({
@@ -449,6 +457,9 @@ export class AdminEstateController {
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const estateEnquiryWhere: Prisma.enquiryWhereInput = {
+      OR: [{ estateId: estateIdValue }, { lot: { estateId: estateIdValue } }],
+    };
 
     const [
       enquiriesTotal,
@@ -462,29 +473,39 @@ export class AdminEstateController {
       matchRows,
     ] = await this.prisma.$transaction([
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue },
+        where: estateEnquiryWhere,
       }),
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue, hotLead: true },
+        where: {
+          AND: [estateEnquiryWhere, { hotLead: true }],
+        },
       }),
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue, createdAt: { gte: sevenDaysAgo } },
+        where: {
+          AND: [estateEnquiryWhere, { createdAt: { gte: sevenDaysAgo } }],
+        },
       }),
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue, createdAt: { gte: thirtyDaysAgo } },
+        where: {
+          AND: [estateEnquiryWhere, { createdAt: { gte: thirtyDaysAgo } }],
+        },
       }),
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue, status: EnquiryStatus.PENDING },
+        where: {
+          AND: [estateEnquiryWhere, { status: EnquiryStatus.PENDING }],
+        },
       }),
       this.prisma.enquiry.count({
-        where: { estateId: estateIdValue, status: EnquiryStatus.PROCESSED },
+        where: {
+          AND: [estateEnquiryWhere, { status: EnquiryStatus.PROCESSED }],
+        },
       }),
       this.prisma.enquiry.findMany({
-        where: { estateId: estateIdValue },
+        where: estateEnquiryWhere,
         select: { lotId: true },
       }),
       this.prisma.enquiryBuilder.findMany({
-        where: { enquiry: { estateId: estateIdValue } },
+        where: { enquiry: estateEnquiryWhere },
         select: {
           builderId: true,
           builder: {

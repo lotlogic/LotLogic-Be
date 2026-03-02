@@ -133,11 +133,15 @@ type BuilderPerformanceSummary = {
   };
   viewsByLot: Array<{
     lotId: string;
+    lotLabel?: string;
+    lotDbId?: string;
     views: number;
   }>;
   viewsByDesign: Array<{
     designId: string;
     designName?: string;
+    designLabel?: string;
+    houseDesignLabel?: string;
     views: number;
   }>;
 };
@@ -180,6 +184,26 @@ export class AdminBuilderController {
 
   private toDateOnly(value: Date): string {
     return value.toISOString().slice(0, 10);
+  }
+
+  private buildLotLabel(lot: {
+    id: bigint;
+    blockKey: string;
+    blockNumber: number | null;
+    address: string | null;
+  }): string {
+    if (typeof lot.blockNumber === 'number') {
+      return `Lot ${lot.blockNumber}`;
+    }
+    const blockKey = this.normalizeText(lot.blockKey);
+    if (blockKey) {
+      return blockKey;
+    }
+    const address = this.normalizeText(lot.address);
+    if (address) {
+      return address;
+    }
+    return lot.id.toString();
   }
 
   private getMixpanelAuthorizationHeader(): string | null {
@@ -612,6 +636,7 @@ export class AdminBuilderController {
     @Param('id') id: string,
     @Query('from') fromDateQuery?: string,
     @Query('to') toDateQuery?: string,
+    @Query('forceRefresh') forceRefreshQuery?: string,
   ): Promise<BuilderPerformanceSummary> {
     const builderIdValue = parseBigIntId(id, 'id');
     const builderId = builderIdValue.toString();
@@ -635,10 +660,17 @@ export class AdminBuilderController {
 
     const fromDateOnly = this.toDateOnly(fromDate);
     const toDateOnly = this.toDateOnly(toDate);
+    const normalizedForceRefresh = this.normalizeText(forceRefreshQuery).toLowerCase();
+    const forceRefresh =
+      normalizedForceRefresh === 'true' ||
+      normalizedForceRefresh === '1' ||
+      normalizedForceRefresh === 'yes';
     const cacheKey = this.buildPerformanceCacheKey(builderId, fromDateOnly, toDateOnly);
-    const cached = this.readPerformanceCache(cacheKey);
-    if (cached) {
-      return cached;
+    if (!forceRefresh) {
+      const cached = this.readPerformanceCache(cacheKey);
+      if (cached) {
+        return cached;
+      }
     }
 
     const configured = Boolean(this.getMixpanelAuthorizationHeader());
@@ -730,7 +762,43 @@ export class AdminBuilderController {
       .map(([lotId, views]) => ({ lotId, views }))
       .sort((a, b) => b.views - a.views || a.lotId.localeCompare(b.lotId));
 
+    const lotIdsForLookup = Array.from(
+      new Set(viewsByLot.map((row) => row.lotId).filter((value) => /^\d+$/.test(value))),
+    ).map((value) => BigInt(value));
+
+    const lots = lotIdsForLookup.length
+      ? await this.prisma.lot.findMany({
+          where: { id: { in: lotIdsForLookup } },
+          select: {
+            id: true,
+            blockKey: true,
+            blockNumber: true,
+            address: true,
+          },
+        })
+      : [];
+
+    const lotLabelById = new Map(
+      lots.map((lot) => [lot.id.toString(), this.buildLotLabel(lot)]),
+    );
+
+    const viewsByLotWithLabels = viewsByLot.map((row) => {
+      const mappedLotLabel = lotLabelById.get(row.lotId);
+      const fallbackLabel = /^\d+$/.test(row.lotId) ? undefined : row.lotId;
+      return {
+        lotId: row.lotId,
+        lotDbId: /^\d+$/.test(row.lotId) ? row.lotId : undefined,
+        lotLabel: mappedLotLabel ?? fallbackLabel,
+        views: row.views,
+      };
+    });
+
     const viewsByDesign = Array.from(designCounts.values())
+      .map((row) => ({
+        ...row,
+        designLabel: row.designName,
+        houseDesignLabel: row.designName,
+      }))
       .sort((a, b) => b.views - a.views || a.designId.localeCompare(b.designId));
 
     const payload: BuilderPerformanceSummary = {
@@ -751,7 +819,7 @@ export class AdminBuilderController {
         uniqueLotsViewed: lotCounts.size,
         uniqueDesignsViewed: designCounts.size,
       },
-      viewsByLot: viewsByLot.slice(0, 50),
+      viewsByLot: viewsByLotWithLabels.slice(0, 50),
       viewsByDesign: viewsByDesign.slice(0, 50),
     };
 
