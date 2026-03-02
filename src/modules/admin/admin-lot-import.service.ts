@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import * as proj4 from 'proj4';
 import { calculateDistance, calculateArea, getWidthHeight } from '@/helper/turf';
+import { normalizeLotLifecycleStageOrThrow } from '@/modules/lot/lot-lifecycle';
 
 interface ImportDxfOptions {
   zoning?: string;
@@ -517,6 +518,11 @@ export class AdminLotImportService {
   }
 
   parseOptions(body: Record<string, string | undefined>): ImportDxfOptions {
+    const lifecycleStage = normalizeLotLifecycleStageOrThrow(
+      body.lifecycleStage ?? null,
+      'lifecycleStage',
+    );
+
     return {
       zoning: body.zoning,
       lotType: body.lotType ?? null,
@@ -526,7 +532,7 @@ export class AdminLotImportService {
       address: body.address ?? null,
       district: body.district ?? null,
       division: body.division ?? null,
-      lifecycleStage: body.lifecycleStage ?? null,
+      lifecycleStage,
       layer: body.layer,
       minArea: parseNumber(body.minArea),
       dropLargest: parseBoolean(body.dropLargest, true),

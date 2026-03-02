@@ -7,6 +7,7 @@ import {
   RuleSetStatus,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
+import { normalizeLotLifecycleStage } from '@/modules/lot/lot-lifecycle';
 
 type JsonObject = Record<string, unknown>;
 
@@ -418,6 +419,11 @@ export class DesignOnLotService {
       ['frontageM'],
       ['frontage'],
     ]);
+    const normalizedLifecycleStage = normalizeLotLifecycleStage(lot.lifecycleStage);
+    const lotUnavailableReason =
+      normalizedLifecycleStage === 'available'
+        ? null
+        : `Lot is not available for plan matching (stage: ${normalizedLifecycleStage ?? 'unset'})`;
 
     const lotContext: LotRuleContext = {
       lotAreaSqm: lot.areaSqm,
@@ -426,7 +432,7 @@ export class DesignOnLotService {
       frontageM: lot.frontageM ?? frontageFromGeo ?? null,
       lotType: lot.lotType ?? null,
       roadFacing: lot.roadFacing ?? null,
-      lifecycleStage: lot.lifecycleStage ?? null,
+      lifecycleStage: normalizedLifecycleStage,
       precinct: lot.precinct ?? null,
     };
 
@@ -467,16 +473,23 @@ export class DesignOnLotService {
     const touchedFloorPlanIds = new Set<string>();
 
     for (const floorPlan of approvedFloorPlans) {
-      const outcome = this.evaluateFloorPlan_(
-        floorPlan,
-        lot.areaSqm,
-        dimensions,
-        effectiveRules,
-        {
-          lotId: lot.id.toString(),
-          floorPlanId: floorPlan.id.toString(),
-        },
-      );
+      const outcome = lotUnavailableReason
+        ? this.buildIneligibleLotOutcome_(
+            lot.areaSqm,
+            dimensions,
+            effectiveRules,
+            lotUnavailableReason,
+          )
+        : this.evaluateFloorPlan_(
+            floorPlan,
+            lot.areaSqm,
+            dimensions,
+            effectiveRules,
+            {
+              lotId: lot.id.toString(),
+              floorPlanId: floorPlan.id.toString(),
+            },
+          );
       await this.upsertDesignOnLot_({
         lotId: lot.id,
         floorPlanId: floorPlan.id,
@@ -500,34 +513,26 @@ export class DesignOnLotService {
         continue;
       }
 
-      this.logger.log(
-        `[design-on-lot:evaluation] ${JSON.stringify({
-          event: 'design_on_lot_not_evaluated',
-          lotId: lot.id.toString(),
-          floorPlanId: floorPlan.id.toString(),
-          reason: 'Builder is not approved for this estate',
-          builderId: floorPlan.builderId.toString(),
-          approvedBuilderIds: approvedBuilderIds.map((value) => value.toString()),
-        })}`,
-      );
+      const failReason = lotUnavailableReason ?? 'Builder is not approved for this estate';
+      if (!lotUnavailableReason) {
+        this.logger.log(
+          `[design-on-lot:evaluation] ${JSON.stringify({
+            event: 'design_on_lot_not_evaluated',
+            lotId: lot.id.toString(),
+            floorPlanId: floorPlan.id.toString(),
+            reason: failReason,
+            builderId: floorPlan.builderId.toString(),
+            approvedBuilderIds: approvedBuilderIds.map((value) => value.toString()),
+          })}`,
+        );
+      }
 
-      const outcome: EvaluationOutcome = {
-        status: DesignOnLotStatus.FAIL,
-        isCompatible: false,
-        failReasons: ['Builder is not approved for this estate'],
-        manualReviewReasons: [],
-        spacing: {
-          front: effectiveRules.minFrontSetbackM,
-          rear: effectiveRules.minRearSetbackM,
-          side: effectiveRules.minSideSetbackM,
-        },
-        maxCoverageArea:
-          effectiveRules.maxSiteCoverageRatio !== null
-            ? Number((lot.areaSqm * effectiveRules.maxSiteCoverageRatio).toFixed(2))
-            : null,
-        usableWidth: dimensions.width,
-        usableDepth: dimensions.depth,
-      };
+      const outcome = this.buildIneligibleLotOutcome_(
+        lot.areaSqm,
+        dimensions,
+        effectiveRules,
+        failReason,
+      );
 
       await this.upsertDesignOnLot_({
         lotId: lot.id,
@@ -566,8 +571,9 @@ export class DesignOnLotService {
         continue;
       }
 
+      const failReason = lotUnavailableReason ?? 'Builder is not approved for this estate';
       const approved = approvedBuilderSet.has(row.floorPlan.builderId.toString());
-      if (approved) {
+      if (!lotUnavailableReason && approved) {
         continue;
       }
 
@@ -576,7 +582,7 @@ export class DesignOnLotService {
         data: {
           isCompatible: false,
           status: DesignOnLotStatus.FAIL,
-          failReasons: ['Builder is not approved for this estate'],
+          failReasons: [failReason],
           manualReviewReasons: [],
           assessedAt: now,
           stateRuleSetId: stateRuleSet?.id ?? null,
@@ -669,6 +675,31 @@ export class DesignOnLotService {
         },
       },
     });
+  }
+
+  private buildIneligibleLotOutcome_(
+    lotAreaSqm: number,
+    dimensions: LotDimensions,
+    effectiveRules: NormalizedRules,
+    failReason: string,
+  ): EvaluationOutcome {
+    return {
+      status: DesignOnLotStatus.FAIL,
+      isCompatible: false,
+      failReasons: [failReason],
+      manualReviewReasons: [],
+      spacing: {
+        front: effectiveRules.minFrontSetbackM,
+        rear: effectiveRules.minRearSetbackM,
+        side: effectiveRules.minSideSetbackM,
+      },
+      maxCoverageArea:
+        effectiveRules.maxSiteCoverageRatio !== null
+          ? Number((lotAreaSqm * effectiveRules.maxSiteCoverageRatio).toFixed(2))
+          : null,
+      usableWidth: dimensions.width,
+      usableDepth: dimensions.depth,
+    };
   }
 
   private evaluateFloorPlan_(

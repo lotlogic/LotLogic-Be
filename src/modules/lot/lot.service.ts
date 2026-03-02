@@ -72,6 +72,8 @@ export class LotService {
         "updatedAt"
       FROM
         lot
+      WHERE
+        LOWER(COALESCE("lifecycleStage", '')) = 'available'
       ORDER BY id
     `;
 
@@ -109,7 +111,8 @@ export class LotService {
       FROM
         lot
       WHERE
-        id = $1`,lotId);
+        id = $1
+        AND LOWER(COALESCE("lifecycleStage", '')) = 'available'`,lotId);
     
     if (lot && lot.length > 0) {
       const lotData = lot[0];
