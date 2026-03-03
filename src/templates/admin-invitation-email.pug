@@ -1,94 +1,179 @@
 doctype html
-html
+html(lang='en')
   head
     meta(charset='UTF-8')
     meta(name='viewport' content='width=device-width, initial-scale=1.0')
-    title Invitation
+    title LotCheck Invitation
     style.
       body {
         margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        background-color: #f5f7fa;
-        color: #222;
+        padding: 24px;
+        background: #f5f4f2;
+        font-family: Montserrat, Arial, sans-serif;
+        color: #2b3d48;
       }
-      .container {
-        max-width: 640px;
-        margin: 24px auto;
-        background: #fff;
-        border: 1px solid #e5e7eb;
+
+      .shell {
+        max-width: 620px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid #d0cfc9;
         border-radius: 8px;
         overflow: hidden;
       }
+
       .header {
-        background: #1f2937;
-        color: #fff;
-        padding: 20px 24px;
+        background: #2b3d48;
+        padding: 20px 28px;
       }
+
+      .logo {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: #ffffff;
+      }
+
+      .accent {
+        height: 4px;
+        background: #ef7b6c;
+      }
+
       .content {
-        padding: 24px;
+        padding: 32px 28px;
+        line-height: 1.65;
       }
-      .button {
-        display: inline-block;
-        margin: 16px 0;
-        padding: 12px 18px;
-        background: #2563eb;
-        color: #fff !important;
-        text-decoration: none;
-        border-radius: 6px;
+
+      .content p {
+        margin: 0 0 14px 0;
+        font-size: 14px;
+      }
+
+      .greeting {
+        font-size: 16px;
         font-weight: 600;
       }
-      .meta {
-        margin-top: 16px;
-        padding: 12px;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
+
+      .cta-wrap {
+        text-align: center;
+        margin: 24px 0;
+      }
+
+      .cta {
+        display: inline-block;
+        background: #ef7b6c;
+        color: #ffffff !important;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 12px 28px;
+        border-radius: 4px;
+      }
+
+      .list {
+        background: #f5f4f2;
         border-radius: 6px;
+        margin: 0 0 14px 0;
+        padding: 14px 20px 14px 34px;
       }
-      .meta p {
-        margin: 6px 0;
+
+      .list li {
+        margin: 0 0 8px 0;
+        font-size: 14px;
       }
+
+      .list li:last-child {
+        margin-bottom: 0;
+      }
+
+      .ps {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e8e7e5;
+        color: #7a8c95;
+        font-size: 12px;
+        font-style: italic;
+      }
+
       .footer {
-        padding: 16px 24px;
-        border-top: 1px solid #e5e7eb;
-        color: #6b7280;
-        font-size: 13px;
+        background: #2b3d48;
+        border-top: 1px solid #d0cfc9;
+        padding: 16px 28px;
       }
-      ul {
-        margin-top: 8px;
+
+      .footer p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
       }
+
+      .footer a {
+        color: #ef7b6c;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
   body
-    .container
-      .header
-        h2(style='margin:0') #{appName} Invitation
-      .content
-        p Hi #{inviteeName},
-        p You have been invited to access #{appName}.
-        p Use the link below to accept your invitation and sign in:
-        a.button(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') Accept Invitation
-        p If the button does not work, copy and paste this URL into your browser:
-        p
-          a(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') #{inviteRedeemUrl}
+    .shell
+      .card
+        .header
+          p.logo lotcheck.
+        .accent
+        .content
+          p.greeting Hi #{inviteeFirstName},
 
-        .meta
-          p
-            strong Email:
-            |  #{inviteeEmail}
-          p
-            strong Role:
-            |  #{role}
-          p
-            strong Status:
-            |  #{status}
-          p
-            strong Post-accept redirect:
-            |  #{redirectUrl}
+          if scenario === 'estate-manager'
+            p You're all set up on LotCheck. Your account is ready and your estate portal is waiting - click the button below to log in and get started.
+            .cta-wrap
+              a.cta(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') Set up your account
+            p Once you're in, you'll be able to:
+            ul.list
+              li Add your team members
+              li Upload your estate logo and set your brand colour
+              li Review the builders we've approved for your estate
+            p If you run into anything, just reply to this email or contact us directly - we're here to help you get set up quickly.
+            p Talk soon,
+            p
+              strong The LotCheck Team
+            p.ps P.S. Use the same email address this was sent to when you sign in.
 
-        if assignedEstateNames && assignedEstateNames.length > 0
+          else if scenario === 'builder-estate'
+            p
+              strong #{estateName}
+              |  has invited you to list your floor plans on LotCheck.
+            p LotCheck is a planning tool that helps buyers visualise how house designs fit on specific lots. When a buyer is browsing #{estateName}, your matched plans appear alongside the lot - generating qualified enquiries directly to you.
+            p To get your plans in front of buyers, you'll need to upload them to your builder profile. It takes about 20-30 minutes for an initial set of plans, and you can add more at any time.
+            .cta-wrap
+              a.cta(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') Set up your account
+            p Once you're in, you'll be able to:
+            ul.list
+              li Review the estate's design guidelines
+              li Upload your floor plans (name, dimensions, storeys, key features)
+              li See which of your plans match available lots
+            p If you have questions before getting started, just reply to this email.
+            p
+              strong The LotCheck Team
+
+          else
+            p Your LotCheck account is set up and ready to go.
+            p We're in the process of connecting you with estates in your area - you'll receive a separate notification when you're approved for a specific estate. In the meantime, you can log in now to set up your builder profile and upload your floor plans so you're ready when those connections come through.
+            .cta-wrap
+              a.cta(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer') Access your account
+            p Once you're in:
+            ul.list
+              li Add your company details and logo
+              li Upload your floor plans - name, dimensions, storeys, key features
+              li We'll notify you when your plans are live on an estate
+            p Any questions, just reply here.
+            p
+              strong The LotCheck Team
+
+        .footer
           p
-            strong Estate access:
-          ul
-            each estateName in assignedEstateNames
-              li #{estateName}
-      .footer
-        p(style='margin:0') This is an automated invitation email from #{appName}.
+            | Need help? Contact us at
+            |  
+            a(href=`mailto:${supportEmail}`) #{supportEmail}

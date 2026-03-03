@@ -11,7 +11,7 @@ const parsePort = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const DEFAULT_FROM = 'BlockPlanner <mail@mail.blockplanner.com.au>';
+const DEFAULT_FROM = 'BlockPlanner <noreply@mail.blockplanner.com.au>';
 
 const buildSmtpTransport = (config: {
   host?: string;

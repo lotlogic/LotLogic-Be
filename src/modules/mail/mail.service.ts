@@ -5,12 +5,12 @@ const LOTCHECK_TRANSPORTER_NAME = 'lotcheck';
 const SENDER_PROFILE_CONFIG = {
   blockplanner: {
     displayName: 'BlockPlanner',
-    email: 'mail@mail.blockplanner.com.au',
+    email: 'noreply@mail.blockplanner.com.au',
     transporterName: undefined,
   },
   lotcheck: {
     displayName: 'LotCheck',
-    email: 'mail@mail.lotcheck.com.au',
+    email: 'noreply@mail.lotcheck.com.au',
     transporterName: LOTCHECK_TRANSPORTER_NAME,
   },
 } as const;

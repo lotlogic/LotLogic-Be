@@ -15,6 +15,16 @@ import { AdminEntraGraphService } from '@/modules/admin/admin-entra-graph.servic
 import { UserRole, UserStatus } from '@prisma/client';
 import { MailService } from '@/modules/mail/mail.service';
 
+type LotCheckInvitationScenario =
+  | 'estate-manager'
+  | 'builder-estate'
+  | 'builder-direct';
+
+interface AdminInviteContextBody {
+  scenario?: LotCheckInvitationScenario;
+  estateName?: string;
+}
+
 interface AdminInviteBody {
   email?: string;
   displayName?: string;
@@ -23,18 +33,74 @@ interface AdminInviteBody {
   estateIds?: string[];
   redirectUrl?: string;
   sendInvitationMessage?: boolean;
+  inviteContext?: AdminInviteContextBody;
 }
 
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/invitations')
 export class AdminInvitationsController {
   private readonly logger = new Logger(AdminInvitationsController.name);
+  private readonly lotCheckSupportEmail = 'support@lotcheck.com.au';
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly graph: AdminEntraGraphService,
     private readonly mailService: MailService,
   ) {}
+
+  private resolveInviteeFirstName(displayName: string, email: string): string {
+    const normalizedDisplayName = String(displayName || '').trim();
+    if (normalizedDisplayName) {
+      const first = normalizedDisplayName.split(/\s+/)[0];
+      if (first) {
+        return first;
+      }
+    }
+
+    const localPart = String(email || '').split('@')[0]?.trim();
+    if (localPart) {
+      const normalizedLocal = localPart.replace(/[._-]+/g, ' ');
+      const first = normalizedLocal.split(/\s+/)[0];
+      if (first) {
+        return first.charAt(0).toUpperCase() + first.slice(1);
+      }
+    }
+
+    return 'there';
+  }
+
+  private resolveInvitationScenario(
+    body: AdminInviteBody,
+    assignedEstateNames: string[],
+  ): LotCheckInvitationScenario {
+    const explicitScenario = body.inviteContext?.scenario;
+    if (
+      explicitScenario === 'estate-manager' ||
+      explicitScenario === 'builder-estate' ||
+      explicitScenario === 'builder-direct'
+    ) {
+      return explicitScenario;
+    }
+
+    if (assignedEstateNames.length > 0) {
+      return 'estate-manager';
+    }
+
+    return 'builder-direct';
+  }
+
+  private resolveInvitationSubject(
+    scenario: LotCheckInvitationScenario,
+    estateName: string,
+  ): string {
+    if (scenario === 'estate-manager') {
+      return "You're set up on LotCheck - here's how to get started";
+    }
+    if (scenario === 'builder-estate') {
+      return `You've been invited to list your plans on ${estateName}`;
+    }
+    return 'Welcome to LotCheck - your account is ready';
+  }
 
   @Post()
   @Roles('ADMIN')
@@ -142,26 +208,30 @@ export class AdminInvitationsController {
     const assignedEstateNames = estates
       .map((item) => item.estate?.name?.trim() || '')
       .filter(Boolean);
+    const inviteeFirstName = this.resolveInviteeFirstName(inviteeName, email);
+    const estateNameFromContext = String(body.inviteContext?.estateName || '').trim();
+    const estateNameForCopy = estateNameFromContext || assignedEstateNames[0] || 'your estate';
+    const invitationScenario = this.resolveInvitationScenario(body, assignedEstateNames);
+    const invitationSubject = this.resolveInvitationSubject(
+      invitationScenario,
+      estateNameForCopy,
+    );
 
     // Invitation flows are LotCheck-only (admin endpoints are not used by Free Assessment).
-    const appName = 'LotCheck';
-
     let customEmailSent = true;
     let customEmailError: string | null = null;
 
     try {
       await this.mailService.sendEmailOrThrow({
-        subject: `You're invited to ${appName}`,
+        subject: invitationSubject,
         template: 'admin-invitation-email',
         context: {
-          appName,
-          inviteeName,
+          scenario: invitationScenario,
+          inviteeFirstName,
+          estateName: estateNameForCopy,
           inviteeEmail: email,
           inviteRedeemUrl: invitation.inviteRedeemUrl,
-          redirectUrl,
-          role,
-          status,
-          assignedEstateNames,
+          supportEmail: this.lotCheckSupportEmail,
         },
         emailsList: email,
         senderProfile: 'lotcheck',
@@ -179,6 +249,7 @@ export class AdminInvitationsController {
       customEmail: {
         sent: customEmailSent,
         error: customEmailError,
+        scenario: invitationScenario,
       },
       user: {
         id: user.id.toString(),
