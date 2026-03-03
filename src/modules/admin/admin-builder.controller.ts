@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { EnquiryStatus, Prisma } from '@prisma/client';
+import { DesignOnLotStatus, EnquiryStatus, Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { BuilderScopeGuard } from '@/modules/auth/guards/builder-scope.guard';
@@ -1016,6 +1016,136 @@ export class AdminBuilderController {
       orderBy: [{ estateId: 'asc' }],
     });
 
+    const estateIds = Array.from(new Set(approvals.map((item) => item.estateId)));
+    const availableLots = estateIds.length
+      ? await this.prisma.lot.findMany({
+          where: {
+            estateId: { in: estateIds },
+            lifecycleStage: {
+              equals: 'available',
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+            estateId: true,
+            blockKey: true,
+            blockNumber: true,
+            address: true,
+          },
+          orderBy: [{ estateId: 'asc' }, { blockNumber: 'asc' }, { id: 'asc' }],
+        })
+      : [];
+
+    const availableLotsByEstateId = new Map<
+      string,
+      Array<{
+        id: bigint;
+        estateId: bigint | null;
+        blockKey: string;
+        blockNumber: number | null;
+        address: string | null;
+      }>
+    >();
+    const lotById = new Map<
+      string,
+      {
+        id: bigint;
+        estateId: bigint | null;
+        blockKey: string;
+        blockNumber: number | null;
+        address: string | null;
+      }
+    >();
+
+    for (const lot of availableLots) {
+      const lotId = lot.id.toString();
+      lotById.set(lotId, lot);
+
+      const estateIdKey = lot.estateId?.toString();
+      if (!estateIdKey) {
+        continue;
+      }
+      const existing = availableLotsByEstateId.get(estateIdKey) ?? [];
+      existing.push(lot);
+      availableLotsByEstateId.set(estateIdKey, existing);
+    }
+
+    const availableLotIds = availableLots.map((lot) => lot.id);
+    const compatibleDesignOnLots = availableLotIds.length
+      ? await this.prisma.designOnLot.findMany({
+          where: {
+            lotId: { in: availableLotIds },
+            status: DesignOnLotStatus.PASS,
+            isCompatible: true,
+            floorPlan: {
+              builderId,
+            },
+          },
+          select: {
+            lotId: true,
+            floorPlanId: true,
+            floorPlan: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        })
+      : [];
+
+    const matchesByEstateId = new Map<
+      string,
+      {
+        matchedLotIds: Set<string>;
+        passCombinationCount: number;
+        plans: Map<
+          string,
+          {
+            floorPlanId: string;
+            floorPlanName: string;
+            matchedLotIds: Set<string>;
+          }
+        >;
+      }
+    >();
+
+    for (const record of compatibleDesignOnLots) {
+      const lotId = record.lotId.toString();
+      const lot = lotById.get(lotId);
+      const estateIdKey = lot?.estateId?.toString();
+      if (!lot || !estateIdKey) {
+        continue;
+      }
+
+      const estateBucket = matchesByEstateId.get(estateIdKey) ?? {
+        matchedLotIds: new Set<string>(),
+        passCombinationCount: 0,
+        plans: new Map<
+          string,
+          {
+            floorPlanId: string;
+            floorPlanName: string;
+            matchedLotIds: Set<string>;
+          }
+        >(),
+      };
+      estateBucket.passCombinationCount += 1;
+      estateBucket.matchedLotIds.add(lotId);
+
+      const floorPlanId = record.floorPlanId.toString();
+      const existingPlan = estateBucket.plans.get(floorPlanId) ?? {
+        floorPlanId,
+        floorPlanName: record.floorPlan?.name || floorPlanId,
+        matchedLotIds: new Set<string>(),
+      };
+      existingPlan.matchedLotIds.add(lotId);
+      estateBucket.plans.set(floorPlanId, existingPlan);
+
+      matchesByEstateId.set(estateIdKey, estateBucket);
+    }
+
     const jurisdictions = Array.from(
       new Set(
         approvals
@@ -1095,6 +1225,42 @@ export class AdminBuilderController {
         sortedRuleSets[0] ||
         null;
 
+      const estateIdKey = approval.estateId.toString();
+      const availableLotsForEstate = availableLotsByEstateId.get(estateIdKey) ?? [];
+      const estateMatches = matchesByEstateId.get(estateIdKey);
+      const includeMatching = approval.status === 'APPROVED';
+      const matchingPlans = includeMatching
+        ? Array.from(estateMatches?.plans.values() ?? [])
+            .map((plan) => ({
+              floorPlanId: plan.floorPlanId,
+              floorPlanName: plan.floorPlanName,
+              matchedLotCount: plan.matchedLotIds.size,
+              matchedLots: Array.from(plan.matchedLotIds)
+                .map((lotId) => {
+                  const lot = lotById.get(lotId);
+                  return {
+                    lotId,
+                    lotLabel: lot
+                      ? this.buildLotLabel({
+                          id: lot.id,
+                          blockKey: lot.blockKey,
+                          blockNumber: lot.blockNumber,
+                          address: lot.address,
+                        })
+                      : lotId,
+                  };
+                })
+                .sort((left, right) => left.lotLabel.localeCompare(right.lotLabel)),
+            }))
+            .sort((left, right) => {
+              const countDelta = right.matchedLotCount - left.matchedLotCount;
+              if (countDelta !== 0) {
+                return countDelta;
+              }
+              return left.floorPlanName.localeCompare(right.floorPlanName);
+            })
+        : [];
+
       return {
         id: approval.id.toString(),
         builderId: approval.builderId.toString(),
@@ -1170,6 +1336,13 @@ export class AdminBuilderController {
               updatedAt: currentStateRuleSet.updatedAt,
             }
           : null,
+        matching: {
+          availableLotCount: includeMatching ? availableLotsForEstate.length : 0,
+          matchedLotCount: includeMatching ? estateMatches?.matchedLotIds.size ?? 0 : 0,
+          matchedPlanCount: includeMatching ? matchingPlans.length : 0,
+          passCombinationCount: includeMatching ? estateMatches?.passCombinationCount ?? 0 : 0,
+          plans: matchingPlans,
+        },
       };
     });
   }
