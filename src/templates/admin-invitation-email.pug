@@ -38,6 +38,10 @@ html(lang='en')
         color: #ffffff;
       }
 
+      .logo-lot {
+        color: #ef7b6c;
+      }
+
       .accent {
         height: 4px;
         background: #ef7b6c;
@@ -90,13 +94,13 @@ html(lang='en')
         margin-bottom: 0;
       }
 
-      .ps {
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid #e8e7e5;
-        color: #7a8c95;
+      .email-ps {
         font-size: 12px;
+        color: #7a8c95;
         font-style: italic;
+        padding-top: 16px;
+        border-top: 1px solid #e8e7e5;
+        margin-top: 8px !important;
       }
 
       .footer {
@@ -121,7 +125,9 @@ html(lang='en')
     .shell
       .card
         .header
-          p.logo lotcheck.
+          p.logo
+            span.logo-lot lot
+            | check.
         .accent
         .content
           p.greeting Hi #{inviteeFirstName},
@@ -139,7 +145,7 @@ html(lang='en')
             p Talk soon,
             p
               strong The LotCheck Team
-            p.ps P.S. Use the same email address this was sent to when you sign in.
+            p.email-ps Use the same email address this was sent to when you sign in.
 
           else if scenario === 'builder-estate'
             p
@@ -157,6 +163,7 @@ html(lang='en')
             p If you have questions before getting started, just reply to this email.
             p
               strong The LotCheck Team
+            p.email-ps Use the same email address this was sent to when you sign in.
 
           else
             p Your LotCheck account is set up and ready to go.
@@ -171,6 +178,7 @@ html(lang='en')
             p Any questions, just reply here.
             p
               strong The LotCheck Team
+            p.email-ps Use the same email address this was sent to when you sign in.
 
         .footer
           p

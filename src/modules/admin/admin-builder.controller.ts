@@ -981,6 +981,199 @@ export class AdminBuilderController {
     });
   }
 
+  @Get(':id/approved-estates')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
+  async listApprovedEstates(@Param('id') id: string) {
+    const builderId = parseBigIntId(id, 'id');
+    const approvals = await this.prisma.builderEstateApproval.findMany({
+      where: { builderId },
+      include: {
+        estate: {
+          select: {
+            id: true,
+            name: true,
+            jurisdiction: true,
+            estateRuleSets: {
+              orderBy: [{ version: 'desc' }, { id: 'desc' }],
+              select: {
+                id: true,
+                estateId: true,
+                name: true,
+                version: true,
+                status: true,
+                effectiveFrom: true,
+                effectiveTo: true,
+                rules: true,
+                notes: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ estateId: 'asc' }],
+    });
+
+    const jurisdictions = Array.from(
+      new Set(
+        approvals
+          .map((item) => item.estate?.jurisdiction)
+          .filter((value): value is 'ACT' | 'NSW' => value === 'ACT' || value === 'NSW'),
+      ),
+    );
+
+    const statusRank = (status: string) => {
+      if (status === 'PUBLISHED') return 0;
+      if (status === 'DRAFT') return 1;
+      return 2;
+    };
+
+    const sortRuleSets = <T extends { status: string; version: number }>(
+      items: T[],
+    ): T[] =>
+      [...items].sort((left, right) => {
+        const rankDelta = statusRank(left.status) - statusRank(right.status);
+        if (rankDelta !== 0) {
+          return rankDelta;
+        }
+        return right.version - left.version;
+      });
+
+    const stateRuleSets = jurisdictions.length
+      ? await this.prisma.stateRuleSet.findMany({
+          where: {
+            jurisdiction: {
+              in: jurisdictions,
+            },
+          },
+          orderBy: [{ version: 'desc' }, { id: 'desc' }],
+          select: {
+            id: true,
+            jurisdiction: true,
+            name: true,
+            version: true,
+            status: true,
+            effectiveFrom: true,
+            effectiveTo: true,
+            rules: true,
+            sourceUrl: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        })
+      : [];
+
+    const stateRuleSetsByJurisdiction = new Map<
+      'ACT' | 'NSW',
+      typeof stateRuleSets
+    >();
+    for (const ruleSet of stateRuleSets) {
+      const jurisdiction = ruleSet.jurisdiction;
+      const existing = stateRuleSetsByJurisdiction.get(jurisdiction) ?? [];
+      existing.push(ruleSet);
+      stateRuleSetsByJurisdiction.set(jurisdiction, existing);
+    }
+
+    return approvals.map((approval) => {
+      const sortedRuleSets = sortRuleSets(approval.estate?.estateRuleSets || []);
+      const jurisdiction = approval.estate?.jurisdiction ?? null;
+      const sortedStateRuleSets =
+        jurisdiction && (jurisdiction === 'ACT' || jurisdiction === 'NSW')
+          ? sortRuleSets(stateRuleSetsByJurisdiction.get(jurisdiction) || [])
+          : [];
+
+      const currentStateRuleSet =
+        sortedStateRuleSets.find((item) => item.status === 'PUBLISHED') ||
+        sortedStateRuleSets[0] ||
+        null;
+
+      const currentRuleSet =
+        sortedRuleSets.find((item) => item.status === 'PUBLISHED') ||
+        sortedRuleSets[0] ||
+        null;
+
+      return {
+        id: approval.id.toString(),
+        builderId: approval.builderId.toString(),
+        estateId: approval.estateId.toString(),
+        status: approval.status,
+        effectiveFrom: approval.effectiveFrom,
+        effectiveTo: approval.effectiveTo,
+        notes: approval.notes,
+        createdAt: approval.createdAt,
+        updatedAt: approval.updatedAt,
+        estate: approval.estate
+          ? {
+              id: approval.estate.id.toString(),
+              name: approval.estate.name,
+              jurisdiction: approval.estate.jurisdiction,
+            }
+          : null,
+        ruleSets: sortedRuleSets.map((ruleSet) => ({
+          id: ruleSet.id.toString(),
+          estateId: ruleSet.estateId.toString(),
+          name: ruleSet.name,
+          version: ruleSet.version,
+          status: ruleSet.status,
+          effectiveFrom: ruleSet.effectiveFrom,
+          effectiveTo: ruleSet.effectiveTo,
+          rules: ruleSet.rules,
+          notes: ruleSet.notes,
+          createdAt: ruleSet.createdAt,
+          updatedAt: ruleSet.updatedAt,
+        })),
+        currentRuleSet: currentRuleSet
+          ? {
+              id: currentRuleSet.id.toString(),
+              estateId: currentRuleSet.estateId.toString(),
+              name: currentRuleSet.name,
+              version: currentRuleSet.version,
+              status: currentRuleSet.status,
+              effectiveFrom: currentRuleSet.effectiveFrom,
+              effectiveTo: currentRuleSet.effectiveTo,
+              rules: currentRuleSet.rules,
+              notes: currentRuleSet.notes,
+              createdAt: currentRuleSet.createdAt,
+              updatedAt: currentRuleSet.updatedAt,
+            }
+          : null,
+        stateRuleSets: sortedStateRuleSets.map((ruleSet) => ({
+          id: ruleSet.id.toString(),
+          jurisdiction: ruleSet.jurisdiction,
+          name: ruleSet.name,
+          version: ruleSet.version,
+          status: ruleSet.status,
+          effectiveFrom: ruleSet.effectiveFrom,
+          effectiveTo: ruleSet.effectiveTo,
+          rules: ruleSet.rules,
+          sourceUrl: ruleSet.sourceUrl,
+          notes: ruleSet.notes,
+          createdAt: ruleSet.createdAt,
+          updatedAt: ruleSet.updatedAt,
+        })),
+        currentStateRuleSet: currentStateRuleSet
+          ? {
+              id: currentStateRuleSet.id.toString(),
+              jurisdiction: currentStateRuleSet.jurisdiction,
+              name: currentStateRuleSet.name,
+              version: currentStateRuleSet.version,
+              status: currentStateRuleSet.status,
+              effectiveFrom: currentStateRuleSet.effectiveFrom,
+              effectiveTo: currentStateRuleSet.effectiveTo,
+              rules: currentStateRuleSet.rules,
+              sourceUrl: currentStateRuleSet.sourceUrl,
+              notes: currentStateRuleSet.notes,
+              createdAt: currentStateRuleSet.createdAt,
+              updatedAt: currentStateRuleSet.updatedAt,
+            }
+          : null,
+      };
+    });
+  }
+
   @Post()
   @Roles('ADMIN', 'USER')
   async create(@Req() req: AuthenticatedRequest, @Body() data: Prisma.builderCreateInput) {
