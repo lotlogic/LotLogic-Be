@@ -43,6 +43,7 @@ export class AdminDesignOnLotController {
     floorPlan: {
       id: bigint;
       name: string;
+      floorplanUrl: string | null;
       bedrooms: number;
       bathrooms: number;
       garages: number;
@@ -100,6 +101,7 @@ export class AdminDesignOnLotController {
           select: {
             id: true,
             name: true,
+            floorplanUrl: true,
             bedrooms: true,
             bathrooms: true,
             garages: true,
@@ -154,6 +156,7 @@ export class AdminDesignOnLotController {
           select: {
             id: true,
             name: true,
+            floorplanUrl: true,
             bedrooms: true,
             bathrooms: true,
             garages: true,
