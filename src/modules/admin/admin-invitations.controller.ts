@@ -16,7 +16,7 @@ import { UserRole, UserStatus } from '@prisma/client';
 import { MailService } from '@/modules/mail/mail.service';
 
 type LotCheckInvitationScenario =
-  | 'estate-manager'
+  | 'estate-team'
   | 'builder-estate'
   | 'builder-direct';
 
@@ -75,7 +75,7 @@ export class AdminInvitationsController {
   ): LotCheckInvitationScenario {
     const explicitScenario = body.inviteContext?.scenario;
     if (
-      explicitScenario === 'estate-manager' ||
+      explicitScenario === 'estate-team' ||
       explicitScenario === 'builder-estate' ||
       explicitScenario === 'builder-direct'
     ) {
@@ -83,7 +83,7 @@ export class AdminInvitationsController {
     }
 
     if (assignedEstateNames.length > 0) {
-      return 'estate-manager';
+      return 'estate-team';
     }
 
     return 'builder-direct';
@@ -93,8 +93,10 @@ export class AdminInvitationsController {
     scenario: LotCheckInvitationScenario,
     estateName: string,
   ): string {
-    if (scenario === 'estate-manager') {
-      return "You're set up on LotCheck - here's how to get started";
+    if (scenario === 'estate-team') {
+      const subjectEstateName =
+        estateName && estateName !== 'your estate' ? estateName : 'Your estate';
+      return `"${subjectEstateName}" is live on LotCheck - here's how to get started`;
     }
     if (scenario === 'builder-estate') {
       return `You've been invited to list your plans on ${estateName}`;

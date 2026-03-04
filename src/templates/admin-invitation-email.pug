@@ -132,16 +132,19 @@ html(lang='en')
         .content
           p.greeting Hi #{inviteeFirstName},
 
-          if scenario === 'estate-manager'
-            p You're all set up on LotCheck. Your account is ready and your estate portal is waiting - click the button below to log in and get started.
+          if scenario === 'estate-team'
+            p
+              strong "#{estateName}" is live on LotCheck - here's how to get started
+            p You're all set up on LotCheck. From here, buyers browsing #{estateName} will be able to see exactly which homes fit which blocks - and your team will start receiving enquiries from people who already know what they want to build.
+            p Your account is ready. Click below to log in and get started.
             .cta-wrap
-              a.cta(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer' style='color:#ffffff !important;-webkit-text-fill-color:#ffffff;text-decoration:none;') Set up your account
+              a.cta(href=inviteRedeemUrl target='_blank' rel='noopener noreferrer' style='color:#ffffff !important;-webkit-text-fill-color:#ffffff;text-decoration:none;') Log in and get started &rarr;
             p Once you're in, you'll be able to:
             ul.list
               li Add your team members
               li Upload your estate logo and set your brand colour
               li Review the builders we've approved for your estate
-            p If you run into anything, just reply to this email or contact us directly - we're here to help you get set up quickly.
+            p If you need anything along the way, just reply to this email.
             p Talk soon,
             p
               strong The LotCheck Team
