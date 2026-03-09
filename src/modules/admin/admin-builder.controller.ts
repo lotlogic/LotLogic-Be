@@ -8,10 +8,17 @@ import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { BuilderScope } from '@/modules/auth/decorators/builder-scope.decorator';
 import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { MailService } from '@/modules/mail/mail.service';
 import { Response } from 'express';
 
 interface BuilderUserAssignmentBody {
   userIds?: string[];
+}
+
+interface BuilderEstateJoinRequestBody {
+  estateName?: string;
+  estateLocation?: string;
+  fitReason?: string;
 }
 
 const parsePositiveIntQuery = (
@@ -155,7 +162,10 @@ export class AdminBuilderController {
     { expiresAt: number; payload: BuilderPerformanceSummary }
   >();
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   private normalizeText(value: unknown): string {
     return String(value ?? '').trim();
@@ -1418,6 +1428,78 @@ export class AdminBuilderController {
     return this.prisma.builder.delete({
       where: { id: parseBigIntId(id, 'id') },
     });
+  }
+
+  @Post(':id/estate-join-request')
+  @Roles('ADMIN', 'USER')
+  @BuilderScope({ builderIdParam: 'id' })
+  async submitEstateJoinRequest(
+    @Param('id') id: string,
+    @Body() body: BuilderEstateJoinRequestBody,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const builderId = parseBigIntId(id, 'id');
+    const estateName = this.normalizeText(body.estateName);
+    const estateLocation = this.normalizeText(body.estateLocation);
+    const fitReason = this.normalizeText(body.fitReason);
+
+    if (!estateName) {
+      throw new BadRequestException('estateName is required');
+    }
+
+    if (!estateLocation) {
+      throw new BadRequestException('estateLocation is required');
+    }
+
+    const builder = await this.prisma.builder.findUnique({
+      where: { id: builderId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    });
+
+    if (!builder) {
+      throw new BadRequestException('Builder not found');
+    }
+
+    const recipientEmail =
+      this.normalizeText(process.env.GET_IN_TOUCH_RECIPIENT_EMAIL) ||
+      'mitch@blockplanner.com.au';
+    const requesterName =
+      this.normalizeText(req.auth?.displayName) ||
+      this.normalizeText(req.auth?.email) ||
+      this.normalizeText(req.auth?.externalAuthId) ||
+      req.auth?.id?.toString() ||
+      'Unknown user';
+    const requesterEmail = this.normalizeText(req.auth?.email) || 'Not provided';
+    const builderName = this.normalizeText(builder.name) || builder.id.toString();
+    const subject = `Builder estate join request — ${estateName}`;
+
+    await this.mailService.sendEmailOrThrow({
+      subject,
+      template: 'builder-estate-join-request',
+      context: {
+        estateName,
+        estateLocation,
+        fitReason: fitReason || 'Not provided',
+        builderId: builder.id.toString(),
+        builderName,
+        builderEmail: this.normalizeText(builder.email) || 'Not provided',
+        builderPhone: this.normalizeText(builder.phone) || 'Not provided',
+        requesterName,
+        requesterEmail,
+        requesterRole: this.normalizeText(req.auth?.role) || 'USER',
+        submittedAt: new Date().toISOString(),
+        sourceIp: this.normalizeText(req.ip) || 'unknown',
+      },
+      emailsList: recipientEmail,
+      senderProfile: 'blockplanner',
+    });
+
+    return { message: 'Request submitted' };
   }
 
   @Get(':id/users')

@@ -3,7 +3,7 @@ html(lang='en')
   head
     meta(charset='UTF-8')
     meta(name='viewport' content='width=device-width, initial-scale=1.0')
-    title LotCheck Lead Notification
+    title LotCheck Estate Join Request
     style.
       body {
         margin: 0;
@@ -62,16 +62,6 @@ html(lang='en')
         font-weight: 600;
       }
 
-      .lead-note {
-        margin: 0 0 14px 0;
-        padding: 10px 12px;
-        border-radius: 6px;
-        background: #fff2f0;
-        border: 1px solid #ef7b6c;
-        color: #8f3f34;
-        font-weight: 700;
-      }
-
       .details {
         margin: 0 0 14px 0;
         padding: 14px 16px;
@@ -90,6 +80,15 @@ html(lang='en')
 
       .label {
         font-weight: 700;
+      }
+
+      .email-ps {
+        font-size: 12px;
+        color: #7a8c95;
+        font-style: italic;
+        padding-top: 16px;
+        border-top: 1px solid #e8e7e5;
+        margin-top: 8px !important;
       }
 
       .footer {
@@ -112,38 +111,43 @@ html(lang='en')
             | check.
         .accent
         .content
-          p.greeting Hi #{builderName},
-
-          if hotLead
-            p.lead-note HOT LEAD: buyer is highly interested and may act quickly.
-
-          if isSelected
-            p Great news - you have been selected to proceed for this lot enquiry.
-          else
-            p A buyer has requested building information and your plans have been selected for consideration.
-
+          p.greeting New estate join request
+          p A builder has asked to be considered for an estate that may not yet be active on LotCheck.
           .details
             p
-              span.label Lot Number:
-              |  #{lotNumber}
+              span.label Estate name:
+              |  #{estateName}
             p
-              span.label Address:
-              |  #{lotAddress}
+              span.label Estate location:
+              |  #{estateLocation}
             p
-              span.label Lot Size:
-              |  #{lotSize} m2
+              span.label Builder:
+              |  #{builderName} (#{builderId})
             p
-              span.label Zoning:
-              |  #{lotZoning}
+              span.label Builder email:
+              |  #{builderEmail}
             p
-              span.label Status:
-              |  #{lotStatus}
+              span.label Builder phone:
+              |  #{builderPhone}
             p
-              span.label Notes:
-              |  #{comments || 'Not provided'}
-
-          p If you need anything from our team, reply to this email and we will assist.
+              span.label Submitted by:
+              |  #{requesterName}
+            p
+              span.label Requester email:
+              |  #{requesterEmail}
+            p
+              span.label Requester role:
+              |  #{requesterRole}
+            p
+              span.label Submitted at:
+              |  #{submittedAt}
+            p
+              span.label Source IP:
+              |  #{sourceIp}
           p
-            strong The LotCheck Team
+            span.label Why they are a good fit:
+          .details
+            p #{fitReason}
+          p.email-ps This message was submitted from the builder dashboard in LotCheck.
         .footer
           p This is an automated LotCheck message.
