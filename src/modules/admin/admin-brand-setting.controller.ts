@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -15,7 +14,6 @@ import { Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
-import { parseBigIntId } from '@/modules/admin/admin.utils';
 
 interface BrandSettingBody {
   name?: string;
@@ -29,7 +27,6 @@ interface BrandSettingBody {
   textSecondaryColor?: string | null;
   fontFamilyPrimary?: string | null;
   fontFamilySecondary?: string | null;
-  estateId?: string | null;
 }
 
 @UseGuards(EasyAuthGuard, RolesGuard)
@@ -39,15 +36,10 @@ export class AdminBrandSettingController {
 
   @Get()
   @Roles('ADMIN')
-  async findAll(@Query('estateId') estateId?: string) {
-    const where: Prisma.brandSettingWhereInput = {};
-    if (estateId) {
-      where.estateId = parseBigIntId(estateId, 'estateId');
-    }
+  async findAll() {
     return this.prisma.brandSetting.findMany({
-      where,
       orderBy: { createdAt: 'desc' },
-      include: { estate: { select: { id: true, name: true } } },
+      include: { _count: { select: { estates: true } } },
     });
   }
 
@@ -56,7 +48,7 @@ export class AdminBrandSettingController {
   async findOne(@Param('guid') guid: string) {
     return this.prisma.brandSetting.findUnique({
       where: { guid },
-      include: { estate: { select: { id: true, name: true } } },
+      include: { _count: { select: { estates: true } } },
     });
   }
 
@@ -81,28 +73,9 @@ export class AdminBrandSettingController {
       fontFamilySecondary: body.fontFamilySecondary ?? null,
     };
 
-    if (body.estateId) {
-      const estateId = parseBigIntId(body.estateId, 'estateId');
-      const estate = await this.prisma.estate.findUnique({
-        where: { id: estateId },
-        select: { id: true },
-      });
-      if (!estate) {
-        throw new BadRequestException('estateId does not exist');
-      }
-      const existing = await this.prisma.brandSetting.findUnique({
-        where: { estateId },
-        select: { guid: true },
-      });
-      if (existing) {
-        throw new BadRequestException('Brand setting already exists for this estate');
-      }
-      data.estate = { connect: { id: estateId } };
-    }
-
     return this.prisma.brandSetting.create({
       data,
-      include: { estate: { select: { id: true, name: true } } },
+      include: { _count: { select: { estates: true } } },
     });
   }
 
@@ -139,33 +112,10 @@ export class AdminBrandSettingController {
         : {}),
     };
 
-    if (body.estateId !== undefined) {
-      if (body.estateId === null || body.estateId === '') {
-        data.estate = { disconnect: true };
-      } else {
-        const estateId = parseBigIntId(body.estateId, 'estateId');
-        const estate = await this.prisma.estate.findUnique({
-          where: { id: estateId },
-          select: { id: true },
-        });
-        if (!estate) {
-          throw new BadRequestException('estateId does not exist');
-        }
-        const existing = await this.prisma.brandSetting.findUnique({
-          where: { estateId },
-          select: { guid: true },
-        });
-        if (existing && existing.guid !== guid) {
-          throw new BadRequestException('Brand setting already exists for this estate');
-        }
-        data.estate = { connect: { id: estateId } };
-      }
-    }
-
     return this.prisma.brandSetting.update({
       where: { guid },
       data,
-      include: { estate: { select: { id: true, name: true } } },
+      include: { _count: { select: { estates: true } } },
     });
   }
 

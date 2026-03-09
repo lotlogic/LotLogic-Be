@@ -62,6 +62,24 @@ const normalizeBooleanFlag = (
   throw new BadRequestException(`Invalid ${fieldName}`);
 };
 
+type EstateCreateBody = Prisma.estateCreateInput & {
+  brandGuid?: string | null;
+};
+
+type EstateUpdateBody = Prisma.estateUpdateInput & {
+  brandGuid?: string | null;
+};
+
+const ESTATE_INCLUDE = Prisma.validator<Prisma.estateInclude>()({
+  brandSetting: {
+    select: {
+      guid: true,
+      name: true,
+      title: true,
+    },
+  },
+});
+
 const MIXPANEL_EXPORT_URL = 'https://data.mixpanel.com/api/2.0/export';
 const MIXPANEL_PROJECT_ID = '3834941';
 const MIXPANEL_PERFORMANCE_EVENTS = ['House Design Viewed', 'House Design Opened'];
@@ -174,6 +192,44 @@ export class AdminEstateController {
 
   private normalizeText(value: unknown): string {
     return String(value ?? '').trim();
+  }
+
+  private normalizeBrandGuid(value: unknown): string | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === null) {
+      return null;
+    }
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.prototype.hasOwnProperty.call(value, 'set')
+    ) {
+      return this.normalizeBrandGuid((value as { set?: unknown }).set);
+    }
+
+    const normalized = this.normalizeText(value);
+    return normalized ? normalized : null;
+  }
+
+  private async ensureBrandGuidExists(
+    tx: Prisma.TransactionClient,
+    brandGuid: string | null | undefined,
+  ) {
+    if (brandGuid === undefined || brandGuid === null) {
+      return;
+    }
+
+    const nextBrand = await tx.brandSetting.findUnique({
+      where: { guid: brandGuid },
+      select: { guid: true },
+    });
+
+    if (!nextBrand) {
+      throw new BadRequestException('brandGuid does not exist');
+    }
   }
 
   private parseDateQuery(
@@ -375,7 +431,10 @@ export class AdminEstateController {
   @Roles('ADMIN', 'USER')
   async findAll(@Req() req: AuthenticatedRequest) {
     if (req.auth?.role === 'ADMIN') {
-      return this.prisma.estate.findMany({ orderBy: { id: 'asc' } });
+      return this.prisma.estate.findMany({
+        orderBy: { id: 'asc' },
+        include: ESTATE_INCLUDE,
+      });
     }
 
     const estateIds = await this.prisma.userEstate.findMany({
@@ -386,6 +445,7 @@ export class AdminEstateController {
     return this.prisma.estate.findMany({
       where: { id: { in: estateIds.map((item) => item.estateId) } },
       orderBy: { id: 'asc' },
+      include: ESTATE_INCLUDE,
     });
   }
 
@@ -943,52 +1003,77 @@ export class AdminEstateController {
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
   async findOne(@Param('id') id: string) {
-    return this.prisma.estate.findUnique({ where: { id: parseBigIntId(id, 'id') } });
+    return this.prisma.estate.findUnique({
+      where: { id: parseBigIntId(id, 'id') },
+      include: ESTATE_INCLUDE,
+    });
   }
 
   @Post()
   @Roles('ADMIN')
-  async create(@Body() data: Prisma.estateCreateInput) {
+  async create(@Body() body: EstateCreateBody) {
+    const { brandGuid: rawBrandGuid, ...estateBody } = body;
+    const brandGuid = this.normalizeBrandGuid(rawBrandGuid);
     const normalizedIsPrototype = normalizeBooleanFlag(
-      (data as { isPrototype?: unknown }).isPrototype,
+      (estateBody as { isPrototype?: unknown }).isPrototype,
       'isPrototype',
     );
-    const createData =
+    const createDataBase =
       normalizedIsPrototype === undefined
-        ? data
-        : { ...data, isPrototype: normalizedIsPrototype };
+        ? (estateBody as Prisma.estateCreateInput)
+        : ({ ...estateBody, isPrototype: normalizedIsPrototype } as Prisma.estateCreateInput);
 
-    if (normalizedIsPrototype === true) {
-      return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
+      await this.ensureBrandGuidExists(tx, brandGuid);
+
+      if (normalizedIsPrototype === true) {
         await tx.estate.updateMany({
           where: { isPrototype: true },
           data: { isPrototype: false },
         });
-        return tx.estate.create({ data: createData });
-      });
-    }
+      }
 
-    return this.prisma.estate.create({ data: createData });
+      const createData: Prisma.estateCreateInput =
+        brandGuid === undefined || brandGuid === null
+          ? createDataBase
+          : {
+              ...createDataBase,
+              brandSetting: {
+                connect: { guid: brandGuid },
+              },
+            };
+
+      const created = await tx.estate.create({ data: createData });
+
+      return tx.estate.findUniqueOrThrow({
+        where: { id: created.id },
+        include: ESTATE_INCLUDE,
+      });
+    });
   }
 
   @Patch(':id')
   @Roles('ADMIN')
   async update(
     @Param('id') id: string,
-    @Body() data: Prisma.estateUpdateInput,
+    @Body() body: EstateUpdateBody,
   ) {
     const estateId = parseBigIntId(id, 'id');
+    const { brandGuid: rawBrandGuid, ...estateBody } = body;
+    const brandGuid = this.normalizeBrandGuid(rawBrandGuid);
     const normalizedIsPrototype = normalizeBooleanFlag(
-      (data as { isPrototype?: unknown }).isPrototype,
+      (estateBody as { isPrototype?: unknown }).isPrototype,
       'isPrototype',
     );
-    const updateData =
+    const updateDataBase =
       normalizedIsPrototype === undefined
-        ? data
-        : { ...data, isPrototype: normalizedIsPrototype };
+        ? (estateBody as Prisma.estateUpdateInput)
+        : ({ ...estateBody, isPrototype: normalizedIsPrototype } as Prisma.estateUpdateInput);
 
-    if (normalizedIsPrototype === true) {
-      return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
+      await this.ensureBrandGuidExists(tx, brandGuid);
+
+      if (normalizedIsPrototype === true) {
         await tx.estate.updateMany({
           where: {
             isPrototype: true,
@@ -996,16 +1081,28 @@ export class AdminEstateController {
           },
           data: { isPrototype: false },
         });
-        return tx.estate.update({
-          where: { id: estateId },
-          data: updateData,
-        });
-      });
-    }
+      }
 
-    return this.prisma.estate.update({
-      where: { id: estateId },
-      data: updateData,
+      const updateData: Prisma.estateUpdateInput =
+        brandGuid === undefined
+          ? updateDataBase
+          : {
+              ...updateDataBase,
+              brandSetting:
+                brandGuid === null
+                  ? { disconnect: true }
+                  : { connect: { guid: brandGuid } },
+            };
+
+      await tx.estate.update({
+        where: { id: estateId },
+        data: updateData,
+      });
+
+      return tx.estate.findUniqueOrThrow({
+        where: { id: estateId },
+        include: ESTATE_INCLUDE,
+      });
     });
   }
 

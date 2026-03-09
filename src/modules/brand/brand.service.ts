@@ -23,16 +23,18 @@ export class BrandService {
 
   // Default brand prefers the prototype estate brand when configured.
   async getDefault() {
-    const prototypeBrand = await this.prisma.brandSetting.findFirst({
+    const prototypeEstate = await this.prisma.estate.findFirst({
       where: {
-        estate: {
-          isPrototype: true,
-        },
+        isPrototype: true,
+        brandGuid: { not: null },
       },
       orderBy: { updatedAt: 'desc' },
+      select: {
+        brandSetting: true,
+      },
     });
-    if (prototypeBrand) {
-      return prototypeBrand;
+    if (prototypeEstate?.brandSetting) {
+      return prototypeEstate.brandSetting;
     }
 
     const data = await this.prisma.brandSetting.findUnique({ where: { id: BRAND_ID } });
@@ -44,9 +46,18 @@ export class BrandService {
   }
 
   async getByEstateId(estateId: string) {
-    return this.prisma.brandSetting.findUnique({
-      where: { estateId: BigInt(estateId) },
+    const estate = await this.prisma.estate.findUnique({
+      where: { id: BigInt(estateId) },
+      select: {
+        brandSetting: true,
+      },
     });
+
+    if (estate?.brandSetting) {
+      return estate.brandSetting;
+    }
+
+    return this.getDefault();
   }
 
   // Create or update the legacy singleton brand
