@@ -24,6 +24,10 @@ import { AdminEstateRuleSetController } from '@/modules/admin/admin-estate-rule-
 import { AdminEstateLotConstraintController } from '@/modules/admin/admin-estate-lot-constraint.controller';
 import { AdminBuilderEstateApprovalController } from '@/modules/admin/admin-builder-estate-approval.controller';
 import { MailModule } from '@/modules/mail/mail.module';
+import { AdminAuditLogController } from '@/modules/admin/admin-audit-log.controller';
+import { AdminAuditLogService } from '@/modules/admin/admin-audit-log.service';
+import { AdminAuditLogInterceptor } from '@/modules/admin/admin-audit-log.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [PrismaModule, AuthModule, DesignOnLotModule, MailModule],
@@ -46,7 +50,17 @@ import { MailModule } from '@/modules/mail/mail.module';
     AdminEstateRuleSetController,
     AdminEstateLotConstraintController,
     AdminBuilderEstateApprovalController,
+    AdminAuditLogController,
   ],
-  providers: [AdminEntraGraphService, AdminLotImportService, AdminUploadService],
+  providers: [
+    AdminEntraGraphService,
+    AdminLotImportService,
+    AdminUploadService,
+    AdminAuditLogService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AdminAuditLogInterceptor,
+    },
+  ],
 })
 export class AdminModule {}
