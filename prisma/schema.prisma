@@ -320,6 +320,9 @@ model builder {
   name            String
   email           String
   phone           String
+  logoUrl         String?
+  brandingBgColor String?
+  brandingTextColor String?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
   enquiryBuilders enquiryBuilder[]

@@ -12,6 +12,13 @@ export interface HouseDesignFilterResult   {
     area: number,
     builderId?: string,
     builderName?: string | null,
+    builder?: {
+        id?: string,
+        name?: string | null,
+        logoUrl?: string | null,
+        brandingBgColor?: string | null,
+        brandingTextColor?: string | null,
+    } | null,
     width: number,
     depth: number,
     image: string,
@@ -24,6 +31,7 @@ export interface HouseDesignFilterResult   {
 }
 
 export interface Images   {
+    facadeId?: string,
     src: string,
     faced: string
 }
@@ -31,6 +39,42 @@ export interface Images   {
 @Injectable()
 export class FloorPlanService {
     constructor(private prisma: PrismaService) {}
+
+    private mapHouseDesignResult(house: any): HouseDesignFilterResult {
+        const images = house.facades?.map((facade: any) => {
+            return {
+                facadeId: facade.id?.toString?.() ?? facade.id,
+                src: facade.imageUrl,
+                faced: facade.label
+            };
+        }) || [];
+
+        return {
+            id: house.id.toString(),
+            title: house.name,
+            area: house.areaSqm,
+            builderId: house.builderId ? house.builderId.toString() : undefined,
+            builderName: house.builder?.name ?? null,
+            builder: house.builder
+                ? {
+                    id: house.builder.id?.toString?.() ?? house.builder.id,
+                    name: house.builder.name ?? null,
+                    logoUrl: house.builder.logoUrl ?? null,
+                    brandingBgColor: house.builder.brandingBgColor ?? null,
+                    brandingTextColor: house.builder.brandingTextColor ?? null,
+                }
+                : null,
+            width: house.width,
+            depth: house.depth,
+            image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
+            images,
+            bedrooms: house.bedrooms,
+            bathrooms: house.bathrooms,
+            cars: house.garages,
+            isFavorite: false,
+            floorPlanImage: house.floorplanUrl
+        };
+    }
 
     async getFilteredHouseDesigns(
         bedroom?: number[],
@@ -68,36 +112,17 @@ export class FloorPlanService {
                 builder: {
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        logoUrl: true,
+                        brandingBgColor: true,
+                        brandingTextColor: true,
                     }
                 }
             }
         }) as any;
-        const filteredDesign = houseDesigns.map((house: any) => {
-            const images = house.facades?.map((facade: any) => {
-                return {
-                    facadeId: facade.id,
-                    src: facade.imageUrl,
-                    faced: facade.label
-                };
-            }) || [];
-            return {
-                id: house.id.toString(),
-                title: house.name,
-                area: house.areaSqm,
-                builderId: house.builderId ? house.builderId.toString() : undefined,
-                builderName: house.builder?.name ?? null,
-                width: house.width,
-                depth: house.depth,
-                image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
-                images,
-                bedrooms: house.bedrooms,
-                bathrooms: house.bathrooms,
-                cars: house.garages,
-                isFavorite: false,
-                floorPlanImage: house.floorplanUrl
-            };
-        });
+        const filteredDesign = houseDesigns.map((house: any) =>
+            this.mapHouseDesignResult(house)
+        );
         return filteredDesign;
     }
 
@@ -144,7 +169,10 @@ export class FloorPlanService {
                         builder: {
                             select: {
                                 id: true,
-                                name: true
+                                name: true,
+                                logoUrl: true,
+                                brandingBgColor: true,
+                                brandingTextColor: true,
                             }
                         }
                     },
@@ -153,32 +181,7 @@ export class FloorPlanService {
             orderBy: { floorPlanId: 'asc' },
         });
 
-        return rows.map((row) => {
-            const house = row.floorPlan as any;
-            const images = house.facades?.map((facade: any) => {
-                return {
-                    facadeId: facade.id,
-                    src: facade.imageUrl,
-                    faced: facade.label
-                };
-            }) || [];
-            return {
-                id: house.id.toString(),
-                title: house.name,
-                area: house.areaSqm,
-                builderId: house.builderId ? house.builderId.toString() : undefined,
-                builderName: house.builder?.name ?? null,
-                width: house.width,
-                depth: house.depth,
-                image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
-                images,
-                bedrooms: house.bedrooms,
-                bathrooms: house.bathrooms,
-                cars: house.garages,
-                isFavorite: false,
-                floorPlanImage: house.floorplanUrl
-            };
-        });
+        return rows.map((row) => this.mapHouseDesignResult(row.floorPlan as any));
     }
 
     async getHouseDesignById(house_design_id: string) {

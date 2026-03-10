@@ -1378,6 +1378,9 @@ export class AdminBuilderController {
           name: data.name,
           email: data.email,
           phone: data.phone,
+          logoUrl: data.logoUrl,
+          brandingBgColor: data.brandingBgColor,
+          brandingTextColor: data.brandingTextColor,
         },
       });
 
@@ -1401,10 +1404,19 @@ export class AdminBuilderController {
     @Body() data: Prisma.builderUpdateInput,
   ) {
     if (req.auth?.role !== 'ADMIN') {
-      const allowedKeys = new Set(['name', 'email', 'phone']);
+      const allowedKeys = new Set([
+        'name',
+        'email',
+        'phone',
+        'logoUrl',
+        'brandingBgColor',
+        'brandingTextColor',
+      ]);
       const extras = Object.keys(data || {}).filter((key) => !allowedKeys.has(key));
       if (extras.length > 0) {
-        throw new BadRequestException('Only name, email, and phone can be updated');
+        throw new BadRequestException(
+          'Only name, email, phone, and branding fields can be updated',
+        );
       }
     }
 
@@ -1417,6 +1429,13 @@ export class AdminBuilderController {
               ...(data.name !== undefined ? { name: data.name } : {}),
               ...(data.email !== undefined ? { email: data.email } : {}),
               ...(data.phone !== undefined ? { phone: data.phone } : {}),
+              ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+              ...(data.brandingBgColor !== undefined
+                ? { brandingBgColor: data.brandingBgColor }
+                : {}),
+              ...(data.brandingTextColor !== undefined
+                ? { brandingTextColor: data.brandingTextColor }
+                : {}),
             },
     });
   }
