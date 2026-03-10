@@ -15,7 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { EnquiryStatus, Prisma } from '@prisma/client';
+import { EnquiryStatus, EstateAccessStatus, Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { EstateScopeGuard } from '@/modules/auth/guards/estate-scope.guard';
@@ -28,6 +28,11 @@ import { memoryStorage } from 'multer';
 import { AdminLotImportService } from '@/modules/admin/admin-lot-import.service';
 import { readFileSync } from 'fs';
 import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
+import {
+  hashEstateAccessPassword,
+  normalizeEstateAccessPassword,
+  normalizeEstateAccessStatus,
+} from '@/modules/estate/estate-access.util';
 
 const normalizeBooleanFlag = (
   value: unknown,
@@ -62,12 +67,16 @@ const normalizeBooleanFlag = (
   throw new BadRequestException(`Invalid ${fieldName}`);
 };
 
-type EstateCreateBody = Prisma.estateCreateInput & {
+type EstateCreateBody = Omit<Prisma.estateCreateInput, 'status' | 'accessPasswordHash'> & {
   brandGuid?: string | null;
+  status?: EstateAccessStatus | string | null;
+  accessPassword?: string | null;
 };
 
-type EstateUpdateBody = Prisma.estateUpdateInput & {
+type EstateUpdateBody = Omit<Prisma.estateUpdateInput, 'status' | 'accessPasswordHash'> & {
   brandGuid?: string | null;
+  status?: EstateAccessStatus | string | null;
+  accessPassword?: string | null;
 };
 
 const ESTATE_INCLUDE = Prisma.validator<Prisma.estateInclude>()({
@@ -79,6 +88,10 @@ const ESTATE_INCLUDE = Prisma.validator<Prisma.estateInclude>()({
     },
   },
 });
+
+type EstateWithBrand = Prisma.estateGetPayload<{
+  include: typeof ESTATE_INCLUDE;
+}>;
 
 const MIXPANEL_EXPORT_URL = 'https://data.mixpanel.com/api/2.0/export';
 const MIXPANEL_PROJECT_ID = '3834941';
@@ -212,6 +225,33 @@ export class AdminEstateController {
 
     const normalized = this.normalizeText(value);
     return normalized ? normalized : null;
+  }
+
+  private normalizeAccessStatus(
+    value: unknown,
+  ): EstateAccessStatus | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const normalized = normalizeEstateAccessStatus(value);
+    if (!normalized) {
+      throw new BadRequestException('Invalid status');
+    }
+
+    return normalized;
+  }
+
+  private serializeEstate(estate: EstateWithBrand | null) {
+    if (!estate) {
+      return null;
+    }
+
+    const { accessPasswordHash, ...rest } = estate;
+    return {
+      ...rest,
+      hasAccessPassword: Boolean(accessPasswordHash),
+    };
   }
 
   private async ensureBrandGuidExists(
@@ -431,10 +471,11 @@ export class AdminEstateController {
   @Roles('ADMIN', 'USER')
   async findAll(@Req() req: AuthenticatedRequest) {
     if (req.auth?.role === 'ADMIN') {
-      return this.prisma.estate.findMany({
+      const estates = await this.prisma.estate.findMany({
         orderBy: { id: 'asc' },
         include: ESTATE_INCLUDE,
       });
+      return estates.map((estate) => this.serializeEstate(estate));
     }
 
     const estateIds = await this.prisma.userEstate.findMany({
@@ -442,11 +483,12 @@ export class AdminEstateController {
       select: { estateId: true },
     });
 
-    return this.prisma.estate.findMany({
+    const estates = await this.prisma.estate.findMany({
       where: { id: { in: estateIds.map((item) => item.estateId) } },
       orderBy: { id: 'asc' },
       include: ESTATE_INCLUDE,
     });
+    return estates.map((estate) => this.serializeEstate(estate));
   }
 
   @Get(':id/performance')
@@ -1003,25 +1045,52 @@ export class AdminEstateController {
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdParam: 'id' })
   async findOne(@Param('id') id: string) {
-    return this.prisma.estate.findUnique({
+    const estate = await this.prisma.estate.findUnique({
       where: { id: parseBigIntId(id, 'id') },
       include: ESTATE_INCLUDE,
     });
+    return this.serializeEstate(estate);
   }
 
   @Post()
   @Roles('ADMIN')
   async create(@Body() body: EstateCreateBody) {
-    const { brandGuid: rawBrandGuid, ...estateBody } = body;
+    const {
+      brandGuid: rawBrandGuid,
+      accessPassword: rawAccessPassword,
+      status: rawStatus,
+      ...estateBody
+    } = body;
     const brandGuid = this.normalizeBrandGuid(rawBrandGuid);
+    const accessPassword = normalizeEstateAccessPassword(rawAccessPassword);
+    const status =
+      this.normalizeAccessStatus(rawStatus) ?? EstateAccessStatus.LIVE;
     const normalizedIsPrototype = normalizeBooleanFlag(
       (estateBody as { isPrototype?: unknown }).isPrototype,
       'isPrototype',
     );
+    if (status === EstateAccessStatus.GATED && !accessPassword) {
+      throw new BadRequestException(
+        'accessPassword is required when status is GATED',
+      );
+    }
     const createDataBase =
       normalizedIsPrototype === undefined
-        ? (estateBody as Prisma.estateCreateInput)
-        : ({ ...estateBody, isPrototype: normalizedIsPrototype } as Prisma.estateCreateInput);
+        ? ({
+            ...(estateBody as Prisma.estateCreateInput),
+            status,
+            ...(accessPassword
+              ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
+              : {}),
+          } as Prisma.estateCreateInput)
+        : ({
+            ...estateBody,
+            isPrototype: normalizedIsPrototype,
+            status,
+            ...(accessPassword
+              ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
+              : {}),
+          } as Prisma.estateCreateInput);
 
     return this.prisma.$transaction(async (tx) => {
       await this.ensureBrandGuidExists(tx, brandGuid);
@@ -1045,10 +1114,11 @@ export class AdminEstateController {
 
       const created = await tx.estate.create({ data: createData });
 
-      return tx.estate.findUniqueOrThrow({
+      const estate = await tx.estate.findUniqueOrThrow({
         where: { id: created.id },
         include: ESTATE_INCLUDE,
       });
+      return this.serializeEstate(estate);
     });
   }
 
@@ -1059,19 +1129,66 @@ export class AdminEstateController {
     @Body() body: EstateUpdateBody,
   ) {
     const estateId = parseBigIntId(id, 'id');
-    const { brandGuid: rawBrandGuid, ...estateBody } = body;
+    const {
+      brandGuid: rawBrandGuid,
+      accessPassword: rawAccessPassword,
+      status: rawStatus,
+      ...estateBody
+    } = body;
     const brandGuid = this.normalizeBrandGuid(rawBrandGuid);
+    const accessPassword = normalizeEstateAccessPassword(rawAccessPassword);
+    const normalizedStatus = this.normalizeAccessStatus(rawStatus);
     const normalizedIsPrototype = normalizeBooleanFlag(
       (estateBody as { isPrototype?: unknown }).isPrototype,
       'isPrototype',
     );
     const updateDataBase =
       normalizedIsPrototype === undefined
-        ? (estateBody as Prisma.estateUpdateInput)
-        : ({ ...estateBody, isPrototype: normalizedIsPrototype } as Prisma.estateUpdateInput);
+        ? ({
+            ...(estateBody as Prisma.estateUpdateInput),
+            ...(normalizedStatus ? { status: normalizedStatus } : {}),
+            ...(accessPassword
+              ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
+              : {}),
+          } as Prisma.estateUpdateInput)
+        : ({
+            ...estateBody,
+            isPrototype: normalizedIsPrototype,
+            ...(normalizedStatus ? { status: normalizedStatus } : {}),
+            ...(accessPassword
+              ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
+              : {}),
+          } as Prisma.estateUpdateInput);
 
     return this.prisma.$transaction(async (tx) => {
       await this.ensureBrandGuidExists(tx, brandGuid);
+      const existingEstate = await tx.estate.findUnique({
+        where: { id: estateId },
+        select: {
+          id: true,
+          status: true,
+          accessPasswordHash: true,
+        },
+      });
+
+      if (!existingEstate) {
+        throw new BadRequestException('Estate not found');
+      }
+
+      const nextStatus = normalizedStatus ?? existingEstate.status;
+      const nextPasswordHash =
+        'accessPasswordHash' in updateDataBase
+          ? updateDataBase.accessPasswordHash
+          : undefined;
+      if (
+        nextStatus === EstateAccessStatus.GATED &&
+        !existingEstate.accessPasswordHash &&
+        !nextPasswordHash
+      ) {
+        throw new BadRequestException(
+          'accessPassword is required when status is GATED',
+        );
+      }
 
       if (normalizedIsPrototype === true) {
         await tx.estate.updateMany({
@@ -1099,10 +1216,11 @@ export class AdminEstateController {
         data: updateData,
       });
 
-      return tx.estate.findUniqueOrThrow({
+      const estate = await tx.estate.findUniqueOrThrow({
         where: { id: estateId },
         include: ESTATE_INCLUDE,
       });
+      return this.serializeEstate(estate);
     });
   }
 

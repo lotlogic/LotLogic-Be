@@ -46,10 +46,16 @@ enum EnquiryStatus {
   PROCESSED
 }
 
+enum EstateAccessStatus {
+  LIVE
+  GATED
+}
+
 model estate {
   id                     BigInt                  @id @default(autoincrement())
   name                   String
   isPrototype            Boolean                 @default(false)
+  status                 EstateAccessStatus      @default(LIVE)
   jurisdiction           Jurisdiction            @default(ACT)
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
@@ -57,6 +63,7 @@ model estate {
   email                  String?
   logoUrl                String?
   phone                  String?
+  accessPasswordHash     String?
   brandGuid              String?                 @db.Uuid
   lots                   lot[]
   userEstates            userEstate[]
