@@ -54,6 +54,7 @@ export class AdminUploadService {
     }
 
     const folder = this.sanitizeSegment_(request.folder) || 'misc';
+    this.validateFolderUpload_(folder, contentType);
     const uploadsFolder = this.getUploadsFolder_();
     const blobName = this.buildBlobName_(fileName, uploadsFolder, folder);
 
@@ -232,5 +233,20 @@ export class AdminUploadService {
       );
     }
     return { accountName, accountKey };
+  }
+
+  private validateFolderUpload_(
+    folder: string,
+    contentType?: string,
+  ): void {
+    if (folder !== 'floorplans') {
+      return;
+    }
+
+    if (!contentType || !contentType.toLowerCase().startsWith('image/')) {
+      throw new BadRequestException(
+        'Floor plan uploads must be marketing-ready image files.',
+      );
+    }
   }
 }

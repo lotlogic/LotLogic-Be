@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 
 interface DatabaseLot {
@@ -7,6 +8,8 @@ interface DatabaseLot {
   blockNumber: number | null;
   sectionNumber: number | null;
   areaSqm: number;
+  salesMode: string | null;
+  price: number | null;
   frontageM: number | null;
   lotType: string | null;
   roadFacing: string | null;
@@ -21,6 +24,7 @@ interface DatabaseLot {
   overlays: string[];
   geojson: any;
   geometry: string;
+  frontageCoordinate: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,7 +49,11 @@ export class LotService {
     });
   }
 
-  async findAllLots() {
+  async findAllLots(estateId?: bigint | null) {
+    const estateFilter =
+      estateId === undefined || estateId === null
+        ? Prisma.sql``
+        : Prisma.sql`WHERE "estateId" = ${estateId}`;
     const lots = await this.prisma.$queryRaw<DatabaseLot[]>`
       SELECT
         id,
@@ -53,6 +61,8 @@ export class LotService {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "salesMode",
+        price,
         "frontageM",
         "lotType",
         "roadFacing",
@@ -72,8 +82,7 @@ export class LotService {
         "updatedAt"
       FROM
         lot
-      WHERE
-        LOWER(COALESCE("lifecycleStage", '')) = 'available'
+      ${estateFilter}
       ORDER BY id
     `;
 
@@ -81,7 +90,8 @@ export class LotService {
       ...lot,
       id: lot.id.toString(),
       estateId: lot.estateId?.toString(),
-      geometry: JSON.parse(lot.geometry)
+      geometry: JSON.parse(lot.geometry),
+      frontageCoordinate: lot.frontageCoordinate,
     }));
   }
 
@@ -93,6 +103,8 @@ export class LotService {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "salesMode",
+        price,
         "frontageM",
         "lotType",
         "roadFacing",
@@ -111,8 +123,9 @@ export class LotService {
       FROM
         lot
       WHERE
-        id = $1
-        AND LOWER(COALESCE("lifecycleStage", '')) = 'available'`,lotId);
+        id = $1`,
+      lotId,
+    );
     
     if (lot && lot.length > 0) {
       const lotData = lot[0];
@@ -138,6 +151,8 @@ export class LotService {
         ...lotData,
         id: lotData.id.toString(),
         estateId: lotData.estateId?.toString(),
+        geometry: lotData.geometry ? JSON.parse(lotData.geometry) : null,
+        frontageCoordinate: lotData.frontageCoordinate,
         zoningSetbacks
       };
     }

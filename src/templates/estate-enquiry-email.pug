@@ -3,7 +3,7 @@ html(lang='en')
   head
     meta(charset='UTF-8')
     meta(name='viewport' content='width=device-width, initial-scale=1.0')
-    title LotCheck Lead Notification
+    title LotCheck Estate Notification
     style.
       body {
         margin: 0;
@@ -62,16 +62,6 @@ html(lang='en')
         font-weight: 600;
       }
 
-      .lead-note {
-        margin: 0 0 14px 0;
-        padding: 10px 12px;
-        border-radius: 6px;
-        background: #fff2f0;
-        border: 1px solid #ef7b6c;
-        color: #8f3f34;
-        font-weight: 700;
-      }
-
       .details {
         margin: 0 0 14px 0;
         padding: 14px 16px;
@@ -90,6 +80,16 @@ html(lang='en')
 
       .label {
         font-weight: 700;
+      }
+
+      .summary-note {
+        margin: 0 0 14px 0;
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: #fff2f0;
+        border: 1px solid #ef7b6c;
+        color: #8f3f34;
+        font-weight: 600;
       }
 
       .footer {
@@ -112,9 +112,9 @@ html(lang='en')
             | check.
         .accent
         .content
-          p.greeting Hi #{builderName},
-
-          p A buyer has requested detailed pricing for one of your designs on a LotCheck block.
+          p.greeting Hi #{estateName},
+          p #{journeyLabel} submitted via LotCheck.
+          p.summary-note #{summaryNote}
 
           .details
             p
@@ -135,9 +135,6 @@ html(lang='en')
             p
               span.label Finishes:
               |  #{finishesLevel}
-            p
-              span.label Block secured:
-              |  #{blockSecuredLabel}
 
           .details
             p
@@ -159,7 +156,7 @@ html(lang='en')
               span.label Notes:
               |  #{comments || 'Not provided'}
 
-          p If you need anything from our team, reply to this email and we will assist.
+          p Reply directly to the buyer to continue the next step.
           p
             strong The LotCheck Team
         .footer

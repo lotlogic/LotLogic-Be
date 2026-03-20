@@ -22,6 +22,7 @@ import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
 import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 import { normalizeLotLifecycleStage } from '@/modules/lot/lot-lifecycle';
+import { normalizeLotSalesModeOrThrow } from '@/modules/lot/lot-sales-mode';
 
 type LotWithGeometryRow = {
   id: bigint;
@@ -29,6 +30,8 @@ type LotWithGeometryRow = {
   blockNumber: number | null;
   sectionNumber: number | null;
   areaSqm: number;
+  salesMode: string | null;
+  price: number | null;
   frontageM: number | null;
   lotType: string | null;
   roadFacing: string | null;
@@ -81,6 +84,67 @@ const normalizeLifecycleStageInput = (
   return normalized;
 };
 
+const normalizeSalesModeInput = (
+  value: unknown,
+  fieldName: string,
+): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const unwrapped =
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.hasOwnProperty.call(value, 'set')
+      ? (value as { set?: unknown }).set
+      : value;
+
+  if (unwrapped === undefined) {
+    return undefined;
+  }
+  if (unwrapped === null) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected one of: land_sale, house_and_land.`,
+    );
+  }
+
+  return normalizeLotSalesModeOrThrow(unwrapped, fieldName);
+};
+
+const normalizePriceInput = (
+  value: unknown,
+  fieldName: string,
+): number | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const unwrapped =
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.hasOwnProperty.call(value, 'set')
+      ? (value as { set?: unknown }).set
+      : value;
+
+  if (unwrapped === undefined) {
+    return undefined;
+  }
+  if (unwrapped === null || unwrapped === '') {
+    return null;
+  }
+
+  const parsed = Number(unwrapped);
+  if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected a whole-dollar amount.`,
+    );
+  }
+
+  return parsed;
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/lots')
 export class AdminLotController {
@@ -109,6 +173,8 @@ export class AdminLotController {
           "blockNumber",
           "sectionNumber",
           "areaSqm",
+          "salesMode",
+          price,
           "frontageM",
           "lotType",
           "roadFacing",
@@ -167,6 +233,8 @@ export class AdminLotController {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "salesMode",
+        price,
         "frontageM",
         "lotType",
         "roadFacing",
@@ -212,6 +280,8 @@ export class AdminLotController {
         "blockNumber",
         "sectionNumber",
         "areaSqm",
+        "salesMode",
+        price,
         "frontageM",
         "lotType",
         "roadFacing",
@@ -258,11 +328,20 @@ export class AdminLotController {
       data.lifecycleStage,
       'lifecycleStage',
     );
+    const normalizedSalesMode = normalizeSalesModeInput(
+      data.salesMode,
+      'salesMode',
+    );
+    const normalizedPrice = normalizePriceInput(data.price, 'price');
 
-    const createData =
-      normalizedLifecycleStage === undefined
-        ? data
-        : { ...data, lifecycleStage: normalizedLifecycleStage };
+    const createData: Prisma.lotUncheckedCreateInput = {
+      ...(data as Prisma.lotUncheckedCreateInput),
+      ...(normalizedLifecycleStage !== undefined
+        ? { lifecycleStage: normalizedLifecycleStage }
+        : {}),
+      ...(normalizedSalesMode !== undefined ? { salesMode: normalizedSalesMode } : {}),
+      ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
+    };
 
     const created = await this.prisma.lot.create({ data: createData });
     if (created.estateId) {
@@ -282,11 +361,20 @@ export class AdminLotController {
       data.lifecycleStage,
       'lifecycleStage',
     );
+    const normalizedSalesMode = normalizeSalesModeInput(
+      data.salesMode,
+      'salesMode',
+    );
+    const normalizedPrice = normalizePriceInput(data.price, 'price');
 
-    const updateData =
-      normalizedLifecycleStage === undefined
-        ? data
-        : { ...data, lifecycleStage: normalizedLifecycleStage };
+    const updateData: Prisma.lotUncheckedUpdateInput = {
+      ...(data as Prisma.lotUncheckedUpdateInput),
+      ...(normalizedLifecycleStage !== undefined
+        ? { lifecycleStage: normalizedLifecycleStage }
+        : {}),
+      ...(normalizedSalesMode !== undefined ? { salesMode: normalizedSalesMode } : {}),
+      ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
+    };
 
     const updated = await this.prisma.lot.update({
       where: { id: parseBigIntId(id, 'id') },
