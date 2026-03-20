@@ -31,7 +31,11 @@ export const normalizeEnquiryJourneyTypeOrThrow = (
   value: unknown,
   fieldName = 'journeyType',
 ): EnquiryJourneyType | null => {
-  if (value === undefined || value === null) {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && !value.trim())
+  ) {
     return null;
   }
 
@@ -66,7 +70,11 @@ export const normalizeEnquiryFinishesLevelOrThrow = (
   value: unknown,
   fieldName = 'finishesLevel',
 ): EnquiryFinishesLevel | null => {
-  if (value === undefined || value === null) {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && !value.trim())
+  ) {
     return null;
   }
 

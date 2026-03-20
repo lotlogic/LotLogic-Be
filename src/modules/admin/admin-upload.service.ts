@@ -239,6 +239,15 @@ export class AdminUploadService {
     folder: string,
     contentType?: string,
   ): void {
+    if (folder === 'estate-backgrounds') {
+      if (!contentType || contentType.toLowerCase() !== 'image/png') {
+        throw new BadRequestException(
+          'Estate background uploads must be transparent PNG files.',
+        );
+      }
+      return;
+    }
+
     if (folder !== 'floorplans') {
       return;
     }

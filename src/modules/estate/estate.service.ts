@@ -18,6 +18,11 @@ export class EstateService {
     address: true,
     email: true,
     logoUrl: true,
+    backgroundImageUrl: true,
+    backgroundImageNorth: true,
+    backgroundImageSouth: true,
+    backgroundImageEast: true,
+    backgroundImageWest: true,
     phone: true,
     brandGuid: true,
   } as const;

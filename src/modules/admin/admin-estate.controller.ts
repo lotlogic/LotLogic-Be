@@ -207,6 +207,123 @@ export class AdminEstateController {
     return String(value ?? '').trim();
   }
 
+  private normalizeOptionalTextField(
+    value: unknown,
+    fieldName: string,
+  ): string | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const unwrapped =
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.prototype.hasOwnProperty.call(value, 'set')
+        ? (value as { set?: unknown }).set
+        : value;
+
+    if (unwrapped === undefined) {
+      return undefined;
+    }
+    if (unwrapped === null) {
+      return null;
+    }
+
+    const normalized = this.normalizeText(unwrapped);
+    if (!normalized) {
+      return null;
+    }
+
+    if (fieldName === 'backgroundImageUrl') {
+      const lower = normalized.toLowerCase();
+      if (!lower.endsWith('.png')) {
+        throw new BadRequestException(
+          'backgroundImageUrl must reference a PNG asset',
+        );
+      }
+    }
+
+    return normalized;
+  }
+
+  private normalizeOptionalFloatField(
+    value: unknown,
+    fieldName: string,
+  ): number | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const unwrapped =
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.prototype.hasOwnProperty.call(value, 'set')
+        ? (value as { set?: unknown }).set
+        : value;
+
+    if (unwrapped === undefined) {
+      return undefined;
+    }
+    if (unwrapped === null || unwrapped === '') {
+      return null;
+    }
+
+    const parsed =
+      typeof unwrapped === 'number' ? unwrapped : Number(String(unwrapped));
+    if (!Number.isFinite(parsed)) {
+      throw new BadRequestException(`Invalid ${fieldName}`);
+    }
+    return parsed;
+  }
+
+  private applyEstateBackgroundFields(
+    source: Record<string, unknown>,
+  ): Prisma.estateCreateInput | Prisma.estateUpdateInput {
+    const backgroundImageUrl = this.normalizeOptionalTextField(
+      source.backgroundImageUrl,
+      'backgroundImageUrl',
+    );
+    const backgroundImageNorth = this.normalizeOptionalFloatField(
+      source.backgroundImageNorth,
+      'backgroundImageNorth',
+    );
+    const backgroundImageSouth = this.normalizeOptionalFloatField(
+      source.backgroundImageSouth,
+      'backgroundImageSouth',
+    );
+    const backgroundImageEast = this.normalizeOptionalFloatField(
+      source.backgroundImageEast,
+      'backgroundImageEast',
+    );
+    const backgroundImageWest = this.normalizeOptionalFloatField(
+      source.backgroundImageWest,
+      'backgroundImageWest',
+    );
+
+    const normalizedEntries = Object.entries({
+      backgroundImageUrl,
+      backgroundImageNorth,
+      backgroundImageSouth,
+      backgroundImageEast,
+      backgroundImageWest,
+    }).filter(([, value]) => value !== undefined);
+
+    const nextData = { ...source };
+    delete nextData.backgroundImageUrl;
+    delete nextData.backgroundImageNorth;
+    delete nextData.backgroundImageSouth;
+    delete nextData.backgroundImageEast;
+    delete nextData.backgroundImageWest;
+
+    for (const [key, value] of normalizedEntries) {
+      (nextData as Record<string, unknown>)[key] = value;
+    }
+
+    return nextData as Prisma.estateCreateInput | Prisma.estateUpdateInput;
+  }
+
   private normalizeBrandGuid(value: unknown): string | null | undefined {
     if (value === undefined) {
       return undefined;
@@ -1074,17 +1191,20 @@ export class AdminEstateController {
         'accessPassword is required when status is GATED',
       );
     }
+    const normalizedEstateBody = this.applyEstateBackgroundFields(
+      estateBody as Record<string, unknown>,
+    );
     const createDataBase =
       normalizedIsPrototype === undefined
         ? ({
-            ...(estateBody as Prisma.estateCreateInput),
+            ...(normalizedEstateBody as Prisma.estateCreateInput),
             status,
             ...(accessPassword
               ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
               : {}),
           } as Prisma.estateCreateInput)
         : ({
-            ...estateBody,
+            ...normalizedEstateBody,
             isPrototype: normalizedIsPrototype,
             status,
             ...(accessPassword
@@ -1142,17 +1262,20 @@ export class AdminEstateController {
       (estateBody as { isPrototype?: unknown }).isPrototype,
       'isPrototype',
     );
+    const normalizedEstateBody = this.applyEstateBackgroundFields(
+      estateBody as Record<string, unknown>,
+    );
     const updateDataBase =
       normalizedIsPrototype === undefined
         ? ({
-            ...(estateBody as Prisma.estateUpdateInput),
+            ...(normalizedEstateBody as Prisma.estateUpdateInput),
             ...(normalizedStatus ? { status: normalizedStatus } : {}),
             ...(accessPassword
               ? { accessPasswordHash: hashEstateAccessPassword(accessPassword) }
               : {}),
           } as Prisma.estateUpdateInput)
         : ({
-            ...estateBody,
+            ...normalizedEstateBody,
             isPrototype: normalizedIsPrototype,
             ...(normalizedStatus ? { status: normalizedStatus } : {}),
             ...(accessPassword
