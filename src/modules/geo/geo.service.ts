@@ -180,15 +180,21 @@ export class GeoService {
     let location: { lat: number; lng: number } | null = null;
     let formattedAddress: string | undefined;
 
-    if (typeof params.address === 'string' && params.address.trim()) {
+    const hasCoords =
+      typeof params.lat === 'number' &&
+      Number.isFinite(params.lat) &&
+      typeof params.lng === 'number' &&
+      Number.isFinite(params.lng);
+
+    if (hasCoords) {
+      location = { lat: params.lat as number, lng: params.lng as number };
+      if (typeof params.address === 'string' && params.address.trim()) {
+        formattedAddress = params.address.trim();
+      }
+    } else if (typeof params.address === 'string' && params.address.trim()) {
       const geocoded = await this.geocodeAddress(params.address);
       location = geocoded.location;
       formattedAddress = geocoded.formattedAddress;
-    } else if (
-      typeof params.lat === 'number' &&
-      typeof params.lng === 'number'
-    ) {
-      location = { lat: params.lat, lng: params.lng };
     } else {
       throw new BadRequestException('Provide either address OR lat+lng');
     }

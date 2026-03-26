@@ -1,79 +1,169 @@
 doctype html
-html(lang="en")
+html(lang='en')
   head
-    meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
     title BlockPlanner Report Delivery
     style.
       body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
         margin: 0;
-        padding: 20px;
+        padding: 24px;
+        background: #e9e6da;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        color: #2a2f2b;
       }
 
       .container {
         max-width: 640px;
-        margin: auto;
-        background-color: #ffffff;
-        padding: 28px;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       }
 
-      h2 {
-        margin: 0 0 12px 0;
-        color: #1a5276;
+      .header {
+        background: #494f4a;
+        color: #f8f6e4;
+        padding: 24px 28px;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(248, 246, 228, 0.58);
+        margin-bottom: 8px;
+      }
+
+      .brand {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .brand span {
+        font-weight: 300;
+      }
+
+      .content {
+        padding: 28px;
       }
 
       p, li {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333333;
+        font-size: 15px;
+        line-height: 1.65;
+        color: #434843;
+        margin: 0;
+      }
+
+      p + p {
+        margin-top: 12px;
+      }
+
+      .meta,
+      .callout,
+      .signature {
+        border: 1px solid #dedad0;
+        border-radius: 4px;
+        padding: 16px 18px;
+        margin-top: 18px;
       }
 
       .meta {
-        background-color: #f9f9f9;
-        padding: 12px 14px;
-        border: 1px solid #dddddd;
-        border-radius: 4px;
-        margin: 16px 0 18px 0;
+        background: #f8f6e4;
+      }
+
+      .callout {
+        background: #fbfaf5;
+      }
+
+      .signature {
+        background: #f9f8f3;
+      }
+
+      .meta strong,
+      .signature strong {
+        color: #2a2f2b;
+      }
+
+      ul {
+        margin: 12px 0 0 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .links {
+        margin-top: 14px;
+      }
+
+      .link {
+        display: inline-block;
+        margin: 0 8px 8px 0;
+        padding: 8px 11px;
+        border: 1px solid #dedad0;
+        border-radius: 999px;
+        color: #6d7a70;
+        text-decoration: none;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
       }
 
       .footer {
-        margin-top: 22px;
-        font-size: 13px;
-        color: #888888;
-        text-align: center;
+        padding: 0 28px 24px;
+        color: #72756f;
+        font-size: 12px;
       }
   body
     .container
-      h2 Your BlockPlanner Site Assessment Report
+      .header
+        .eyebrow Property Assessment Delivery
+        .brand
+          | Block
+          span Planner
 
-      p Hi #{clientName},
+      .content
+        p Hi #{clientName},
+        p Your BlockPlanner property assessment report is attached to this email.
 
-      p Thanks for using BlockPlanner. Please find your Site Assessment Report attached.
-      if address
-        .meta
+        if address || reportId
+          .meta
+            if address
+              p
+                strong Address:
+                |  #{address}
+            if reportId
+              p
+                strong Report ID:
+                |  #{reportId}
+
+        p This report is designed to give you a clear, honest starting point based on the site constraints visible from mapping, imagery and publicly available planning information.
+
+        .callout
+          p If you want to take the next step, we can help with:
+          ul
+            li Detailed feasibility analysis
+            li Professional planning advice
+            li Understanding likely delivery pathways
+            li Introductions to the right local specialists
+
+        .signature
           p
-            strong Address:
-            |  #{address}
-          if reportId
-            p
-              strong Report ID:
-              |  #{reportId}
-
-      p If you'd like to proceed further, reply to this email and we'll help you understand the best pathway forward.
-
-      p A Detailed Feasibility Review can confirm the things we can't verify from public mapping, including:
-      ul
-        li Tree status and protection zones
-        li Services capacity (sewer, stormwater, electrical)
-        li Access and parking compliance
-        li Solar access and overshadowing constraints
-
-      p Best regards,
-      p The BlockPlanner Team
+            strong= contact.name
+            if contact.role
+              |  · #{contact.role}
+          p BlockPlanner
+          .links
+            a.link(href=`mailto:${contact.email}`)= contact.email
+            if contact.phone
+              span.link= contact.phone
+            a.link(href=contact.websiteUrl)= contact.websiteUrl
+            if contact.linkedinUrl
+              a.link(href=contact.linkedinUrl) LinkedIn
 
       .footer
-        p This is an automated message. Please reply to this email if you have questions.
+        p This is an automated delivery email. If you have questions about the report, contact the BlockPlanner team using the details above.

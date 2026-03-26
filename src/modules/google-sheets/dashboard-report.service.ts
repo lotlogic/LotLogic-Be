@@ -9,9 +9,33 @@ import * as puppeteer from 'puppeteer-core';
 
 type ReportKeyValue = { label: string; value: string };
 
-type ReportBullet = { icon: string; title: string; text: string };
+type ReportStatus = 'possible' | 'review' | 'not_available';
 
-type ReportStep = { title: string; text: string };
+type ReportBullet = { status: ReportStatus; title: string; text: string };
+
+type SiteSection = {
+  key: string;
+  title: string;
+  metaItems?: ReportKeyValue[];
+  paragraphs: string[];
+  bullets?: string[];
+};
+
+type SectionContent = {
+  metaItems: ReportKeyValue[];
+  paragraphs: string[];
+  bullets?: string[];
+};
+
+type ReportContact = {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+  websiteUrl: string;
+  websiteLabel: string;
+  linkedinUrl?: string;
+};
 
 type PaidReport = {
   cover: {
@@ -21,35 +45,37 @@ type PaidReport = {
     zoning: string;
     preparedFor: string;
     date: string;
+    reportId?: string;
   };
-  atAGlance: {
+  property: {
     blockSize: string;
     frontage: string;
     zone: string;
     intention: string;
+    note: string;
   };
-  reforms: {
-    blockSize: string;
-    rows: { threshold: string; allowed: string; qualifies: boolean }[];
-    qualifiesFor: string;
+  imagery: {
+    url: string;
+    label: string;
+    note: string;
+  } | null;
+  executiveSummary: {
+    title: string;
+    intro: string;
+    bullets: ReportBullet[];
+    summary?: string;
   };
-  zoning: { paragraphs: string[] };
-  existingHouse: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  rearYard: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  siteCoverage: { paragraphs: string[] };
-  trees: {
-    metaItems: ReportKeyValue[];
+  siteSections: SiteSection[];
+  nextStep: {
+    intentionLabel: string;
+    title: string;
     paragraphs: string[];
-    bullets: string[];
+    checklist: string[];
+    closing: string;
+    cta: string;
   };
-  heritage: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  easements: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  sewer: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  driveway: { metaItems: ReportKeyValue[]; paragraphs: string[] };
-  whatMeans: { intro: string; bullets: ReportBullet[]; summary?: string };
-  nextStep: { paragraphs: string[]; bullets: string[] };
   disclaimer: { paragraphs: string[] };
-  whatHappensNext: { steps: ReportStep[]; cta: string };
+  contact: ReportContact;
 };
 
 @Injectable()
@@ -187,6 +213,7 @@ export class DashboardReportService {
         rowNumber,
         fullAddress,
       });
+      const contact = this.buildContactDetails_();
 
       await this.mailService.sendEmailOrThrow({
         subject,
@@ -195,6 +222,7 @@ export class DashboardReportService {
           clientName,
           address: fullAddress || address || suburb || '',
           reportId: reportId || '',
+          contact,
         },
         emailsList: recipientEmail,
         attachments: [
@@ -255,11 +283,13 @@ export class DashboardReportService {
     const address = this.readValue(payload, 'Address');
     const suburb = this.readValue(payload, 'Suburb');
     const zone = this.readValue(payload, 'Zone');
-    const intention = this.readValue(payload, 'Intention');
+    const intentionRaw = this.readValue(payload, 'Intention');
+    const intention = this.normalizeIntention_(intentionRaw);
     const preparedFor =
       this.readValue(payload, 'Client name') ||
       this.readValue(payload, 'Client email') ||
       'Customer';
+    const reportId = this.readValue(payload, 'Report ID');
 
     const timestampRaw = this.readRaw(payload, 'Timestamp');
     const date = this.formatDate_(
@@ -267,6 +297,14 @@ export class DashboardReportService {
     );
 
     const coverAddress = [address, suburb].filter(Boolean).join(', ') || '—';
+    const blockSection = this.buildBlockSection_(payload);
+    const mapImageUrl = this.readFirstValue_(payload, [
+      'Map image URL',
+      'Aerial image URL',
+      'ACTMapi image URL',
+      'Property image URL',
+      'Image URL',
+    ]);
 
     const blockSizeM2 =
       this.normalizeToFloat_(this.readRaw(payload, 'Block size (m²)')) ??
@@ -314,51 +352,25 @@ export class DashboardReportService {
     const subdivision = this.readValue(payload, 'Subdivision potential');
 
     const zoneDisplay = this.formatZoneDisplay_(zone);
+    const executiveSummary = this.buildExecutiveSummary_({
+      blockSizeM2,
+      grannyFlat,
+      dualOcc,
+      subdivision,
+      housePosition,
+      treesVisibleCount,
+      sewerLocation,
+    });
 
-    const reformsRows = [
+    const siteSections: SiteSection[] = [
       {
-        threshold: '400m²+',
-        allowed: 'Dual occupancy (two dwellings, one title)',
-        qualifies: blockSizeM2 !== null ? blockSizeM2 >= 400 : false,
-      },
-      {
-        threshold: '500m²+',
-        allowed: 'Secondary residence up to 120m²',
-        qualifies: blockSizeM2 !== null ? blockSizeM2 >= 500 : false,
+        key: 'planning-context',
+        title: 'Planning context',
+        paragraphs: this.buildZoningParagraphs_(zone),
       },
       {
-        threshold: '600m²+',
-        allowed: 'Unit titling (two dwellings, separate titles)',
-        qualifies: blockSizeM2 !== null ? blockSizeM2 >= 600 : false,
-      },
-      {
-        threshold: '800m²+',
-        allowed: 'Up to three dwellings',
-        qualifies: blockSizeM2 !== null ? blockSizeM2 >= 800 : false,
-      },
-    ];
-
-    return {
-      cover: {
-        title: 'BlockPlanner Site Assessment Report',
-        address: coverAddress,
-        zoning: zoneDisplay || zone || '—',
-        preparedFor,
-        date,
-      },
-      atAGlance: {
-        blockSize: this.formatArea_(blockSizeM2),
-        frontage: this.formatMeters_(frontageM),
-        zone: zone || '—',
-        intention: intention || '—',
-      },
-      reforms: {
-        blockSize: this.formatArea_(blockSizeM2),
-        rows: reformsRows,
-        qualifiesFor: this.formatQualifiesFor_(reformsRows),
-      },
-      zoning: { paragraphs: this.buildZoningParagraphs_(zone) },
-      existingHouse: {
+        key: 'existing-house',
+        title: 'Existing house',
         metaItems: [
           ...(housePosition
             ? [{ label: 'House position', value: housePosition }]
@@ -374,7 +386,9 @@ export class DashboardReportService {
         ],
         paragraphs: this.buildExistingHouseParagraphs_(housePosition),
       },
-      rearYard: {
+      {
+        key: 'rear-yard',
+        title: 'Rear yard space',
         metaItems: [
           ...(rearYardCategory
             ? [{ label: 'Rear yard', value: rearYardCategory }]
@@ -388,7 +402,9 @@ export class DashboardReportService {
           rearYardDepthM,
         ),
       },
-      siteCoverage: {
+      {
+        key: 'site-coverage',
+        title: 'Site coverage',
         paragraphs: this.buildSiteCoverageParagraphs_({
           blockSizeM2,
           maxBuildingAllowedM2,
@@ -396,55 +412,74 @@ export class DashboardReportService {
           remainingSiteCoverageM2,
         }),
       },
-      trees: this.buildTreesSection_({
-        treesVisibleCount,
-        treeLocation,
-      }),
-      heritage: this.buildHeritageSection_(heritageOverlay),
-      easements: this.buildEasementsSection_(easementImpact),
-      sewer: this.buildSewerSection_(sewerLocation),
-      driveway: this.buildDrivewaySection_({
-        frontageM,
-        secondDriveway,
-      }),
-      whatMeans: this.buildWhatMeansSection_({
-        blockSizeM2,
-        grannyFlat,
-        dualOcc,
-        subdivision,
-        housePosition,
-        treesVisibleCount,
-        sewerLocation,
-      }),
+      {
+        key: 'trees',
+        title: 'Trees',
+        ...this.buildTreesSection_({
+          treesVisibleCount,
+          treeLocation,
+        }),
+      },
+      {
+        key: 'heritage',
+        title: 'Heritage',
+        ...this.buildHeritageSection_(heritageOverlay),
+      },
+      {
+        key: 'easements',
+        title: 'Easements',
+        ...this.buildEasementsSection_(easementImpact),
+      },
+      {
+        key: 'sewer',
+        title: 'Sewer',
+        ...this.buildSewerSection_(sewerLocation),
+      },
+      {
+        key: 'driveway',
+        title: 'Driveway and access',
+        ...this.buildDrivewaySection_({
+          frontageM,
+          secondDriveway,
+        }),
+      },
+    ];
+
+    return {
+      cover: {
+        title: 'BlockPlanner Property Assessment Report',
+        address: coverAddress,
+        ...(blockSection ? { blockSection } : {}),
+        zoning: zoneDisplay || zone || '—',
+        preparedFor,
+        date,
+        ...(reportId ? { reportId } : {}),
+      },
+      property: {
+        blockSize: this.formatArea_(blockSizeM2),
+        frontage: this.formatMeters_(frontageM),
+        zone: zoneDisplay || zone || '—',
+        intention: intention.label,
+        note: 'Indicative only. Measurements are based on ACT Government mapping, aerial imagery and publicly available planning information.',
+      },
+      imagery: mapImageUrl
+        ? {
+            url: mapImageUrl,
+            label: 'Property image',
+            note: 'Optional staff-supplied imagery can highlight easements, servicing and site context that standard public basemaps miss.',
+          }
+        : null,
+      executiveSummary,
+      siteSections,
       nextStep: this.buildNextStepSection_(intention),
       disclaimer: {
         paragraphs: [
-          'This report is based on ACT Government mapping, aerial imagery, and publicly available planning information. It is not a formal planning assessment, survey, engineering report, or guarantee of approval.',
-          'All development must comply with ACT laws, the Territory Plan, and technical requirements. Site-specific conditions — including exact tree status, easement locations, sewer alignment, and heritage requirements — should be confirmed through detailed due diligence before committing to any design or construction.',
-          'BlockPlanner is not a licensed planning consultancy. Where formal planning advice or development applications are required, we work with registered planners and can coordinate this on your behalf.',
+          'This report is based on ACT Government mapping, aerial imagery and publicly available planning information. It is not a formal planning assessment, survey, engineering report or guarantee of approval.',
+          'All development must comply with ACT laws, the Territory Plan and technical requirements. Site-specific conditions — including exact tree status, easement locations, sewer alignment, lease provisions and heritage requirements — should be confirmed through detailed due diligence before committing to any design or construction.',
+          'BlockPlanner provides strategic guidance and can coordinate further feasibility, planning and specialist input where required.',
         ],
       },
-      whatHappensNext: {
-        steps: [
-          {
-            title: 'Review this report',
-            text: "take your time to understand your block's potential and constraints.",
-          },
-          {
-            title: 'Book a call',
-            text: "we'll walk through the findings and answer any questions. No obligation, no pressure.",
-          },
-          {
-            title: 'Detailed Feasibility Review',
-            text: "if you want to proceed, we'll confirm all constraints and give you a clear go/no-go assessment with numbers.",
-          },
-          {
-            title: 'Choose your pathway',
-            text: 'develop yourself, partner with us, or sell with confidence.',
-          },
-        ],
-        cta: 'Book a Call | Email Us | Learn About Joint Ventures',
-      },
+      contact: this.buildContactDetails_(),
     };
   }
 
@@ -514,10 +549,10 @@ export class DashboardReportService {
     context: { rowNumber: number; reportId?: string },
   ): void {
     const computed = {
-      rearYardMeta: report.rearYard?.metaItems || [],
-      whatMeans: (report.whatMeans?.bullets || []).map((b) => ({
+      siteSections: report.siteSections.map((section) => section.key),
+      executiveSummary: (report.executiveSummary?.bullets || []).map((b) => ({
         title: b.title,
-        icon: b.icon,
+        status: b.status,
       })),
     };
 
@@ -691,6 +726,17 @@ export class DashboardReportService {
     return '';
   }
 
+  private readFirstValue_(
+    payload: Record<string, unknown>,
+    labels: string[],
+  ): string {
+    for (const label of labels) {
+      const value = this.readValue(payload, label).trim();
+      if (value) return value;
+    }
+    return '';
+  }
+
   private readRaw(payload: Record<string, unknown>, label: string): unknown {
     const candidates = this.getKeyVariants(label);
     for (const key of candidates) {
@@ -837,6 +883,92 @@ export class DashboardReportService {
     return z;
   }
 
+  private buildBlockSection_(payload: Record<string, unknown>): string {
+    const combined = this.readFirstValue_(payload, [
+      'Block / Section',
+      'Block/Section',
+      'Block section',
+    ]);
+    if (combined) return combined;
+
+    const block = this.readFirstValue_(payload, ['Block number', 'Block']);
+    const section = this.readFirstValue_(payload, ['Section number', 'Section']);
+
+    if (block && section) return `Block ${block} / Section ${section}`;
+    if (block) return `Block ${block}`;
+    if (section) return `Section ${section}`;
+    return '';
+  }
+
+  private normalizeIntention_(raw: string): {
+    key:
+      | 'sell'
+      | 'develop_myself'
+      | 'have_someone_develop_for_me'
+      | 'open_to_options';
+    label: string;
+  } {
+    const value = String(raw || '')
+      .trim()
+      .toLowerCase();
+
+    if (value.includes('sell')) {
+      return { key: 'sell', label: 'Sell' };
+    }
+
+    if (
+      value.includes('joint') ||
+      value.includes('partner') ||
+      value.includes('someone develop') ||
+      value.includes('develop for me')
+    ) {
+      return {
+        key: 'have_someone_develop_for_me',
+        label: 'Have someone develop for me',
+      };
+    }
+
+    if (value.includes('develop')) {
+      return { key: 'develop_myself', label: 'Develop myself' };
+    }
+
+    if (
+      value.includes('explor') ||
+      value.includes('just looking') ||
+      value.includes('open')
+    ) {
+      return { key: 'open_to_options', label: 'Open to options' };
+    }
+
+    return { key: 'open_to_options', label: 'Open to options' };
+  }
+
+  private buildContactDetails_(): PaidReport['contact'] {
+    const name = String(process.env.BLOCKPLANNER_CONTACT_NAME || '').trim();
+    const role = String(process.env.BLOCKPLANNER_CONTACT_ROLE || '').trim();
+    const email = String(process.env.BLOCKPLANNER_CONTACT_EMAIL || '').trim();
+    const phone = String(process.env.BLOCKPLANNER_CONTACT_PHONE || '').trim();
+    const websiteUrl = String(process.env.BLOCKPLANNER_WEBSITE_URL || '').trim();
+    const linkedinUrl = String(
+      process.env.BLOCKPLANNER_LINKEDIN_URL || '',
+    ).trim();
+
+    const safeWebsiteUrl = websiteUrl || 'https://blockplanner.com.au';
+    const websiteLabel = safeWebsiteUrl
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '');
+
+    return {
+      name: name || 'The BlockPlanner Team',
+      role: role || 'Property strategy and feasibility',
+      email: email || 'mitch@blockplanner.com.au',
+      ...(phone ? { phone } : {}),
+      websiteUrl: safeWebsiteUrl,
+      websiteLabel,
+      ...(linkedinUrl ? { linkedinUrl } : {}),
+    };
+  }
+
   private buildZoningParagraphs_(zoneRaw: string): string[] {
     const z = String(zoneRaw || '').trim();
     const upper = z.toUpperCase();
@@ -845,22 +977,22 @@ export class DashboardReportService {
     if (upper.includes('RZ1')) {
       return [
         `Your block is zoned ${label}.`,
-        "RZ1 is the most common residential zone in Canberra, covering established suburban areas. Historically, RZ1 has been restricted to one main dwelling per block, with limited options for adding a second home. The ACT Government's Missing Middle reforms are changing this — removing minimum block size requirements and opening up new possibilities for dual occupancy, granny flats, and in some cases, subdivision.",
-        "Understanding your zone is the foundation for knowing what's possible. The sections below assess your specific block against both current rules and the new reforms.",
+        'RZ1 is primarily intended for lower-intensity suburban housing. In practice, the real opportunity on any individual site depends on the existing house, access, trees, easements, servicing and the usable dimensions left to work with.',
+        'This report focuses on those practical constraints so you can see what is likely to be realistic before spending money on design or formal planning advice.',
       ];
     }
 
     if (upper.includes('RZ2')) {
       return [
         `Your block is zoned ${label}.`,
-        'RZ2 allows for a broader range of housing types than RZ1, including dual occupancies and multi-unit developments. It has always been more flexible for redevelopment, and the Missing Middle reforms make it even more so — reducing minimum lot sizes and easing restrictions on townhouses and small apartment buildings.',
-        "Understanding your zone is the foundation for knowing what's possible. The sections below assess your specific block against both current rules and the new reforms.",
+        'RZ2 is generally more flexible than RZ1 and can support a broader range of residential outcomes, but the practical result still turns on the details of the site and the constraints already on it.',
+        'This report focuses on those real-world constraints so you can judge whether the apparent zoning upside is likely to translate into a workable project.',
       ];
     }
 
     return [
       `Your block is zoned ${label}.`,
-      "Zoning sets the foundation for what's possible. The sections below assess your specific block against both current rules and the Missing Middle reforms.",
+      "Zoning sets the starting point for what's possible, but it does not tell the whole story. The sections below assess the site conditions that usually determine whether a project is realistic in practice.",
     ];
   }
 
@@ -990,7 +1122,7 @@ export class DashboardReportService {
   private buildTreesSection_(params: {
     treesVisibleCount: number;
     treeLocation: string;
-  }): PaidReport['trees'] {
+  }): SectionContent {
     const { treesVisibleCount, treeLocation } = params;
 
     const metaItems: ReportKeyValue[] = [
@@ -1050,7 +1182,7 @@ export class DashboardReportService {
 
   private buildHeritageSection_(
     heritageOverlayRaw: string,
-  ): PaidReport['heritage'] {
+  ): SectionContent {
     const yes = this.isYesLike_(heritageOverlayRaw);
     const metaValue = heritageOverlayRaw
       ? heritageOverlayRaw
@@ -1073,7 +1205,7 @@ export class DashboardReportService {
     };
   }
 
-  private buildEasementsSection_(easementRaw: string): PaidReport['easements'] {
+  private buildEasementsSection_(easementRaw: string): SectionContent {
     const s = String(easementRaw || '')
       .trim()
       .toLowerCase();
@@ -1122,7 +1254,7 @@ export class DashboardReportService {
     };
   }
 
-  private buildSewerSection_(sewerRaw: string): PaidReport['sewer'] {
+  private buildSewerSection_(sewerRaw: string): SectionContent {
     const s = String(sewerRaw || '')
       .trim()
       .toLowerCase();
@@ -1172,7 +1304,7 @@ export class DashboardReportService {
   private buildDrivewaySection_(params: {
     frontageM: number | null;
     secondDriveway: string;
-  }): PaidReport['driveway'] {
+  }): SectionContent {
     const frontageText = this.formatMeters_(params.frontageM);
     const s = String(params.secondDriveway || '')
       .trim()
@@ -1260,7 +1392,7 @@ export class DashboardReportService {
     return { ok: false, label: raw };
   }
 
-  private buildWhatMeansSection_(params: {
+  private buildExecutiveSummary_(params: {
     blockSizeM2: number | null;
     grannyFlat: string;
     dualOcc: string;
@@ -1268,7 +1400,7 @@ export class DashboardReportService {
     housePosition: string;
     treesVisibleCount: number;
     sewerLocation: string;
-  }): PaidReport['whatMeans'] {
+  }): PaidReport['executiveSummary'] {
     const bullets: ReportBullet[] = [];
 
     const gf = this.normalizeFeasibility_(params.grannyFlat, {
@@ -1282,27 +1414,27 @@ export class DashboardReportService {
     });
 
     bullets.push({
-      icon: gf.ok ? '✓' : '✘',
-      title: 'Granny flat',
+      status: gf.ok ? 'possible' : 'review',
+      title: 'Keep the house and add a second dwelling',
       text: gf.ok
-        ? 'Add a granny flat behind the existing house (up to 90m²), subject to setbacks, tree constraints, and access.'
-        : 'Adding a granny flat behind the existing house would be difficult due to rear yard space, site coverage, or tree protection zones.',
+        ? 'A self-contained dwelling behind the existing home appears achievable in principle, subject to setbacks, tree protection zones, access and services.'
+        : 'This path looks constrained by the current house position, rear yard depth, site coverage or likely tree and access issues.',
     });
 
     bullets.push({
-      icon: dual.ok ? '✓' : '✘',
-      title: 'Dual occupancy',
+      status: dual.ok ? 'possible' : 'review',
+      title: 'Remove the house and build two homes',
       text: dual.ok
-        ? 'Dual occupancy (two dwellings on one title) may be possible, likely requiring removal of the existing house.'
-        : 'Dual occupancy would face constraints due to access, trees, heritage, or other site limitations.',
+        ? 'A knockdown-rebuild pathway with two dwellings looks plausible, though design, access, servicing and site constraints still need to be confirmed.'
+        : 'A two-dwelling outcome may still be possible, but it would need closer testing against access, trees, heritage, servicing or other site limitations.',
     });
 
     bullets.push({
-      icon: sub.ok ? '✓' : '✘',
-      title: 'Subdivision',
+      status: sub.ok ? 'possible' : 'review',
+      title: 'Create separate titles and sell',
       text: sub.ok
-        ? 'Subdivision into two separate titles may be possible, subject to minimum lot sizes and access requirements.'
-        : 'Subdivision would face constraints due to access or minimum lot size requirements.',
+        ? 'Creating separate titles looks plausible in principle, subject to the legal pathway, layout, access and certification requirements.'
+        : 'Separate titles are not an obvious outcome from the high-level evidence alone and would need detailed testing before being relied on.',
     });
 
     const qualifiesThree =
@@ -1310,16 +1442,17 @@ export class DashboardReportService {
     const blockSizeText = this.formatArea_(params.blockSizeM2);
 
     bullets.push({
-      icon: qualifiesThree ? '✓' : '✘',
-      title: 'Three dwellings',
+      status: qualifiesThree ? 'review' : 'not_available',
+      title: 'Push for a larger redevelopment',
       text: qualifiesThree
-        ? `Possible in theory. At ${blockSizeText}, your block exceeds the 800m² threshold. However, fitting three dwellings while managing trees, sewer servicing, and parking can be challenging. A detailed feasibility review would confirm whether this is realistic.`
-        : 'Not available on blocks under the 800m² threshold.',
+        ? `At ${blockSizeText}, the block is large enough to justify asking the question, but fitting a more intensive outcome while managing trees, servicing, parking and private open space could still be difficult.`
+        : 'There is not enough headline site area here to treat a more intensive redevelopment outcome as a realistic starting assumption.',
     });
 
     return {
+      title: 'Executive summary',
       intro:
-        'Based on the assessment above, here is what you could typically do given the constraints identified on your block:',
+        'This is the high-level view of what appears most realistic based on the available evidence and the constraints identified on your block.',
       bullets,
       summary: this.buildSummary_({
         housePosition: params.housePosition,
@@ -1357,7 +1490,7 @@ export class DashboardReportService {
       params.dualOk &&
       (pos.includes('middle') || pos.includes('rear') || pos.includes('back'))
     ) {
-      return `Your block has strong underlying metrics for redevelopment under the Missing Middle reforms. The key constraint is the existing house — its size and position leave limited room for additions while it remains. The most viable pathway is a knockdown-rebuild scenario${hasTrees ? ', designing around tree protection zones' : ''}${sewerRear ? ' and sewer constraints' : ''}.`;
+      return `Your block has strong underlying redevelopment metrics, but the existing house is the main constraint. The clearest path is likely to be a knockdown-rebuild scenario${hasTrees ? ', designed around tree protection zones' : ''}${sewerRear ? ' and sewer constraints' : ''}.`;
     }
 
     if (params.grannyFlatOk && !hasTrees) {
@@ -1367,64 +1500,96 @@ export class DashboardReportService {
     return 'Your block has redevelopment potential, but the achievable outcome depends on detailed due diligence of access, trees, services, and other site constraints.';
   }
 
-  private buildNextStepSection_(intentionRaw: string): PaidReport['nextStep'] {
-    const s = String(intentionRaw || '')
-      .trim()
-      .toLowerCase();
-
-    const bullets = [
-      'Lease purpose clause — whether your lease permits multiple dwellings or requires a variation',
-      'Tree status — confirming which trees are protected and mapping their protection zones',
-      'Services capacity — whether sewer, stormwater, and electrical networks can support additional dwellings without upgrades',
-      'Solar access and overshadowing — how orientation and neighbours affect building envelopes',
-      'Parking layout — whether compliant parking can be achieved on site',
-      'Preliminary site layout options — showing what could realistically fit',
-      'High-level cost estimates and indicative end values',
-    ];
-
-    if (s.includes('develop')) {
-      return {
-        paragraphs: [
-          "You indicated you're interested in developing the site yourself.",
-          "Your recommended next step is a Detailed Feasibility Review. This confirms the factors we can't verify from public mapping and gives you a clear go/no-go decision before engaging architects, planners, or builders.",
-          'We offer this as a fixed-fee service and can discuss your site in a no-obligation call.',
-        ],
-        bullets,
-      };
+  private buildNextStepSection_(intention: {
+    key:
+      | 'sell'
+      | 'develop_myself'
+      | 'have_someone_develop_for_me'
+      | 'open_to_options';
+    label: string;
+  }): PaidReport['nextStep'] {
+    switch (intention.key) {
+      case 'sell':
+        return {
+          intentionLabel: intention.label,
+          title: 'Your next step',
+          paragraphs: [
+            "You've made a smart move getting here. This assessment gives you a clear, honest picture of what your block can support under current planning rules. It's a high-level starting point, not a full feasibility analysis, but it is the right foundation before making decisions.",
+            "Here's what the path to selling a developed asset typically looks like:",
+          ],
+          checklist: [
+            'Check your Crown lease and vary it if needed',
+            'Engage a designer and prepare plans',
+            'Lodge and obtain development approval',
+            'Build and certify the dwelling',
+            'Separate the titles (unit titling)',
+            'Sell',
+          ],
+          closing:
+            "If you want to go deeper — a detailed feasibility analysis, professional planning advice, or an introduction to the right people to move this forward — that's exactly what we can help with next.",
+          cta: 'Talk to BlockPlanner about the next step',
+        };
+      case 'develop_myself':
+        return {
+          intentionLabel: intention.label,
+          title: 'Your next step',
+          paragraphs: [
+            'Getting here means you already have a clearer picture of your block than most people do. This is a high-level development assessment — it tells you what the planning rules allow. The detailed numbers and design work come next.',
+            "Here's what the development journey typically looks like:",
+          ],
+          checklist: [
+            'Check your Crown lease and vary it if needed',
+            'Engage a designer to prepare compliant plans',
+            'Lodge a development application',
+            'Complete the public notification period',
+            'Receive development approval',
+            'Appoint a building certifier',
+            'Build',
+            'Receive a Certificate of Occupancy and Use',
+          ],
+          closing:
+            "From DA lodgement to decision is usually one to three months for straightforward residential projects, with construction added on top. When you're ready to take the next step — whether that's a detailed feasibility analysis, professional planning advice, or connecting with the right designer or builder — we can point you in the right direction.",
+          cta: 'Talk to BlockPlanner about feasibility and planning',
+        };
+      case 'have_someone_develop_for_me':
+        return {
+          intentionLabel: intention.label,
+          title: 'Your next step',
+          paragraphs: [
+            "This assessment gives you a solid, honest foundation — it shows what your block can support under current planning rules. A detailed feasibility analysis is the natural next step, and that's something we can help with directly.",
+            'Having someone else manage the development is a good option for a lot of people. The journey broadly looks like this:',
+          ],
+          checklist: [
+            'Understand your options and agree on a structure',
+            'Have the developer manage Crown lease, planning and design',
+            'Lodge and approve the development application',
+            'Have the developer manage construction and certification',
+            'Settle or receive returns at completion',
+          ],
+          closing:
+            'We work with experienced local developers who know the ACT market well, and we can help with the planning advice and feasibility work needed before you commit to a structure.',
+          cta: 'Talk to BlockPlanner about developer pathways',
+        };
+      case 'open_to_options':
+      default:
+        return {
+          intentionLabel: intention.label,
+          title: 'Your next step',
+          paragraphs: [
+            "You haven't landed on a direction yet — and that's a sensible place to be. This assessment shows you what your block can support. What you do with that is worth thinking through properly before committing to anything.",
+            'The main paths from here:',
+          ],
+          checklist: [
+            'Sell the block as-is with development potential clearly documented',
+            'Develop and hold — build a second dwelling and rent it',
+            'Develop and sell — create separate titles and sell one or both',
+            'Bring in a development partner and retain an interest in the outcome',
+          ],
+          closing:
+            'Each path has a different process, timeline and financial shape. If you want to understand the numbers behind any of them, a proper feasibility analysis and professional planning advice are the logical next step. Both are things we can help with, with no commitment required just to have the conversation.',
+          cta: 'Talk to BlockPlanner through the options',
+        };
     }
-
-    if (s.includes('joint') || s.includes('partner')) {
-      return {
-        paragraphs: [
-          "You indicated you're interested in partnering or joint venturing on this site.",
-          'BlockPlanner works with landowners who want to unlock the value of their site without taking on the full risk and complexity of development.',
-          'Your recommended next step is a Detailed Feasibility Review. If the numbers stack up, we can then discuss partnership structures and delivery options.',
-          'Book a call with our team to discuss your options.',
-        ],
-        bullets,
-      };
-    }
-
-    if (s.includes('sell')) {
-      return {
-        paragraphs: [
-          "You indicated you're interested in selling the property, potentially with development upside.",
-          'A Detailed Feasibility Review helps de-risk the opportunity for buyers by confirming constraints and buildable outcomes, so you can market the site with confidence.',
-          'Book a call with our team to discuss your options.',
-        ],
-        bullets,
-      };
-    }
-
-    return {
-      paragraphs: [
-        "You indicated you're exploring your options at this stage.",
-        "That's a smart approach. When you're ready to take the next step, a Detailed Feasibility Review will confirm the things we can't check from public mapping and give you a clear picture of what's possible, what it would cost, and whether it makes financial sense.",
-        "There's no obligation to proceed — it simply gives you the information to make a confident decision.",
-        'Book a call with our team when you are ready, or reply with any questions.',
-      ],
-      bullets,
-    };
   }
 
   private redactEmail_(email: string): string {
