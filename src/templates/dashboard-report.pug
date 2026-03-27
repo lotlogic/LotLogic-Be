@@ -33,12 +33,12 @@ html(lang='en')
 
       body {
         margin: 0;
-        background: var(--page-bg);
+        background: var(--white);
         font-family: 'Lexend', 'Segoe UI', sans-serif;
         color: var(--ink);
         font-size: 11pt;
         line-height: 1.55;
-        padding: 22px 0;
+        padding: 0;
       }
 
       p, li { margin: 0; }
@@ -393,6 +393,7 @@ html(lang='en')
         font-weight: 500;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        text-decoration: none;
       }
 
       .contact-panel,
@@ -443,9 +444,10 @@ html(lang='en')
       }
 
       .report-footer {
+        margin-top: 22px;
         border-top: 1px solid var(--rule);
-        background: #f9f8f3;
-        padding: 14px 40px;
+        background: var(--white);
+        padding: 18px 40px 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -558,7 +560,7 @@ html(lang='en')
                   span.checkbox
                   span= item
             p= report.nextStep.closing
-            .cta-chip= report.nextStep.cta
+            a.cta-chip(href=`mailto:${report.contact.email}`)= report.nextStep.cta
 
         .contact-panel
           h3 Want to take this further?

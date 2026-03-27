@@ -96,21 +96,22 @@ html(lang='en')
         margin-top: 6px;
       }
 
-      .links {
-        margin-top: 14px;
+      .signature p + p {
+        margin-top: 8px;
       }
 
-      .link {
-        display: inline-block;
-        margin: 0 8px 8px 0;
-        padding: 8px 11px;
-        border: 1px solid #dedad0;
-        border-radius: 999px;
+      .signature-name {
+        color: #2a2f2b;
+        font-weight: 600;
+      }
+
+      .signature-links {
+        margin-top: 10px;
+      }
+
+      .signature-links a {
         color: #6d7a70;
-        text-decoration: none;
-        font-size: 12px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+        text-decoration: underline;
       }
 
       .footer {
@@ -156,14 +157,15 @@ html(lang='en')
             strong= contact.name
             if contact.role
               |  · #{contact.role}
-          p BlockPlanner
-          .links
-            a.link(href=`mailto:${contact.email}`)= contact.email
-            if contact.phone
-              span.link= contact.phone
-            a.link(href=contact.websiteUrl)= contact.websiteUrl
+          p.signature-name Mitch Porteous
+          p CEO
+          if contact.phone
+            p= contact.phone
+          .signature-links
+            a(href=contact.websiteUrl) Website
             if contact.linkedinUrl
-              a.link(href=contact.linkedinUrl) LinkedIn
+              |  | 
+              a(href=contact.linkedinUrl) Linkedin
 
       .footer
         p This is an automated delivery email. If you have questions about the report, contact the BlockPlanner team using the details above.

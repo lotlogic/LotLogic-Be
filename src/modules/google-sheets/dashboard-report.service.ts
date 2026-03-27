@@ -954,6 +954,8 @@ export class DashboardReportService {
     ).trim();
 
     const safeWebsiteUrl = websiteUrl || 'https://blockplanner.com.au';
+    const safeLinkedinUrl =
+      linkedinUrl || 'https://www.linkedin.com/in/beerandjobs/';
     const websiteLabel = safeWebsiteUrl
       .replace(/^https?:\/\//, '')
       .replace(/\/+$/, '');
@@ -962,10 +964,10 @@ export class DashboardReportService {
       name: name || 'The BlockPlanner Team',
       role: role || 'Property strategy and feasibility',
       email: email || 'mitch@blockplanner.com.au',
-      ...(phone ? { phone } : {}),
+      phone: phone || '0401 637 961',
       websiteUrl: safeWebsiteUrl,
       websiteLabel,
-      ...(linkedinUrl ? { linkedinUrl } : {}),
+      linkedinUrl: safeLinkedinUrl,
     };
   }
 
@@ -1587,7 +1589,7 @@ export class DashboardReportService {
           ],
           closing:
             'Each path has a different process, timeline and financial shape. If you want to understand the numbers behind any of them, a proper feasibility analysis and professional planning advice are the logical next step. Both are things we can help with, with no commitment required just to have the conversation.',
-          cta: 'Talk to BlockPlanner through the options',
+          cta: 'Talk to BlockPlanner about your options',
         };
     }
   }
