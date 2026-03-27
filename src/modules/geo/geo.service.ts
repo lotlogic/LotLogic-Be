@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
+  LotCheckPathwayCard,
   LotCheckRuleMatch,
   LotCheckRulesService,
 } from '@modules/geo/lotcheck-rules.service';
@@ -175,6 +176,7 @@ export class GeoService {
       zoneCode: string | null;
       blockAreaSqm: number | null;
       matches: LotCheckRuleMatch[];
+      cards: LotCheckPathwayCard[];
     };
   }> {
     let location: { lat: number; lng: number } | null = null;
@@ -232,6 +234,12 @@ export class GeoService {
           blockAreaSqm,
         })
       : [];
+    const lotCheckCards = rulesZoneCode
+      ? this.lotCheckRulesService.getPathwayCardsForZone({
+          zoneCode: rulesZoneCode,
+          blockAreaSqm,
+        })
+      : [];
 
     return {
       ...(formattedAddress ? { formattedAddress } : {}),
@@ -243,6 +251,7 @@ export class GeoService {
         zoneCode: rulesZoneCode,
         blockAreaSqm,
         matches: lotCheckMatches,
+        cards: lotCheckCards,
       },
     };
   }
