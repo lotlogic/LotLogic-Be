@@ -68,8 +68,24 @@ export class GoogleSheetsController {
   ) {
     const requestId = randomUUID();
     const startedAt = Date.now();
+    const bodyKeys =
+      body && typeof body === 'object' && !Array.isArray(body)
+        ? Object.keys(body)
+        : [];
+
+    this.logger.log(
+      `Dashboard trigger received (requestId=${requestId} contentType=${
+        Array.isArray(body) ? 'array' : typeof body
+      } keys=${bodyKeys.length} hasHeaderSecret=${Boolean(webhookSecret)} hasQuerySecret=${Boolean(
+        querySecret,
+      )})`,
+    );
+
     const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
     if (!expectedSecret) {
+      this.logger.error(
+        `Dashboard trigger rejected (requestId=${requestId}): Missing env var GOOGLE_SHEETS_WEB_APP_SECRET`,
+      );
       throw new InternalServerErrorException(
         'Missing env var GOOGLE_SHEETS_WEB_APP_SECRET',
       );
@@ -81,10 +97,16 @@ export class GoogleSheetsController {
       (typeof body?.secret === 'string' ? body.secret : '');
 
     if (providedSecret !== expectedSecret) {
+      this.logger.warn(
+        `Dashboard trigger rejected (requestId=${requestId}): Invalid webhook secret`,
+      );
       throw new UnauthorizedException('Invalid webhook secret');
     }
 
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      this.logger.warn(
+        `Dashboard trigger rejected (requestId=${requestId}): Expected JSON body`,
+      );
       throw new BadRequestException('Expected JSON body');
     }
 
@@ -97,6 +119,9 @@ export class GoogleSheetsController {
         : Number.parseInt(String(rowNumberRaw || '').trim(), 10);
 
     if (!Number.isFinite(rowNumber) || rowNumber < 1) {
+      this.logger.warn(
+        `Dashboard trigger rejected (requestId=${requestId}): Missing/invalid Row Number`,
+      );
       throw new BadRequestException('Missing/invalid Row Number');
     }
 

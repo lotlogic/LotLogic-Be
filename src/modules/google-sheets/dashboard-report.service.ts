@@ -106,6 +106,7 @@ export class DashboardReportService {
       this.logPayloadSnapshot_(payload, { rowNumber, reportId });
 
       const report = this.buildPaidReport(payload);
+      await this.resolveImageryForRender_(report, { rowNumber, reportId });
       this.logComputedSnapshot_(report, { rowNumber, reportId });
       const html = this.renderHtml(report);
       this.logger.log(
@@ -674,6 +675,20 @@ export class DashboardReportService {
         )}`,
       );
 
+      const hasBrokenImages = imageSnapshot.some(
+        (image) => !image.complete || image.naturalWidth === 0,
+      );
+      if (hasBrokenImages) {
+        this.logger.warn(
+          `Dashboard report removing broken image panel${ctx}`,
+        );
+        await page.evaluate(() => {
+          document
+            .querySelectorAll('.image-panel')
+            .forEach((element) => element.remove());
+        });
+      }
+
       const tPdf = Date.now();
       const pdf = await page.pdf({
         format: 'A4',
@@ -1083,9 +1098,122 @@ export class DashboardReportService {
       return null;
     }
 
-    return `https://maps.googleapis.com/maps/api/staticmap?size=1280x720&scale=2&zoom=18&maptype=satellite&markers=color:0xC4622D|${encodeURIComponent(
-      mapQuery,
-    )}&key=${encodeURIComponent(apiKey)}`;
+    const query = encodeURIComponent(mapQuery);
+    return `https://maps.googleapis.com/maps/api/staticmap?size=640x360&scale=2&zoom=18&maptype=satellite&center=${query}&markers=color:0xC4622D|${query}&key=${encodeURIComponent(
+      apiKey,
+    )}`;
+  }
+
+  private async resolveImageryForRender_(
+    report: PaidReport,
+    ctxArgs?: { rowNumber?: number; reportId?: string },
+  ): Promise<void> {
+    if (!report.imagery?.url) {
+      return;
+    }
+
+    if (/^data:/i.test(report.imagery.url)) {
+      return;
+    }
+
+    const imageDataUrl = await this.fetchImageAsDataUrl_(report.imagery.url, {
+      label: report.imagery.label,
+      ...ctxArgs,
+    });
+
+    if (!imageDataUrl) {
+      report.imagery = null;
+      return;
+    }
+
+    report.imagery.url = imageDataUrl;
+  }
+
+  private async fetchImageAsDataUrl_(
+    url: string,
+    ctxArgs?: { rowNumber?: number; reportId?: string; label?: string },
+  ): Promise<string | null> {
+    const timeoutMs = Number(
+      process.env.DASHBOARD_IMAGE_FETCH_TIMEOUT_MS || 20_000,
+    );
+    const abortController = new AbortController();
+    const timeoutHandle = setTimeout(() => abortController.abort(), timeoutMs);
+    const ctx = this.formatCtx_(ctxArgs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        signal: abortController.signal,
+        headers: {
+          Accept: 'image/*,*/*;q=0.8',
+          'User-Agent': 'BlockPlanner Dashboard Report Renderer',
+        },
+      });
+
+      if (!response.ok) {
+        const bodyPreview = await response.text().catch(() => '');
+        this.logger.warn(
+          `Dashboard report image fetch failed (status=${response.status}${
+            ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
+          } url=${this.redactUrlForLogs_(url)} body=${JSON.stringify(
+            bodyPreview.slice(0, 240),
+          )})${ctx}`,
+        );
+        return null;
+      }
+
+      const contentType = String(response.headers.get('content-type') || '')
+        .split(';')[0]
+        .trim()
+        .toLowerCase();
+      if (!contentType.startsWith('image/')) {
+        const bodyPreview = await response.text().catch(() => '');
+        this.logger.warn(
+          `Dashboard report image fetch returned non-image content-type=${
+            contentType || 'unknown'
+          }${ctxArgs?.label ? ` label=${ctxArgs.label}` : ''} url=${this.redactUrlForLogs_(
+            url,
+          )} body=${JSON.stringify(bodyPreview.slice(0, 240))}${ctx}`,
+        );
+        return null;
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      if (!buffer.length) {
+        this.logger.warn(
+          `Dashboard report image fetch returned empty body${
+            ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
+          } url=${this.redactUrlForLogs_(url)}${ctx}`,
+        );
+        return null;
+      }
+
+      return `data:${contentType};base64,${buffer.toString('base64')}`;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'name' in error) {
+        const name = String((error as { name?: unknown }).name || '');
+        if (name === 'AbortError') {
+          this.logger.warn(
+            `Dashboard report image fetch timed out after ${timeoutMs}ms${
+              ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
+            } url=${this.redactUrlForLogs_(url)}${ctx}`,
+          );
+          return null;
+        }
+      }
+
+      const message =
+        error instanceof Error ? error.message : 'Unknown image fetch error';
+      this.logger.warn(
+        `Dashboard report image fetch threw${
+          ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
+        } url=${this.redactUrlForLogs_(url)} message=${message}${ctx}`,
+      );
+      return null;
+    } finally {
+      clearTimeout(timeoutHandle);
+    }
   }
 
   private shouldLogExternalAssetUrl_(url: string): boolean {
@@ -1730,6 +1858,22 @@ export class DashboardReportService {
       local.length <= 2 ? local.charAt(0) + '*' : local.slice(0, 2) + '***';
 
     return `${safeLocal}@${domain}`;
+  }
+
+  private formatCtx_(params?: {
+    rowNumber?: number;
+    reportId?: string;
+  }): string {
+    if (!params) {
+      return '';
+    }
+
+    const parts = [
+      params.rowNumber ? `row=${params.rowNumber}` : null,
+      params.reportId ? `reportId=${params.reportId}` : null,
+    ].filter(Boolean);
+
+    return parts.length ? ` (${parts.join(' ')})` : '';
   }
 
   private buildDeliveryAttachmentFilename_(params: {

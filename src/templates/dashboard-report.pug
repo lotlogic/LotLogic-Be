@@ -152,9 +152,6 @@ html(lang='en')
       }
 
       .image-caption {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
         padding: 10px 16px;
         background: #f5f2e8;
         font-size: 9px;
@@ -504,7 +501,6 @@ html(lang='en')
             img(src=report.imagery.url alt=report.imagery.label)
             .image-caption
               span= report.imagery.label
-              span= report.imagery.note
 
         .report-body
           .section-label= report.executiveSummary.title
