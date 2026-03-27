@@ -546,6 +546,16 @@ export class DashboardReportService {
         title: b.title,
         status: b.status,
       })),
+      imagery: {
+        present: Boolean(report.imagery),
+        label: report.imagery?.label || null,
+        source: report.imagery
+          ? report.imagery.url.includes('maps.googleapis.com/maps/api/staticmap')
+            ? 'google_static_fallback'
+            : 'dashboard_or_external'
+          : 'none',
+        url: report.imagery ? this.redactUrlForLogs_(report.imagery.url) : null,
+      },
     };
 
     this.logger.log(
@@ -602,11 +612,66 @@ export class DashboardReportService {
       const page = await browser.newPage();
       page.setDefaultTimeout(60_000);
       page.setDefaultNavigationTimeout(60_000);
+      page.on('pageerror', (error) => {
+        const message =
+          error instanceof Error ? error.message : this.normalizeToString(error);
+        const stack = error instanceof Error ? error.stack : undefined;
+        this.logger.error(
+          `Dashboard report pageerror${ctx}: ${message}`,
+          stack,
+        );
+      });
+      page.on('console', (message) => {
+        const type = message.type();
+        if (type === 'error' || type === 'warn') {
+          this.logger.warn(
+            `Dashboard report browser console ${type}${ctx}: ${message.text()}`,
+          );
+        }
+      });
+      page.on('requestfailed', (request) => {
+        const url = request.url();
+        if (!this.shouldLogExternalAssetUrl_(url)) return;
+        this.logger.warn(
+          `Dashboard report request failed${ctx}: type=${request.resourceType()} method=${request.method()} url=${this.redactUrlForLogs_(
+            url,
+          )} error=${request.failure()?.errorText || 'unknown'}`,
+        );
+      });
+      page.on('response', (response) => {
+        const url = response.url();
+        if (response.status() < 400 || !this.shouldLogExternalAssetUrl_(url))
+          return;
+        this.logger.warn(
+          `Dashboard report asset response ${response.status()}${ctx}: url=${this.redactUrlForLogs_(
+            url,
+          )}`,
+        );
+      });
 
       const tSetContent = Date.now();
       await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
       this.logger.log(
         `Dashboard report PDF setContent done (ms=${Date.now() - tSetContent})${ctx}`,
+      );
+
+      const imageSnapshot = await page.evaluate(() =>
+        Array.from(document.images).map((image) => ({
+          src: image.currentSrc || image.src || '',
+          complete: image.complete,
+          naturalWidth: image.naturalWidth || 0,
+          naturalHeight: image.naturalHeight || 0,
+        })),
+      );
+      this.logger.log(
+        `Dashboard report image snapshot${ctx}: ${JSON.stringify(
+          imageSnapshot.map((image) => ({
+            ...image,
+            src: image.src
+              ? image.src.replace(/([?&]key=)[^&]+/i, '$1REDACTED')
+              : '',
+          })),
+        )}`,
       );
 
       const tPdf = Date.now();
@@ -1021,6 +1086,14 @@ export class DashboardReportService {
     return `https://maps.googleapis.com/maps/api/staticmap?size=1280x720&scale=2&zoom=18&maptype=satellite&markers=color:0xC4622D|${encodeURIComponent(
       mapQuery,
     )}&key=${encodeURIComponent(apiKey)}`;
+  }
+
+  private shouldLogExternalAssetUrl_(url: string): boolean {
+    return /googleapis\.com|gstatic\.com/i.test(url);
+  }
+
+  private redactUrlForLogs_(url: string): string {
+    return String(url || '').replace(/([?&]key=)[^&]+/i, '$1REDACTED');
   }
 
   private buildZoningParagraphs_(zoneRaw: string): string[] {

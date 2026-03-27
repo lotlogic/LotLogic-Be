@@ -66,6 +66,8 @@ export class GoogleSheetsController {
     @Headers('x-webhook-secret') webhookSecret?: string,
     @Query('secret') querySecret?: string,
   ) {
+    const requestId = randomUUID();
+    const startedAt = Date.now();
     const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
     if (!expectedSecret) {
       throw new InternalServerErrorException(
@@ -102,7 +104,7 @@ export class GoogleSheetsController {
     const reportId = String(reportIdRaw || '').trim();
 
     this.logger.log(
-      `Dashboard trigger accepted (row=${rowNumber}${
+      `Dashboard trigger accepted (requestId=${requestId} row=${rowNumber}${
         reportId ? ` reportId=${reportId}` : ''
       })`,
     );
@@ -122,15 +124,41 @@ export class GoogleSheetsController {
     };
 
     this.logger.log(
-      `Dashboard trigger fields snapshot (row=${rowNumber}${
+      `Dashboard trigger fields snapshot (requestId=${requestId} row=${rowNumber}${
         reportId ? ` reportId=${reportId}` : ''
       }): ${JSON.stringify(fieldsSnapshot)}`,
     );
 
     setImmediate(() => {
+      const jobStartedAt = Date.now();
+      this.logger.log(
+        `Dashboard trigger job started (requestId=${requestId} row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        })`,
+      );
+
       void this.dashboardReportService
         .processDashboardTrigger(body)
-        .catch(() => undefined);
+        .then(() => {
+          this.logger.log(
+            `Dashboard trigger job finished (requestId=${requestId} row=${rowNumber}${
+              reportId ? ` reportId=${reportId}` : ''
+            } jobMs=${Date.now() - jobStartedAt} totalMs=${
+              Date.now() - startedAt
+            })`,
+          );
+        })
+        .catch((error) => {
+          const stack = error instanceof Error ? error.stack : undefined;
+          this.logger.error(
+            `Dashboard trigger job threw (requestId=${requestId} row=${rowNumber}${
+              reportId ? ` reportId=${reportId}` : ''
+            } jobMs=${Date.now() - jobStartedAt} totalMs=${
+              Date.now() - startedAt
+            }): ${error instanceof Error ? error.message : String(error)}`,
+            stack,
+          );
+        });
     });
 
     return true;
