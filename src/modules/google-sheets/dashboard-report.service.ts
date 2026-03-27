@@ -298,13 +298,11 @@ export class DashboardReportService {
 
     const coverAddress = [address, suburb].filter(Boolean).join(', ') || '—';
     const blockSection = this.buildBlockSection_(payload);
-    const mapImageUrl = this.readFirstValue_(payload, [
-      'Map image URL',
-      'Aerial image URL',
-      'ACTMapi image URL',
-      'Property image URL',
-      'Image URL',
-    ]);
+    const imagery = this.buildImagery_(payload, {
+      address,
+      suburb,
+      coverAddress,
+    });
 
     const blockSizeM2 =
       this.normalizeToFloat_(this.readRaw(payload, 'Block size (m²)')) ??
@@ -462,13 +460,7 @@ export class DashboardReportService {
         intention: intention.label,
         note: 'Indicative only. Measurements are based on ACT Government mapping, aerial imagery and publicly available planning information.',
       },
-      imagery: mapImageUrl
-        ? {
-            url: mapImageUrl,
-            label: 'Property image',
-            note: 'Optional staff-supplied imagery can highlight easements, servicing and site context that standard public basemaps miss.',
-          }
-        : null,
+      imagery,
       executiveSummary,
       siteSections,
       nextStep: this.buildNextStepSection_(intention),
@@ -969,6 +961,66 @@ export class DashboardReportService {
       websiteLabel,
       linkedinUrl: safeLinkedinUrl,
     };
+  }
+
+  private buildImagery_(
+    payload: Record<string, unknown>,
+    params: { address: string; suburb: string; coverAddress: string },
+  ): PaidReport['imagery'] {
+    const dashboardImageUrl = this.readFirstValue_(payload, [
+      'Map image URL',
+      'Aerial image URL',
+      'ACTMapi image URL',
+      'Property image URL',
+      'Image URL',
+    ]);
+
+    if (dashboardImageUrl) {
+      return {
+        url: dashboardImageUrl,
+        label: 'Property image',
+        note: 'Optional staff-supplied imagery can highlight easements, servicing and site context that standard public basemaps miss.',
+      };
+    }
+
+    const fallbackMapUrl = this.buildGoogleStaticMapUrl_(payload, params);
+    if (!fallbackMapUrl) {
+      return null;
+    }
+
+    return {
+      url: fallbackMapUrl,
+      label: 'Property snapshot',
+      note: 'Satellite imagery from Google Maps used because no staff-supplied property image was provided.',
+    };
+  }
+
+  private buildGoogleStaticMapUrl_(
+    payload: Record<string, unknown>,
+    params: { address: string; suburb: string; coverAddress: string },
+  ): string | null {
+    const apiKey = String(process.env.GOOGLE_MAPS_API_KEY || '').trim();
+    if (!apiKey) return null;
+
+    const lat = this.normalizeToFloat_(
+      this.readRaw(payload, 'Latitude') ?? this.readRaw(payload, 'lat'),
+    );
+    const lng = this.normalizeToFloat_(
+      this.readRaw(payload, 'Longitude') ?? this.readRaw(payload, 'lng'),
+    );
+
+    const mapQuery =
+      lat !== null && lng !== null
+        ? `${lat},${lng}`
+        : [params.address, params.suburb].filter(Boolean).join(', ');
+
+    if (!mapQuery || mapQuery === '—') {
+      return null;
+    }
+
+    return `https://maps.googleapis.com/maps/api/staticmap?size=1280x720&scale=2&zoom=18&maptype=satellite&markers=color:0xC4622D|${encodeURIComponent(
+      mapQuery,
+    )}&key=${encodeURIComponent(apiKey)}`;
   }
 
   private buildZoningParagraphs_(zoneRaw: string): string[] {
