@@ -103,29 +103,11 @@ export class DashboardReportService {
         })`,
       );
 
-      this.logPayloadSnapshot_(payload, { rowNumber, reportId });
-
       const report = this.buildPaidReport(payload);
       await this.resolveImageryForRender_(report, { rowNumber, reportId });
-      this.logComputedSnapshot_(report, { rowNumber, reportId });
       const html = this.renderHtml(report);
-      this.logger.log(
-        `Dashboard report HTML rendered (row=${rowNumber} bytes=${Buffer.byteLength(
-          html,
-          'utf8',
-        )})`,
-      );
-
       const pdf = await this.renderPdf(html, { rowNumber, reportId });
-      this.logger.log(
-        `Dashboard report PDF rendered (row=${rowNumber} bytes=${pdf.length})`,
-      );
-
       const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
-      this.logger.log(
-        `Dashboard report uploaded (row=${rowNumber} url=${pdfUrl})`,
-      );
-
       const updateResponse =
         await this.googleSheetsService.updateGoogleSheetsRow({
           rowNumber,
@@ -143,18 +125,18 @@ export class DashboardReportService {
         this.logger.warn(
           `Dashboard report row update returned ok=false (row=${rowNumber})`,
         );
-      } else {
-        this.logger.log(`Dashboard report row updated (row=${rowNumber})`);
       }
+
+      this.logger.log(
+        `Dashboard report job completed (row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        })`,
+      );
     } catch (error) {
-      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
         `Dashboard report generation failed (row=${
           rowNumber ?? 'unknown'
-        }${reportId ? ` reportId=${reportId}` : ''}): ${this.normalizeToString(
-          error instanceof Error ? error.message : error,
-        )}`,
-        stack,
+        }${reportId ? ` reportId=${reportId}` : ''})`,
       );
     }
   }
@@ -176,8 +158,6 @@ export class DashboardReportService {
       const clientName = this.readValue(payload, 'Client name') || 'there';
       const clientEmail = this.readValue(payload, 'Client email');
       const pdfUrl = this.readValue(payload, 'Final PDF link');
-      const deliveryStatus = this.readValue(payload, 'Delivery status');
-
       const emailOverride = String(
         process.env.GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE || '',
       ).trim();
@@ -186,9 +166,7 @@ export class DashboardReportService {
       this.logger.log(
         `Dashboard delivery job started (row=${rowNumber}${
           reportId ? ` reportId=${reportId}` : ''
-        } status=${deliveryStatus || '—'} to=${this.redactEmail_(
-          recipientEmail,
-        )}${emailOverride ? ' override=true' : ''})`,
+        })`,
       );
 
       if (!pdfUrl) {
@@ -201,9 +179,6 @@ export class DashboardReportService {
       }
 
       const pdf = await this.downloadPdf_(pdfUrl);
-      this.logger.log(
-        `Dashboard delivery PDF downloaded (row=${rowNumber} bytes=${pdf.length})`,
-      );
 
       const subject = `Your BlockPlanner Site Assessment Report${
         fullAddress ? ` — ${fullAddress}` : ''
@@ -236,12 +211,6 @@ export class DashboardReportService {
         senderProfile: 'blockplanner',
       });
 
-      this.logger.log(
-        `Dashboard delivery email sent (row=${rowNumber} to=${this.redactEmail_(
-          recipientEmail,
-        )})`,
-      );
-
       const deliveryDate = new Date().toISOString();
       const updateResponse =
         await this.googleSheetsService.updateGoogleSheetsDelivery({
@@ -261,20 +230,20 @@ export class DashboardReportService {
         this.logger.warn(
           `Dashboard delivery row update returned ok=false (row=${rowNumber})`,
         );
-      } else {
-        this.logger.log(
-          `Dashboard delivery row updated (row=${rowNumber} status=Sent)`,
-        );
       }
+
+      this.logger.log(
+        `Dashboard delivery job completed (row=${rowNumber}${
+          reportId ? ` reportId=${reportId}` : ''
+        })`,
+      );
 
       return true;
     } catch (error) {
-      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
         `Dashboard delivery failed (row=${rowNumber ?? 'unknown'}${
           reportId ? ` reportId=${reportId}` : ''
-        }): ${this.normalizeToString(error instanceof Error ? error.message : error)}`,
-        stack,
+        })`,
       );
       return false;
     }
@@ -476,96 +445,6 @@ export class DashboardReportService {
     };
   }
 
-  private logPayloadSnapshot_(
-    payload: Record<string, unknown>,
-    context: { rowNumber: number; reportId?: string },
-  ): void {
-    const snapshot = {
-      zone: this.readValue(payload, 'Zone'),
-      blockSizeM2: this.readValue(payload, 'Block size (m²)'),
-      frontageM: this.readValue(payload, 'Frontage (m)'),
-      housePosition: this.readValue(payload, 'House position'),
-      houseFootprintM2: this.readValue(payload, 'House footprint (m²)'),
-      rearYardDepthM: this.readValue(payload, 'Rear yard depth (m)'),
-      rearYardCategory: this.readValue(payload, 'Rear yard category'),
-      remainingSiteCoverageM2: this.readValue(
-        payload,
-        'Remaining site coverage (m²)',
-      ),
-      grannyFlatKeepHouse: this.readValue(payload, 'Granny flat (keep house)'),
-      dualOccRemoveHouse: this.readValue(payload, 'Dual occ (remove house)'),
-      subdivisionPotential: this.readValue(payload, 'Subdivision potential'),
-      intention: this.readValue(payload, 'Intention'),
-      keysCount: Object.keys(payload).length,
-    };
-
-    const feasibility = {
-      grannyFlat: this.normalizeFeasibility_(snapshot.grannyFlatKeepHouse, {
-        possibleOk: true,
-      }),
-      dualOcc: this.normalizeFeasibility_(snapshot.dualOccRemoveHouse, {
-        possibleOk: false,
-      }),
-      subdivision: this.normalizeFeasibility_(snapshot.subdivisionPotential, {
-        possibleOk: false,
-      }),
-    };
-
-    this.logger.log(
-      `Dashboard report payload snapshot (row=${context.rowNumber}${
-        context.reportId ? ` reportId=${context.reportId}` : ''
-      }): ${JSON.stringify(snapshot)}`,
-    );
-
-    this.logger.log(
-      `Dashboard report feasibility snapshot (row=${context.rowNumber}${
-        context.reportId ? ` reportId=${context.reportId}` : ''
-      }): ${JSON.stringify({
-        grannyFlat: {
-          raw: snapshot.grannyFlatKeepHouse,
-          ok: feasibility.grannyFlat.ok,
-        },
-        dualOcc: {
-          raw: snapshot.dualOccRemoveHouse,
-          ok: feasibility.dualOcc.ok,
-        },
-        subdivision: {
-          raw: snapshot.subdivisionPotential,
-          ok: feasibility.subdivision.ok,
-        },
-      })}`,
-    );
-  }
-
-  private logComputedSnapshot_(
-    report: PaidReport,
-    context: { rowNumber: number; reportId?: string },
-  ): void {
-    const computed = {
-      siteSections: report.siteSections.map((section) => section.key),
-      executiveSummary: (report.executiveSummary?.bullets || []).map((b) => ({
-        title: b.title,
-        status: b.status,
-      })),
-      imagery: {
-        present: Boolean(report.imagery),
-        label: report.imagery?.label || null,
-        source: report.imagery
-          ? report.imagery.url.includes('maps.googleapis.com/maps/api/staticmap')
-            ? 'google_static_fallback'
-            : 'dashboard_or_external'
-          : 'none',
-        url: report.imagery ? this.redactUrlForLogs_(report.imagery.url) : null,
-      },
-    };
-
-    this.logger.log(
-      `Dashboard report computed snapshot (row=${context.rowNumber}${
-        context.reportId ? ` reportId=${context.reportId}` : ''
-      }): ${JSON.stringify(computed)}`,
-    );
-  }
-
   private renderHtml(report: PaidReport): string {
     const templatePath = join(
       __dirname,
@@ -587,9 +466,6 @@ export class DashboardReportService {
     const ctx = context
       ? ` (row=${context.rowNumber}${context.reportId ? ` reportId=${context.reportId}` : ''})`
       : '';
-
-    const t0 = Date.now();
-    this.logger.log(`Dashboard report PDF render starting${ctx}`);
 
     const executablePath = this.getChromeExecutablePath();
     if (!executablePath) {
@@ -613,66 +489,13 @@ export class DashboardReportService {
       const page = await browser.newPage();
       page.setDefaultTimeout(60_000);
       page.setDefaultNavigationTimeout(60_000);
-      page.on('pageerror', (error) => {
-        const message =
-          error instanceof Error ? error.message : this.normalizeToString(error);
-        const stack = error instanceof Error ? error.stack : undefined;
-        this.logger.error(
-          `Dashboard report pageerror${ctx}: ${message}`,
-          stack,
-        );
-      });
-      page.on('console', (message) => {
-        const type = message.type();
-        if (type === 'error' || type === 'warn') {
-          this.logger.warn(
-            `Dashboard report browser console ${type}${ctx}: ${message.text()}`,
-          );
-        }
-      });
-      page.on('requestfailed', (request) => {
-        const url = request.url();
-        if (!this.shouldLogExternalAssetUrl_(url)) return;
-        this.logger.warn(
-          `Dashboard report request failed${ctx}: type=${request.resourceType()} method=${request.method()} url=${this.redactUrlForLogs_(
-            url,
-          )} error=${request.failure()?.errorText || 'unknown'}`,
-        );
-      });
-      page.on('response', (response) => {
-        const url = response.url();
-        if (response.status() < 400 || !this.shouldLogExternalAssetUrl_(url))
-          return;
-        this.logger.warn(
-          `Dashboard report asset response ${response.status()}${ctx}: url=${this.redactUrlForLogs_(
-            url,
-          )}`,
-        );
-      });
-
-      const tSetContent = Date.now();
       await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
-      this.logger.log(
-        `Dashboard report PDF setContent done (ms=${Date.now() - tSetContent})${ctx}`,
-      );
 
       const imageSnapshot = await page.evaluate(() =>
         Array.from(document.images).map((image) => ({
-          src: image.currentSrc || image.src || '',
           complete: image.complete,
           naturalWidth: image.naturalWidth || 0,
-          naturalHeight: image.naturalHeight || 0,
         })),
-      );
-      this.logger.log(
-        `Dashboard report image snapshot${ctx}: ${JSON.stringify(
-          imageSnapshot.map((image) => ({
-            ...image,
-            src: image.src
-              ? image.src.replace(/([?&]key=)[^&]+/i, '$1REDACTED')
-              : '',
-          })),
-        )}`,
       );
 
       const hasBrokenImages = imageSnapshot.some(
@@ -689,19 +512,11 @@ export class DashboardReportService {
         });
       }
 
-      const tPdf = Date.now();
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
         margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
       });
-
-      this.logger.log(
-        `Dashboard report PDF page.pdf done (ms=${Date.now() - tPdf})${ctx}`,
-      );
-      this.logger.log(
-        `Dashboard report PDF render finished (ms=${Date.now() - t0})${ctx}`,
-      );
 
       return Buffer.from(pdf);
     } finally {
@@ -1151,13 +966,8 @@ export class DashboardReportService {
       });
 
       if (!response.ok) {
-        const bodyPreview = await response.text().catch(() => '');
         this.logger.warn(
-          `Dashboard report image fetch failed (status=${response.status}${
-            ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
-          } url=${this.redactUrlForLogs_(url)} body=${JSON.stringify(
-            bodyPreview.slice(0, 240),
-          )})${ctx}`,
+          `Dashboard report image fetch failed (status=${response.status})${ctx}`,
         );
         return null;
       }
@@ -1167,13 +977,10 @@ export class DashboardReportService {
         .trim()
         .toLowerCase();
       if (!contentType.startsWith('image/')) {
-        const bodyPreview = await response.text().catch(() => '');
         this.logger.warn(
           `Dashboard report image fetch returned non-image content-type=${
             contentType || 'unknown'
-          }${ctxArgs?.label ? ` label=${ctxArgs.label}` : ''} url=${this.redactUrlForLogs_(
-            url,
-          )} body=${JSON.stringify(bodyPreview.slice(0, 240))}${ctx}`,
+          }${ctx}`,
         );
         return null;
       }
@@ -1182,9 +989,7 @@ export class DashboardReportService {
       const buffer = Buffer.from(arrayBuffer);
       if (!buffer.length) {
         this.logger.warn(
-          `Dashboard report image fetch returned empty body${
-            ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
-          } url=${this.redactUrlForLogs_(url)}${ctx}`,
+          `Dashboard report image fetch returned empty body${ctx}`,
         );
         return null;
       }
@@ -1195,33 +1000,17 @@ export class DashboardReportService {
         const name = String((error as { name?: unknown }).name || '');
         if (name === 'AbortError') {
           this.logger.warn(
-            `Dashboard report image fetch timed out after ${timeoutMs}ms${
-              ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
-            } url=${this.redactUrlForLogs_(url)}${ctx}`,
+            `Dashboard report image fetch timed out after ${timeoutMs}ms${ctx}`,
           );
           return null;
         }
       }
 
-      const message =
-        error instanceof Error ? error.message : 'Unknown image fetch error';
-      this.logger.warn(
-        `Dashboard report image fetch threw${
-          ctxArgs?.label ? ` label=${ctxArgs.label}` : ''
-        } url=${this.redactUrlForLogs_(url)} message=${message}${ctx}`,
-      );
+      this.logger.warn(`Dashboard report image fetch threw${ctx}`);
       return null;
     } finally {
       clearTimeout(timeoutHandle);
     }
-  }
-
-  private shouldLogExternalAssetUrl_(url: string): boolean {
-    return /googleapis\.com|gstatic\.com/i.test(url);
-  }
-
-  private redactUrlForLogs_(url: string): string {
-    return String(url || '').replace(/([?&]key=)[^&]+/i, '$1REDACTED');
   }
 
   private buildZoningParagraphs_(zoneRaw: string): string[] {
@@ -1845,19 +1634,6 @@ export class DashboardReportService {
           cta: 'Talk to BlockPlanner about your options',
         };
     }
-  }
-
-  private redactEmail_(email: string): string {
-    const value = String(email || '').trim();
-    if (!value) return '—';
-
-    const [local, domain] = value.split('@');
-    if (!domain) return 'REDACTED';
-
-    const safeLocal =
-      local.length <= 2 ? local.charAt(0) + '*' : local.slice(0, 2) + '***';
-
-    return `${safeLocal}@${domain}`;
   }
 
   private formatCtx_(params?: {

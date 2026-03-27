@@ -67,20 +67,6 @@ export class GoogleSheetsController {
     @Query('secret') querySecret?: string,
   ) {
     const requestId = randomUUID();
-    const startedAt = Date.now();
-    const bodyKeys =
-      body && typeof body === 'object' && !Array.isArray(body)
-        ? Object.keys(body)
-        : [];
-
-    this.logger.log(
-      `Dashboard trigger received (requestId=${requestId} contentType=${
-        Array.isArray(body) ? 'array' : typeof body
-      } keys=${bodyKeys.length} hasHeaderSecret=${Boolean(webhookSecret)} hasQuerySecret=${Boolean(
-        querySecret,
-      )})`,
-    );
-
     const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
     if (!expectedSecret) {
       this.logger.error(
@@ -128,62 +114,8 @@ export class GoogleSheetsController {
     const reportIdRaw = (body['Report ID'] ?? body.reportId) as unknown;
     const reportId = String(reportIdRaw || '').trim();
 
-    this.logger.log(
-      `Dashboard trigger accepted (requestId=${requestId} row=${rowNumber}${
-        reportId ? ` reportId=${reportId}` : ''
-      })`,
-    );
-
-    const fieldsSnapshot = {
-      zone: body['Zone'],
-      blockSizeM2: body['Block size (m²)'],
-      frontageM: body['Frontage (m)'],
-      housePosition: body['House position'],
-      rearYardDepthM: body['Rear yard depth (m)'],
-      rearYardCategory: body['Rear yard category'],
-      grannyFlatKeepHouse: body['Granny flat (keep house)'],
-      dualOccRemoveHouse: body['Dual occ (remove house)'],
-      subdivisionPotential: body['Subdivision potential'],
-      intention: body['Intention'],
-      keysCount: Object.keys(body).length,
-    };
-
-    this.logger.log(
-      `Dashboard trigger fields snapshot (requestId=${requestId} row=${rowNumber}${
-        reportId ? ` reportId=${reportId}` : ''
-      }): ${JSON.stringify(fieldsSnapshot)}`,
-    );
-
     setImmediate(() => {
-      const jobStartedAt = Date.now();
-      this.logger.log(
-        `Dashboard trigger job started (requestId=${requestId} row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
-
-      void this.dashboardReportService
-        .processDashboardTrigger(body)
-        .then(() => {
-          this.logger.log(
-            `Dashboard trigger job finished (requestId=${requestId} row=${rowNumber}${
-              reportId ? ` reportId=${reportId}` : ''
-            } jobMs=${Date.now() - jobStartedAt} totalMs=${
-              Date.now() - startedAt
-            })`,
-          );
-        })
-        .catch((error) => {
-          const stack = error instanceof Error ? error.stack : undefined;
-          this.logger.error(
-            `Dashboard trigger job threw (requestId=${requestId} row=${rowNumber}${
-              reportId ? ` reportId=${reportId}` : ''
-            } jobMs=${Date.now() - jobStartedAt} totalMs=${
-              Date.now() - startedAt
-            }): ${error instanceof Error ? error.message : String(error)}`,
-            stack,
-          );
-        });
+      void this.dashboardReportService.processDashboardTrigger(body);
     });
 
     return true;
@@ -197,7 +129,6 @@ export class GoogleSheetsController {
     @Query('secret') querySecret?: string,
   ) {
     const requestId = randomUUID();
-    const startedAt = Date.now();
 
     const expectedSecret = process.env.GOOGLE_SHEETS_WEB_APP_SECRET;
     if (!expectedSecret) {
@@ -276,58 +207,8 @@ export class GoogleSheetsController {
       );
     }
 
-    this.logger.log(
-      `Dashboard delivery accepted (requestId=${requestId} row=${rowNumber}${
-        reportId ? ` reportId=${reportId}` : ''
-      })`,
-    );
-
-    const deliverySnapshot = {
-      deliveryStatus: body['Delivery status'],
-      deliveryDate: body['Delivery date'],
-      finalPdfLinkPresent: Boolean(pdfUrl),
-      clientEmailPresent: Boolean(clientEmail),
-      emailOverrideEnabled: Boolean(emailOverride),
-      keysCount: Object.keys(body).length,
-    };
-
-    this.logger.log(
-      `Dashboard delivery fields snapshot (requestId=${requestId} row=${rowNumber}${
-        reportId ? ` reportId=${reportId}` : ''
-      }): ${JSON.stringify(deliverySnapshot)}`,
-    );
-
     setImmediate(() => {
-      const jobStartedAt = Date.now();
-
-      this.logger.log(
-        `Dashboard delivery job started (requestId=${requestId} row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
-
-      void this.dashboardReportService
-        .processDashboardDelivery(body)
-        .then((ok) => {
-          this.logger.log(
-            `Dashboard delivery job finished (requestId=${requestId} row=${rowNumber}${
-              reportId ? ` reportId=${reportId}` : ''
-            } ok=${ok} jobMs=${Date.now() - jobStartedAt} totalMs=${
-              Date.now() - startedAt
-            })`,
-          );
-        })
-        .catch((error) => {
-          const stack = error instanceof Error ? error.stack : undefined;
-          this.logger.error(
-            `Dashboard delivery job threw (requestId=${requestId} row=${rowNumber}${
-              reportId ? ` reportId=${reportId}` : ''
-            } jobMs=${Date.now() - jobStartedAt} totalMs=${
-              Date.now() - startedAt
-            }): ${error instanceof Error ? error.message : String(error)}`,
-            stack,
-          );
-        });
+      void this.dashboardReportService.processDashboardDelivery(body);
     });
 
     return true;
