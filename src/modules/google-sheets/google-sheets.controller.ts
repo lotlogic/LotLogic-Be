@@ -42,6 +42,12 @@ export class GoogleSheetsController {
     return this.dashboardReportService.renderSampleHtml();
   }
 
+  @Get('dashboard-preview/all')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  dashboardPreviewAll() {
+    return this.dashboardReportService.renderAllSampleHtml();
+  }
+
   @Post('append')
   @UseInterceptors(AnyFilesInterceptor({ limits: { files: 0 } }))
   async appendFormPost(

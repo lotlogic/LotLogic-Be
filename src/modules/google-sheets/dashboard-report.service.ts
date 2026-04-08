@@ -33,6 +33,12 @@ type SectionContent = {
   bullets?: string[];
 };
 
+type ReportImage = {
+  url: string;
+  label: string;
+  note?: string;
+};
+
 type ReportContact = {
   name: string;
   role: string;
@@ -41,6 +47,14 @@ type ReportContact = {
   websiteUrl: string;
   websiteLabel: string;
   linkedinUrl?: string;
+};
+
+type PreviewScenario = {
+  key: string;
+  title: string;
+  description: string;
+  covers: string[];
+  payload: Record<string, unknown>;
 };
 
 type PaidReport = {
@@ -60,11 +74,8 @@ type PaidReport = {
     intention: string;
     note: string;
   };
-  siteMap: {
-    url: string;
-    label: string;
-    note: string;
-  } | null;
+  coverImage: ReportImage | null;
+  siteMap: ReportImage | null;
   executiveSummary: {
     title: string;
     intro: string;
@@ -103,6 +114,28 @@ export class DashboardReportService {
     return this.renderHtml(report);
   }
 
+  renderAllSampleHtml(): string {
+    const templatePath = join(
+      __dirname,
+      '..',
+      '..',
+      'templates',
+      'dashboard-report-preview-all.pug',
+    );
+
+    const scenarios = this.buildSamplePreviewScenarios_().map((scenario) => {
+      const report = this.buildPaidReport(scenario.payload);
+      return {
+        ...scenario,
+        html: this.renderHtml(report),
+      };
+    });
+
+    return pug.renderFile(templatePath, {
+      scenarios,
+    });
+  }
+
   async processDashboardTrigger(
     payload: Record<string, unknown>,
   ): Promise<void> {
@@ -119,7 +152,7 @@ export class DashboardReportService {
       );
 
       const report = this.buildPaidReport(payload);
-      await this.resolveSiteMapForRender_(report, { rowNumber, reportId });
+      await this.resolveImagesForRender_(report, { rowNumber, reportId });
       const html = this.renderHtml(report);
       const pdf = await this.renderPdf(html, { rowNumber, reportId });
       const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
@@ -283,11 +316,20 @@ export class DashboardReportService {
 
     const coverAddress = [address, suburb].filter(Boolean).join(', ') || '—';
     const blockSection = this.buildBlockSection_(payload);
-    const siteMap = this.buildSiteMap_(payload, {
+    const coverImage = this.buildCoverImage_(payload, {
       address,
       suburb,
       coverAddress,
     });
+    const siteMap = this.buildSiteMap_(
+      payload,
+      {
+        address,
+        suburb,
+        coverAddress,
+      },
+      coverImage,
+    );
 
     const blockSizeM2 =
       this.normalizeToFloat_(this.readRaw(payload, 'Block size (m²)')) ??
@@ -445,6 +487,7 @@ export class DashboardReportService {
         intention: intention.label,
         note: 'Indicative only. Measurements are based on ACT Government mapping, aerial imagery and publicly available planning information.',
       },
+      coverImage,
       siteMap,
       executiveSummary,
       siteSections,
@@ -873,9 +916,38 @@ export class DashboardReportService {
     };
   }
 
+  private buildCoverImage_(
+    payload: Record<string, unknown>,
+    params: { address: string; suburb: string; coverAddress: string },
+  ): PaidReport['coverImage'] {
+    const previewCoverImageUrl = this.readFirstValue_(payload, [
+      'Preview cover image URL',
+    ]);
+
+    if (previewCoverImageUrl) {
+      return {
+        url: previewCoverImageUrl,
+        label: 'Preview cover map',
+        note: 'Preview-only cover image override.',
+      };
+    }
+
+    const staticMapUrl = this.buildGoogleStaticMapUrl_(payload, params);
+    if (!staticMapUrl) {
+      return null;
+    }
+
+    return {
+      url: staticMapUrl,
+      label: 'Google Static Maps cover image',
+      note: 'Satellite imagery from Google Static Maps used as the report cover image.',
+    };
+  }
+
   private buildSiteMap_(
     payload: Record<string, unknown>,
     params: { address: string; suburb: string; coverAddress: string },
+    fallbackImage: PaidReport['coverImage'],
   ): PaidReport['siteMap'] {
     const dashboardImageUrl = this.readFirstValue_(payload, [
       'Map image URL',
@@ -893,15 +965,14 @@ export class DashboardReportService {
       };
     }
 
-    const fallbackMapUrl = this.buildGoogleStaticMapUrl_(payload, params);
-    if (!fallbackMapUrl) {
+    if (!fallbackImage?.url) {
       return null;
     }
 
     return {
-      url: fallbackMapUrl,
+      url: fallbackImage.url,
       label: 'Indicative site map',
-      note: 'Fallback satellite imagery used because no staff-supplied site map was provided.',
+      note: 'No staff-supplied site map was provided, so this section reuses the cover image.',
     };
   }
 
@@ -934,29 +1005,55 @@ export class DashboardReportService {
     )}`;
   }
 
-  private async resolveSiteMapForRender_(
+  private async resolveImagesForRender_(
     report: PaidReport,
     ctxArgs?: { rowNumber?: number; reportId?: string },
   ): Promise<void> {
-    if (!report.siteMap?.url) {
-      return;
+    const cache = new Map<string, string | null>();
+    report.coverImage = await this.resolveImageForRender_(
+      report.coverImage,
+      cache,
+      ctxArgs,
+    );
+    report.siteMap = await this.resolveImageForRender_(
+      report.siteMap,
+      cache,
+      ctxArgs,
+    );
+  }
+
+  private async resolveImageForRender_(
+    image: ReportImage | null,
+    cache: Map<string, string | null>,
+    ctxArgs?: { rowNumber?: number; reportId?: string },
+  ): Promise<ReportImage | null> {
+    if (!image?.url) {
+      return null;
     }
 
-    if (/^data:/i.test(report.siteMap.url)) {
-      return;
+    if (/^data:/i.test(image.url)) {
+      return image;
     }
 
-    const imageDataUrl = await this.fetchImageAsDataUrl_(report.siteMap.url, {
-      label: report.siteMap.label,
-      ...ctxArgs,
-    });
+    if (!cache.has(image.url)) {
+      cache.set(
+        image.url,
+        await this.fetchImageAsDataUrl_(image.url, {
+          label: image.label,
+          ...ctxArgs,
+        }),
+      );
+    }
 
+    const imageDataUrl = cache.get(image.url) || null;
     if (!imageDataUrl) {
-      report.siteMap = null;
-      return;
+      return null;
     }
 
-    report.siteMap.url = imageDataUrl;
+    return {
+      ...image,
+      url: imageDataUrl,
+    };
   }
 
   private async fetchImageAsDataUrl_(
@@ -1564,7 +1661,7 @@ export class DashboardReportService {
     return {
       title: 'Executive summary',
       intro:
-        'This is the high-level view of what the planning settings appear to allow first, and then what the physical site assessment suggests is realistic on this specific block.',
+        'Below is a two-part summary — first, what the planning settings permit based on your block size, then what the site assessment suggests is realistic on this specific block.',
       rulesTitle: `Part 1 - What the rules permit on a ${blockSizeText} block`,
       rulesNote:
         "Meeting the size threshold means the planning settings do not obviously rule it out. It does not mean the outcome is straightforward on this specific site.",
@@ -1582,42 +1679,343 @@ export class DashboardReportService {
   }
 
   private buildSamplePreviewPayload_(): Record<string, unknown> {
-    return {
-      Timestamp: '4/8/2026',
-      'Row Number': 999,
-      'Report ID': 'PREVIEW-001',
-      'Client name': 'Alex Example',
-      'Client email': 'alex@example.com',
-      'Client phone': '0400 000 000',
-      Address: '40 Green Street',
-      Suburb: 'Narrabundah',
-      Block: '12',
-      Section: '23',
-      'Block size (m²)': 960,
-      Zone: 'RZ1',
-      'Frontage (m)': 23,
-      'House position': 'Middle',
-      'House footprint (m²)': 194,
-      'Rear yard depth (m)': 10.5,
-      'Large trees visible': 'Several',
-      'Tree location': 'Front boundary and rear corner',
-      'Heritage overlay': 'No',
-      'Sewer location': 'Rear',
-      'Easement impact': 'Along boundary edge',
-      'Shed in rear': 'No',
-      'Second driveway feasible': 'Possible',
-      'Map image URL': this.buildSampleSiteMapDataUrl_(),
-      'Max building allowed (m²)': 480,
-      'Remaining site coverage (m²)': 286,
-      'Rear yard category': 'Moderate',
-      'Granny flat (keep house)': 'Possible',
-      'Dual occ (remove house)': 'Possible',
-      'Subdivision potential': 'Possible',
-      Intention: 'Open to options',
-    };
+    return this.buildSampleScenarioPayload_(
+      {
+        'Row Number': 999,
+        'Report ID': 'PREVIEW-001',
+        'Client name': 'Alex Example',
+        'Client email': 'alex@example.com',
+        Address: '40 Green Street',
+        Suburb: 'Narrabundah',
+        Block: '12',
+        Section: '23',
+        'Block size (m²)': 960,
+        Zone: 'RZ1',
+        'Frontage (m)': 23,
+        'House position': 'Middle',
+        'House footprint (m²)': 194,
+        'Rear yard depth (m)': 10.5,
+        'Large trees visible': 'Several',
+        'Tree location': 'Front boundary and rear corner',
+        'Heritage overlay': 'No',
+        'Sewer location': 'Rear',
+        'Easement impact': 'None visible',
+        'Second driveway feasible': 'Possible',
+        'Max building allowed (m²)': 480,
+        'Remaining site coverage (m²)': 286,
+        'Rear yard category': 'Moderate',
+        'Granny flat (keep house)': 'Possible',
+        'Dual occ (remove house)': 'Yes',
+        'Subdivision potential': 'Yes',
+        Intention: 'Open to options',
+      },
+      {
+        coverTitle: 'Static map preview',
+        coverSubtitle: 'Default single-preview scenario',
+        siteTitle: 'Annotated site map',
+        siteSubtitle: 'Default single-preview scenario',
+      },
+    );
   }
 
-  private buildSampleSiteMapDataUrl_(): string {
+  private buildSamplePreviewScenarios_(): PreviewScenario[] {
+    return [
+      {
+        key: 'open-options-rz1',
+        title: 'Open to options · RZ1 middle-block example',
+        description:
+          'Baseline scenario used for the single preview. Covers the modern default wording with a strong redevelopment profile.',
+        covers: [
+          'Intention: Open to options',
+          'Zoning copy: RZ1',
+          'House position: Middle',
+          'Rear yard: Moderate',
+          'Trees: 3+',
+          'Heritage: No',
+          'Easements: No visible easement',
+          'Sewer: Rear',
+          'Driveway: Possible',
+          'Executive summary: three-dwellings threshold met',
+        ],
+        payload: this.buildSamplePreviewPayload_(),
+      },
+      {
+        key: 'sell-rz2-clear-site',
+        title: 'Sell pathway · RZ2 clear site',
+        description:
+          'Shows the sell-path copy plus the more optimistic branch where the block is clear, tree-light, and well suited to adding another dwelling. This scenario intentionally omits the sheet map image so the site-map panel reuses the cover image.',
+        covers: [
+          'Intention: Sell',
+          'Zoning copy: RZ2',
+          'House position: Front',
+          'Rear yard: Large',
+          'Trees: None',
+          'Sewer: Front',
+          'Driveway: Yes',
+          'Summary branch: granny flat looks well suited',
+          'Image branch: no sheet map image, so the second image reuses the cover map',
+        ],
+        payload: this.buildSampleScenarioPayload_(
+          {
+            'Row Number': 1001,
+            'Report ID': 'PREVIEW-SELL',
+            'Client name': 'Sophie Seller',
+            'Client email': 'sophie@example.com',
+            Address: '18 Hawdon Place',
+            Suburb: 'Dickson',
+            Block: '4',
+            Section: '91',
+            'Block size (m²)': 650,
+            Zone: 'RZ2',
+            'Frontage (m)': 21,
+            'House position': 'Front',
+            'House footprint (m²)': 160,
+            'Rear yard depth (m)': 18,
+            'Large trees visible': '0',
+            'Tree location': '',
+            'Heritage overlay': 'No',
+            'Sewer location': 'Front',
+            'Easement impact': 'None visible',
+            'Second driveway feasible': 'Yes',
+            'Max building allowed (m²)': 325,
+            'Remaining site coverage (m²)': 165,
+            'Rear yard category': 'Large',
+            'Granny flat (keep house)': 'Yes',
+            'Dual occ (remove house)': 'Yes',
+            'Subdivision potential': 'Yes',
+            Intention: 'Sell',
+          },
+          {
+            coverTitle: 'Static map preview',
+            coverSubtitle: 'Sell pathway scenario',
+            includeSiteMap: false,
+          },
+        ),
+      },
+      {
+        key: 'develop-rear-heritage',
+        title: 'Develop myself · heritage / easement / sewer-through',
+        description:
+          'Designed to surface the more constrained copy branches: heritage overlay, easement present, sewer through the block, and a small rear yard.',
+        covers: [
+          'Intention: Develop myself',
+          'Zoning copy: fallback zone branch',
+          'House position: Rear',
+          'Rear yard: Small',
+          'Trees: One',
+          'Heritage: Yes',
+          'Easements: Yes',
+          'Sewer: Through block',
+          'Driveway: Tight',
+          'Site coverage: below granny-flat size',
+          'Summary branch: knockdown-rebuild recommended',
+        ],
+        payload: this.buildSampleScenarioPayload_(
+          {
+            'Row Number': 1002,
+            'Report ID': 'PREVIEW-DEVELOP',
+            'Client name': 'Dylan Developer',
+            'Client email': 'dylan@example.com',
+            Address: '7 Telopea Crescent',
+            Suburb: 'O\'Connor',
+            Block: '8',
+            Section: '17',
+            'Block size (m²)': 540,
+            Zone: 'RZ3',
+            'Frontage (m)': 14,
+            'House position': 'Rear',
+            'House footprint (m²)': 235,
+            'Rear yard depth (m)': 7.2,
+            'Large trees visible': 'One',
+            'Tree location': 'southern boundary',
+            'Heritage overlay': 'Yes',
+            'Sewer location': 'Through block',
+            'Easement impact': 'Yes',
+            'Second driveway feasible': 'Tight',
+            'Max building allowed (m²)': 270,
+            'Remaining site coverage (m²)': 35,
+            'Rear yard category': 'Small',
+            'Granny flat (keep house)': 'Unlikely',
+            'Dual occ (remove house)': 'Likely',
+            'Subdivision potential': 'No',
+            Intention: 'Develop myself',
+          },
+          {
+            coverTitle: 'Static map preview',
+            coverSubtitle: 'Constraint-heavy development scenario',
+            siteTitle: 'Annotated site map',
+            siteSubtitle: 'Constraint-heavy development scenario',
+          },
+        ),
+      },
+      {
+        key: 'partner-unknowns',
+        title: 'Developer partnership · uncertain mapping inputs',
+        description:
+          'Surfaces the fallback copy when several mapping fields are unknown or cannot be confirmed from desktop review.',
+        covers: [
+          'Intention: Have someone develop for me',
+          'House position: default branch',
+          'Rear yard: default branch',
+          'Trees: Two',
+          'Easements: Unsure',
+          'Sewer: Unknown',
+          'Driveway: Unlikely / fallback branch',
+          'Site coverage: remaining allowance unavailable',
+        ],
+        payload: this.buildSampleScenarioPayload_(
+          {
+            'Row Number': 1003,
+            'Report ID': 'PREVIEW-PARTNER',
+            'Client name': 'Priya Partner',
+            'Client email': 'priya@example.com',
+            Address: '3 Berrigan Lane',
+            Suburb: 'Curtin',
+            Block: '19',
+            Section: '45',
+            'Block size (m²)': 430,
+            Zone: 'RZ1',
+            'Frontage (m)': 11.5,
+            'House position': '',
+            'House footprint (m²)': '',
+            'Rear yard depth (m)': 8.4,
+            'Large trees visible': 'Two',
+            'Tree location': 'rear corners',
+            'Heritage overlay': 'No',
+            'Sewer location': '',
+            'Easement impact': 'Unsure',
+            'Second driveway feasible': 'No',
+            'Max building allowed (m²)': 215,
+            'Remaining site coverage (m²)': '',
+            'Rear yard category': '',
+            'Granny flat (keep house)': 'No',
+            'Dual occ (remove house)': 'No',
+            'Subdivision potential': 'No',
+            Intention: 'Have someone develop for me',
+          },
+          {
+            coverTitle: 'Static map preview',
+            coverSubtitle: 'Unknowns and escalation scenario',
+            siteTitle: 'Annotated site map',
+            siteSubtitle: 'Unknowns and escalation scenario',
+          },
+        ),
+      },
+      {
+        key: 'minimal-yard-side-sewer',
+        title: 'Open to options · minimal rear yard / side sewer',
+        description:
+          'Covers the remaining site-assessment branches for a minimal rear yard and side sewer configuration.',
+        covers: [
+          'Rear yard: Minimal',
+          'Trees: 3+',
+          'Sewer: Side',
+          'Driveway: Unlikely',
+          'Executive summary: below three-dwellings threshold',
+        ],
+        payload: this.buildSampleScenarioPayload_(
+          {
+            'Row Number': 1004,
+            'Report ID': 'PREVIEW-MINIMAL',
+            'Client name': 'Morgan Minimal',
+            'Client email': 'morgan@example.com',
+            Address: '55 Eucalypt Drive',
+            Suburb: 'Gowrie',
+            Block: '2',
+            Section: '66',
+            'Block size (m²)': 520,
+            Zone: 'RZ1',
+            'Frontage (m)': 12.8,
+            'House position': 'Middle',
+            'House footprint (m²)': 210,
+            'Rear yard depth (m)': 4.8,
+            'Large trees visible': 'Several',
+            'Tree location': 'front setback and side boundary',
+            'Heritage overlay': 'No',
+            'Sewer location': 'Side',
+            'Easement impact': 'None visible',
+            'Second driveway feasible': 'Unlikely',
+            'Max building allowed (m²)': 260,
+            'Remaining site coverage (m²)': 50,
+            'Rear yard category': 'Minimal',
+            'Granny flat (keep house)': 'Unlikely',
+            'Dual occ (remove house)': 'Yes',
+            'Subdivision potential': 'Possible',
+            Intention: 'Open to options',
+          },
+          {
+            coverTitle: 'Static map preview',
+            coverSubtitle: 'Minimal rear yard scenario',
+            siteTitle: 'Annotated site map',
+            siteSubtitle: 'Minimal rear yard scenario',
+          },
+        ),
+      },
+    ];
+  }
+
+  private buildSampleScenarioPayload_(
+    overrides: Record<string, unknown>,
+    imageOptions?: {
+      coverTitle?: string;
+      coverSubtitle?: string;
+      siteTitle?: string;
+      siteSubtitle?: string;
+      includeSiteMap?: boolean;
+    },
+  ): Record<string, unknown> {
+    const payload: Record<string, unknown> = {
+      Timestamp: '4/8/2026',
+      'Client phone': '0400 000 000',
+      'Shed in rear': 'No',
+      'Preview cover image URL': this.buildSampleCoverMapDataUrl_(
+        imageOptions?.coverTitle || 'Static map preview',
+        imageOptions?.coverSubtitle ||
+          'Placeholder static map used for the cover image',
+      ),
+      ...overrides,
+    };
+
+    if (imageOptions?.includeSiteMap !== false) {
+      payload['Map image URL'] = this.buildSampleSiteMapDataUrl_(
+        imageOptions?.siteTitle || 'Annotated site map',
+        imageOptions?.siteSubtitle ||
+          'Placeholder image for proofing the site map slot',
+      );
+    }
+
+    return payload;
+  }
+
+  private buildSampleCoverMapDataUrl_(
+    title: string,
+    subtitle: string,
+  ): string {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780">' +
+      '<rect width="1400" height="780" fill="#223428"/>' +
+      '<rect x="0" y="0" width="1400" height="780" fill="url(#g)"/>' +
+      '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#58765b"/><stop offset="55%" stop-color="#3d5641"/><stop offset="100%" stop-color="#26352b"/></linearGradient></defs>' +
+      '<path d="M0 160 C180 140, 210 210, 390 200 S660 110, 840 150 1130 250, 1400 210" stroke="rgba(255,255,255,0.12)" stroke-width="26" fill="none"/>' +
+      '<path d="M30 520 C180 490, 300 560, 450 530 S760 430, 950 500 1200 620, 1390 560" stroke="rgba(255,255,255,0.10)" stroke-width="18" fill="none"/>' +
+      '<path d="M220 40 L340 720" stroke="rgba(255,255,255,0.10)" stroke-width="8"/>' +
+      '<path d="M820 0 L760 780" stroke="rgba(255,255,255,0.08)" stroke-width="10"/>' +
+      '<path d="M1120 60 L1320 720" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>' +
+      '<rect x="480" y="170" width="350" height="250" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.55)" stroke-width="5"/>' +
+      '<circle cx="655" cy="295" r="36" fill="#d4663a"/>' +
+      '<path d="M655 250 L676 305 L655 364 L634 305 Z" fill="#d4663a"/>' +
+      `<text x="86" y="96" font-family="Arial, sans-serif" font-size="34" fill="rgba(248,246,228,0.95)">${this.escapeHtmlForSvg_(title)}</text>` +
+      `<text x="86" y="138" font-family="Arial, sans-serif" font-size="19" fill="rgba(248,246,228,0.72)">${this.escapeHtmlForSvg_(subtitle)}</text>` +
+      '<text x="517" y="462" font-family="Arial, sans-serif" font-size="20" fill="rgba(248,246,228,0.78)">Google Static Maps style cover image preview</text>' +
+      '</svg>';
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
+  private buildSampleSiteMapDataUrl_(
+    title: string,
+    subtitle: string,
+  ): string {
     const svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">' +
       '<rect width="1200" height="720" fill="#ede7d8"/>' +
@@ -1628,14 +2026,21 @@ export class DashboardReportService {
       '<circle cx="300" cy="210" r="46" fill="#6d8b62"/>' +
       '<circle cx="710" cy="455" r="54" fill="#6d8b62"/>' +
       '<circle cx="855" cy="265" r="42" fill="#6d8b62"/>' +
-      '<text x="120" y="135" font-family="Arial, sans-serif" font-size="30" fill="#494f4a">Preview site map</text>' +
-      '<text x="120" y="175" font-family="Arial, sans-serif" font-size="18" fill="#6f736d">Placeholder image for proofing the paid report layout</text>' +
+      `<text x="120" y="135" font-family="Arial, sans-serif" font-size="30" fill="#494f4a">${this.escapeHtmlForSvg_(title)}</text>` +
+      `<text x="120" y="175" font-family="Arial, sans-serif" font-size="18" fill="#6f736d">${this.escapeHtmlForSvg_(subtitle)}</text>` +
       '<text x="442" y="332" font-family="Arial, sans-serif" font-size="26" fill="#ffffff">Existing house</text>' +
       '<text x="838" y="345" font-family="Arial, sans-serif" font-size="24" fill="#b36a3c">Sewer line</text>' +
       '<text x="254" y="590" font-family="Arial, sans-serif" font-size="24" fill="#494f4a">Indicative block boundary, trees and servicing only</text>' +
       '</svg>';
 
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
+  private escapeHtmlForSvg_(value: string): string {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   private buildSummary_(params: {
@@ -1686,7 +2091,7 @@ export class DashboardReportService {
       case 'sell':
         return {
           intentionLabel: intention.label,
-          title: 'Your next step',
+          title: 'Selling pathway',
           paragraphs: [
             "You've made a smart move getting here. This assessment gives you a clear, honest picture of what your block can support under current planning rules. It's a high-level starting point, not a full feasibility analysis, but it is the right foundation before making decisions.",
             "Here's what the path to selling a developed asset typically looks like:",
@@ -1706,7 +2111,7 @@ export class DashboardReportService {
       case 'develop_myself':
         return {
           intentionLabel: intention.label,
-          title: 'Your next step',
+          title: 'Development pathway',
           paragraphs: [
             'Getting here means you already have a clearer picture of your block than most people do. This is a high-level development assessment — it tells you what the planning rules allow. The detailed numbers and design work come next.',
             "Here's what the development journey typically looks like:",
@@ -1728,7 +2133,7 @@ export class DashboardReportService {
       case 'have_someone_develop_for_me':
         return {
           intentionLabel: intention.label,
-          title: 'Your next step',
+          title: 'Developer partnership pathway',
           paragraphs: [
             "This assessment gives you a solid, honest foundation — it shows what your block can support under current planning rules. A detailed feasibility analysis is the natural next step, and that's something we can help with directly.",
             'Having someone else manage the development is a good option for a lot of people. The journey broadly looks like this:',
@@ -1748,7 +2153,7 @@ export class DashboardReportService {
       default:
         return {
           intentionLabel: intention.label,
-          title: 'Your next step',
+          title: 'Your main options',
           paragraphs: [
             "You haven't landed on a direction yet — and that's a sensible place to be. This assessment shows you what your block can support. What you do with that is worth thinking through properly before committing to anything.",
             'The main paths from here:',

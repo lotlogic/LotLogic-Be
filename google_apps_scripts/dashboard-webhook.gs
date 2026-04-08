@@ -6,8 +6,8 @@ const DASHBOARD_DELIVERY_PATH = 'api/google-sheets/dashboard-delivery';
 const HEADER_ROW = 2;
 const TEMPLATE_ROW = 3;
 const REPORT_ID_BASE = 15000;
-const TRIGGER_COLUMN_AB = 28; // Column AB ("send for QA?")
-const TRIGGER_COLUMN_AE = 31; // Column AE ("Delivery status")
+const TRIGGER_COLUMN_AB = 29; // Column AC ("send for QA?")
+const TRIGGER_COLUMN_AE = 32; // Column AF ("Delivery status")
 const APPEND_PAYLOAD_FIELD_MAP = [
   { header: 'Client name', key: 'clientName' },
   { header: 'Client email', key: 'clientEmail' },
