@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Header,
   Headers,
   Get,
   InternalServerErrorException,
@@ -33,6 +34,12 @@ export class GoogleSheetsController {
     }
 
     return this.googleSheetsService.pingGoogleSheetsWebhook();
+  }
+
+  @Get('dashboard-preview')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  dashboardPreview() {
+    return this.dashboardReportService.renderSampleHtml();
   }
 
   @Post('append')

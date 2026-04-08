@@ -11,7 +11,13 @@ type ReportKeyValue = { label: string; value: string };
 
 type ReportStatus = 'possible' | 'review' | 'not_available';
 
-type ReportBullet = { status: ReportStatus; title: string; text: string };
+type ExecutiveSummaryRow = {
+  title: string;
+  subtitle?: string;
+  text: string;
+  statusLabel: string;
+  statusTone: 'possible' | 'review' | 'not_available';
+};
 
 type SiteSection = {
   key: string;
@@ -54,7 +60,7 @@ type PaidReport = {
     intention: string;
     note: string;
   };
-  imagery: {
+  siteMap: {
     url: string;
     label: string;
     note: string;
@@ -62,7 +68,11 @@ type PaidReport = {
   executiveSummary: {
     title: string;
     intro: string;
-    bullets: ReportBullet[];
+    rulesTitle: string;
+    rulesNote: string;
+    rulesRows: ExecutiveSummaryRow[];
+    findingsTitle: string;
+    findingsRows: ExecutiveSummaryRow[];
     summary?: string;
   };
   siteSections: SiteSection[];
@@ -88,6 +98,11 @@ export class DashboardReportService {
     private readonly mailService: MailService,
   ) {}
 
+  renderSampleHtml(): string {
+    const report = this.buildPaidReport(this.buildSamplePreviewPayload_());
+    return this.renderHtml(report);
+  }
+
   async processDashboardTrigger(
     payload: Record<string, unknown>,
   ): Promise<void> {
@@ -104,7 +119,7 @@ export class DashboardReportService {
       );
 
       const report = this.buildPaidReport(payload);
-      await this.resolveImageryForRender_(report, { rowNumber, reportId });
+      await this.resolveSiteMapForRender_(report, { rowNumber, reportId });
       const html = this.renderHtml(report);
       const pdf = await this.renderPdf(html, { rowNumber, reportId });
       const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
@@ -268,7 +283,7 @@ export class DashboardReportService {
 
     const coverAddress = [address, suburb].filter(Boolean).join(', ') || '—';
     const blockSection = this.buildBlockSection_(payload);
-    const imagery = this.buildImagery_(payload, {
+    const siteMap = this.buildSiteMap_(payload, {
       address,
       suburb,
       coverAddress,
@@ -430,7 +445,7 @@ export class DashboardReportService {
         intention: intention.label,
         note: 'Indicative only. Measurements are based on ACT Government mapping, aerial imagery and publicly available planning information.',
       },
-      imagery,
+      siteMap,
       executiveSummary,
       siteSections,
       nextStep: this.buildNextStepSection_(intention),
@@ -507,7 +522,7 @@ export class DashboardReportService {
         );
         await page.evaluate(() => {
           document
-            .querySelectorAll('.image-panel')
+            .querySelectorAll('.site-map-card')
             .forEach((element) => element.remove());
         });
       }
@@ -858,10 +873,10 @@ export class DashboardReportService {
     };
   }
 
-  private buildImagery_(
+  private buildSiteMap_(
     payload: Record<string, unknown>,
     params: { address: string; suburb: string; coverAddress: string },
-  ): PaidReport['imagery'] {
+  ): PaidReport['siteMap'] {
     const dashboardImageUrl = this.readFirstValue_(payload, [
       'Map image URL',
       'Aerial image URL',
@@ -873,8 +888,8 @@ export class DashboardReportService {
     if (dashboardImageUrl) {
       return {
         url: dashboardImageUrl,
-        label: 'Property image',
-        note: 'Optional staff-supplied imagery can highlight easements, servicing and site context that standard public basemaps miss.',
+        label: 'Annotated site map',
+        note: 'Staff-supplied map image showing the key physical constraints visible from desktop review.',
       };
     }
 
@@ -885,8 +900,8 @@ export class DashboardReportService {
 
     return {
       url: fallbackMapUrl,
-      label: 'Property snapshot',
-      note: 'Satellite imagery from Google Maps used because no staff-supplied property image was provided.',
+      label: 'Indicative site map',
+      note: 'Fallback satellite imagery used because no staff-supplied site map was provided.',
     };
   }
 
@@ -919,29 +934,29 @@ export class DashboardReportService {
     )}`;
   }
 
-  private async resolveImageryForRender_(
+  private async resolveSiteMapForRender_(
     report: PaidReport,
     ctxArgs?: { rowNumber?: number; reportId?: string },
   ): Promise<void> {
-    if (!report.imagery?.url) {
+    if (!report.siteMap?.url) {
       return;
     }
 
-    if (/^data:/i.test(report.imagery.url)) {
+    if (/^data:/i.test(report.siteMap.url)) {
       return;
     }
 
-    const imageDataUrl = await this.fetchImageAsDataUrl_(report.imagery.url, {
-      label: report.imagery.label,
+    const imageDataUrl = await this.fetchImageAsDataUrl_(report.siteMap.url, {
+      label: report.siteMap.label,
       ...ctxArgs,
     });
 
     if (!imageDataUrl) {
-      report.imagery = null;
+      report.siteMap = null;
       return;
     }
 
-    report.imagery.url = imageDataUrl;
+    report.siteMap.url = imageDataUrl;
   }
 
   private async fetchImageAsDataUrl_(
@@ -1445,8 +1460,6 @@ export class DashboardReportService {
     treesVisibleCount: number;
     sewerLocation: string;
   }): PaidReport['executiveSummary'] {
-    const bullets: ReportBullet[] = [];
-
     const gf = this.normalizeFeasibility_(params.grannyFlat, {
       possibleOk: true,
     });
@@ -1457,47 +1470,107 @@ export class DashboardReportService {
       possibleOk: false,
     });
 
-    bullets.push({
-      status: gf.ok ? 'possible' : 'review',
-      title: 'Keep the house and add a second dwelling',
-      text: gf.ok
-        ? 'A self-contained dwelling behind the existing home appears achievable in principle, subject to setbacks, tree protection zones, access and services.'
-        : 'This path looks constrained by the current house position, rear yard depth, site coverage or likely tree and access issues.',
-    });
-
-    bullets.push({
-      status: dual.ok ? 'possible' : 'review',
-      title: 'Remove the house and build two homes',
-      text: dual.ok
-        ? 'A knockdown-rebuild pathway with two dwellings looks plausible, though design, access, servicing and site constraints still need to be confirmed.'
-        : 'A two-dwelling outcome may still be possible, but it would need closer testing against access, trees, heritage, servicing or other site limitations.',
-    });
-
-    bullets.push({
-      status: sub.ok ? 'possible' : 'review',
-      title: 'Create separate titles and sell',
-      text: sub.ok
-        ? 'Creating separate titles looks plausible in principle, subject to the legal pathway, layout, access and certification requirements.'
-        : 'Separate titles are not an obvious outcome from the high-level evidence alone and would need detailed testing before being relied on.',
-    });
-
     const qualifiesThree =
       params.blockSizeM2 !== null ? params.blockSizeM2 >= 800 : false;
     const blockSizeText = this.formatArea_(params.blockSizeM2);
+    const rulesRows: ExecutiveSummaryRow[] = [
+      {
+        title: 'Granny flat',
+        subtitle: 'Secondary residence up to 90 m2',
+        text:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 500
+            ? 'Permitted in principle because the block meets the usual size threshold.'
+            : 'Not the obvious starting point because the block does not meet the usual size threshold.',
+        statusLabel: '500 m2+',
+        statusTone:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 500
+            ? 'possible'
+            : 'not_available',
+      },
+      {
+        title: 'Dual occupancy',
+        subtitle: 'Two dwellings, one title',
+        text:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 400
+            ? 'Permitted in principle because the block meets the usual size threshold.'
+            : 'Not the obvious starting point because the block does not meet the usual size threshold.',
+        statusLabel: '400 m2+',
+        statusTone:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 400
+            ? 'possible'
+            : 'not_available',
+      },
+      {
+        title: 'Unit titling',
+        subtitle: 'Two dwellings, separate titles',
+        text:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 600
+            ? 'Permitted in principle because the block meets the usual size threshold.'
+            : 'Not the obvious starting point because the block does not meet the usual size threshold.',
+        statusLabel: '600 m2+',
+        statusTone:
+          params.blockSizeM2 !== null && params.blockSizeM2 >= 600
+            ? 'possible'
+            : 'not_available',
+      },
+      {
+        title: 'Three dwellings',
+        text: qualifiesThree
+          ? 'Large enough to justify further testing, though design and servicing constraints still matter.'
+          : 'Not available as a realistic starting assumption because the block does not meet the usual size threshold.',
+        statusLabel: '800 m2+',
+        statusTone: qualifiesThree ? 'review' : 'not_available',
+      },
+    ];
 
-    bullets.push({
-      status: qualifiesThree ? 'review' : 'not_available',
-      title: 'Push for a larger redevelopment',
-      text: qualifiesThree
-        ? `At ${blockSizeText}, the block is large enough to justify asking the question, but fitting a more intensive outcome while managing trees, servicing, parking and private open space could still be difficult.`
-        : 'There is not enough headline site area here to treat a more intensive redevelopment outcome as a realistic starting assumption.',
-    });
+    const findingsRows: ExecutiveSummaryRow[] = [
+      {
+        title: 'Granny flat',
+        subtitle: 'Behind the existing house',
+        text: gf.ok
+          ? 'A self-contained dwelling behind the existing home appears achievable in principle, subject to setbacks, tree protection zones, access and services.'
+          : 'This path looks constrained by the current house position, rear yard depth, site coverage or likely tree and access issues.',
+        statusLabel: gf.ok ? 'Worth testing' : 'Constrained',
+        statusTone: gf.ok ? 'possible' : 'review',
+      },
+      {
+        title: 'Dual occupancy',
+        subtitle: 'Two dwellings, one title',
+        text: dual.ok
+          ? 'A knockdown-rebuild pathway with two dwellings looks plausible, though design, access, servicing and site constraints still need to be confirmed.'
+          : 'A two-dwelling outcome may still be possible, but it would need closer testing against access, trees, heritage, servicing or other site limitations.',
+        statusLabel: dual.ok ? 'Looks promising' : 'Worth testing',
+        statusTone: dual.ok ? 'possible' : 'review',
+      },
+      {
+        title: 'Unit titling',
+        subtitle: 'Two dwellings, separate titles',
+        text: sub.ok
+          ? 'Creating separate titles looks plausible in principle, subject to the legal pathway, layout, access and certification requirements.'
+          : 'Separate titles are not an obvious outcome from the high-level evidence alone and would need detailed testing before being relied on.',
+        statusLabel: sub.ok ? 'Worth testing' : 'Needs review',
+        statusTone: 'review',
+      },
+      {
+        title: 'Three dwellings',
+        text: qualifiesThree
+          ? `At ${blockSizeText}, the block is large enough to justify asking the question, but fitting a more intensive outcome while managing trees, servicing, parking and private open space could still be difficult.`
+          : 'Not available on this block as a realistic starting assumption regardless of the other site conditions.',
+        statusLabel: qualifiesThree ? 'Worth testing' : 'Not available',
+        statusTone: qualifiesThree ? 'review' : 'not_available',
+      },
+    ];
 
     return {
       title: 'Executive summary',
       intro:
-        'This is the high-level view of what appears most realistic based on the available evidence and the constraints identified on your block.',
-      bullets,
+        'This is the high-level view of what the planning settings appear to allow first, and then what the physical site assessment suggests is realistic on this specific block.',
+      rulesTitle: `Part 1 - What the rules permit on a ${blockSizeText} block`,
+      rulesNote:
+        "Meeting the size threshold means the planning settings do not obviously rule it out. It does not mean the outcome is straightforward on this specific site.",
+      rulesRows,
+      findingsTitle: 'Part 2 - What the site assessment found',
+      findingsRows,
       summary: this.buildSummary_({
         housePosition: params.housePosition,
         treesVisibleCount: params.treesVisibleCount,
@@ -1506,6 +1579,63 @@ export class DashboardReportService {
         dualOk: dual.ok,
       }),
     };
+  }
+
+  private buildSamplePreviewPayload_(): Record<string, unknown> {
+    return {
+      Timestamp: '4/8/2026',
+      'Row Number': 999,
+      'Report ID': 'PREVIEW-001',
+      'Client name': 'Alex Example',
+      'Client email': 'alex@example.com',
+      'Client phone': '0400 000 000',
+      Address: '40 Green Street',
+      Suburb: 'Narrabundah',
+      Block: '12',
+      Section: '23',
+      'Block size (m²)': 960,
+      Zone: 'RZ1',
+      'Frontage (m)': 23,
+      'House position': 'Middle',
+      'House footprint (m²)': 194,
+      'Rear yard depth (m)': 10.5,
+      'Large trees visible': 'Several',
+      'Tree location': 'Front boundary and rear corner',
+      'Heritage overlay': 'No',
+      'Sewer location': 'Rear',
+      'Easement impact': 'Along boundary edge',
+      'Shed in rear': 'No',
+      'Second driveway feasible': 'Possible',
+      'Map image URL': this.buildSampleSiteMapDataUrl_(),
+      'Max building allowed (m²)': 480,
+      'Remaining site coverage (m²)': 286,
+      'Rear yard category': 'Moderate',
+      'Granny flat (keep house)': 'Possible',
+      'Dual occ (remove house)': 'Possible',
+      'Subdivision potential': 'Possible',
+      Intention: 'Open to options',
+    };
+  }
+
+  private buildSampleSiteMapDataUrl_(): string {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">' +
+      '<rect width="1200" height="720" fill="#ede7d8"/>' +
+      '<rect x="80" y="80" width="1040" height="560" rx="28" fill="#f7f3e9" stroke="#c8c0af" stroke-width="4"/>' +
+      '<rect x="250" y="150" width="520" height="360" fill="#d9dfd2" stroke="#566055" stroke-width="5"/>' +
+      '<rect x="430" y="250" width="230" height="150" fill="#8b9b82" stroke="#445042" stroke-width="4"/>' +
+      '<line x1="810" y1="140" x2="810" y2="530" stroke="#b36a3c" stroke-width="8" stroke-dasharray="20 14"/>' +
+      '<circle cx="300" cy="210" r="46" fill="#6d8b62"/>' +
+      '<circle cx="710" cy="455" r="54" fill="#6d8b62"/>' +
+      '<circle cx="855" cy="265" r="42" fill="#6d8b62"/>' +
+      '<text x="120" y="135" font-family="Arial, sans-serif" font-size="30" fill="#494f4a">Preview site map</text>' +
+      '<text x="120" y="175" font-family="Arial, sans-serif" font-size="18" fill="#6f736d">Placeholder image for proofing the paid report layout</text>' +
+      '<text x="442" y="332" font-family="Arial, sans-serif" font-size="26" fill="#ffffff">Existing house</text>' +
+      '<text x="838" y="345" font-family="Arial, sans-serif" font-size="24" fill="#b36a3c">Sewer line</text>' +
+      '<text x="254" y="590" font-family="Arial, sans-serif" font-size="24" fill="#494f4a">Indicative block boundary, trees and servicing only</text>' +
+      '</svg>';
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   }
 
   private buildSummary_(params: {
