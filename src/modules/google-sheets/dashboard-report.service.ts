@@ -1962,19 +1962,23 @@ export class DashboardReportService {
       siteTitle?: string;
       siteSubtitle?: string;
       includeSiteMap?: boolean;
+      usePreviewCover?: boolean;
     },
   ): Record<string, unknown> {
     const payload: Record<string, unknown> = {
       Timestamp: '4/8/2026',
       'Client phone': '0400 000 000',
       'Shed in rear': 'No',
-      'Preview cover image URL': this.buildSampleCoverMapDataUrl_(
-        imageOptions?.coverTitle || 'Static map preview',
-        imageOptions?.coverSubtitle ||
-          'Placeholder static map used for the cover image',
-      ),
       ...overrides,
     };
+
+    if (imageOptions?.usePreviewCover) {
+      payload['Preview cover image URL'] = this.buildSampleCoverMapDataUrl_(
+        imageOptions.coverTitle || 'Static map preview',
+        imageOptions.coverSubtitle ||
+          'Placeholder static map used for the cover image',
+      );
+    }
 
     if (imageOptions?.includeSiteMap !== false) {
       payload['Map image URL'] = this.buildSampleSiteMapDataUrl_(
