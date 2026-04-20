@@ -51,6 +51,101 @@ type LotWithGeometryRow = {
   updatedAt: Date;
 };
 
+type FrontageLineString = {
+  type: 'LineString';
+  coordinates: [number, number][];
+};
+
+const unwrapSetInputValue = (value: unknown) =>
+  value &&
+  typeof value === 'object' &&
+  !Array.isArray(value) &&
+  Object.prototype.hasOwnProperty.call(value, 'set')
+    ? (value as { set?: unknown }).set
+    : value;
+
+const parseFrontageCoordinateInput = (
+  value: unknown,
+  fieldName: string,
+): FrontageLineString | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const unwrapped = unwrapSetInputValue(value);
+  if (unwrapped === undefined) {
+    return undefined;
+  }
+  if (unwrapped === null || unwrapped === '') {
+    return null;
+  }
+
+  let parsed: unknown = unwrapped;
+  if (typeof unwrapped === 'string') {
+    try {
+      parsed = JSON.parse(unwrapped);
+    } catch {
+      throw new BadRequestException(
+        `Invalid ${fieldName}. Expected valid GeoJSON LineString JSON.`,
+      );
+    }
+  }
+
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    Array.isArray(parsed) ||
+    (parsed as { type?: unknown }).type !== 'LineString' ||
+    !Array.isArray((parsed as { coordinates?: unknown }).coordinates)
+  ) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected a GeoJSON LineString.`,
+    );
+  }
+
+  const coordinates = (parsed as { coordinates: unknown[] }).coordinates.map(
+    (coordinate) => {
+      if (
+        !Array.isArray(coordinate) ||
+        coordinate.length < 2 ||
+        !Number.isFinite(Number(coordinate[0])) ||
+        !Number.isFinite(Number(coordinate[1]))
+      ) {
+        throw new BadRequestException(
+          `Invalid ${fieldName}. Expected numeric [lng, lat] coordinate pairs.`,
+        );
+      }
+
+      return [Number(coordinate[0]), Number(coordinate[1])] as [number, number];
+    },
+  );
+
+  if (coordinates.length < 2) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected at least two coordinate pairs.`,
+    );
+  }
+
+  return {
+    type: 'LineString',
+    coordinates,
+  };
+};
+
+const extractFrontageCoordinateFromGeojson = (geojson: unknown): unknown => {
+  const unwrapped = unwrapSetInputValue(geojson);
+  if (!unwrapped || typeof unwrapped !== 'object' || Array.isArray(unwrapped)) {
+    return undefined;
+  }
+
+  const lotMetadata = (unwrapped as Record<string, unknown>).lotMetadata;
+  if (!lotMetadata || typeof lotMetadata !== 'object' || Array.isArray(lotMetadata)) {
+    return undefined;
+  }
+
+  return (lotMetadata as Record<string, unknown>).frontageCoordinate;
+};
+
 const normalizeLifecycleStageInput = (
   value: unknown,
   fieldName: string,
@@ -153,6 +248,75 @@ export class AdminLotController {
     private designOnLotService: DesignOnLotService,
   ) {}
 
+  private mapLotRow(lot: LotWithGeometryRow) {
+    return {
+      ...lot,
+      geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
+      frontageCoordinate: lot.frontageCoordinate
+        ? JSON.parse(lot.frontageCoordinate)
+        : null,
+    };
+  }
+
+  private async findLotRowById(lotId: bigint) {
+    const lots = await this.prisma.$queryRaw<LotWithGeometryRow[]>`
+      SELECT
+        id,
+        "blockKey",
+        "blockNumber",
+        "sectionNumber",
+        "areaSqm",
+        "salesMode",
+        price,
+        "frontageM",
+        "lotType",
+        "roadFacing",
+        "precinct",
+        zoning,
+        address,
+        district,
+        division,
+        "lifecycleStage",
+        "ruleOverrides",
+        "estateId",
+        overlays,
+        geojson,
+        ST_AsGeoJSON(geometry) as geometry,
+        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
+        "createdAt",
+        "updatedAt"
+      FROM
+        lot
+      WHERE
+        id = ${lotId}
+    `;
+
+    return lots[0] ? this.mapLotRow(lots[0]) : null;
+  }
+
+  private async persistFrontageCoordinate(
+    lotId: bigint,
+    frontageCoordinate: FrontageLineString | null,
+  ) {
+    if (frontageCoordinate === null) {
+      await this.prisma.$executeRaw`
+        UPDATE lot
+        SET "frontageCoordinate" = NULL
+        WHERE id = ${lotId}
+      `;
+      return;
+    }
+
+    await this.prisma.$executeRaw`
+      UPDATE lot
+      SET "frontageCoordinate" = ST_SetSRID(
+        ST_GeomFromGeoJSON(${JSON.stringify(frontageCoordinate)}),
+        4326
+      )
+      WHERE id = ${lotId}
+    `;
+  }
+
   @Get()
   @Roles('ADMIN', 'USER')
   async findAll(
@@ -198,13 +362,7 @@ export class AdminLotController {
         ORDER BY id
       `;
 
-      return lots.map((lot) => ({
-        ...lot,
-        geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
-        frontageCoordinate: lot.frontageCoordinate
-          ? JSON.parse(lot.frontageCoordinate)
-          : null,
-      }));
+      return lots.map((lot) => this.mapLotRow(lot));
     }
 
     const estateIds = await this.prisma.userEstate.findMany({
@@ -258,13 +416,7 @@ export class AdminLotController {
       ORDER BY id
     `;
 
-    return lots.map((lot) => ({
-      ...lot,
-      geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
-      frontageCoordinate: lot.frontageCoordinate
-        ? JSON.parse(lot.frontageCoordinate)
-        : null,
-    }));
+    return lots.map((lot) => this.mapLotRow(lot));
   }
 
   @Get(':id')
@@ -272,58 +424,19 @@ export class AdminLotController {
   @EstateScope({ lotIdParam: 'id' })
   async findOne(@Param('id') id: string) {
     const lotId = parseBigIntId(id, 'id');
-
-    const lots = await this.prisma.$queryRaw<LotWithGeometryRow[]>`
-      SELECT
-        id,
-        "blockKey",
-        "blockNumber",
-        "sectionNumber",
-        "areaSqm",
-        "salesMode",
-        price,
-        "frontageM",
-        "lotType",
-        "roadFacing",
-        "precinct",
-        zoning,
-        address,
-        district,
-        division,
-        "lifecycleStage",
-        "ruleOverrides",
-        "estateId",
-        overlays,
-        geojson,
-        ST_AsGeoJSON(geometry) as geometry,
-        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
-        "createdAt",
-        "updatedAt"
-      FROM
-        lot
-      WHERE
-        id = ${lotId}
-    `;
-
-    const lot = lots[0];
-
-    if (!lot) {
-      return null;
-    }
-
-    return {
-      ...lot,
-      geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
-      frontageCoordinate: lot.frontageCoordinate
-        ? JSON.parse(lot.frontageCoordinate)
-        : null,
-    };
+    return this.findLotRowById(lotId);
   }
 
   @Post()
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdBody: 'estateId' })
-  async create(@Body() data: Prisma.lotUncheckedCreateInput) {
+  async create(
+    @Body()
+    data: Prisma.lotUncheckedCreateInput & {
+      frontageCoordinate?: unknown;
+    },
+  ) {
+    const { frontageCoordinate: _frontageCoordinate, ...createPayload } = data;
     const normalizedLifecycleStage = normalizeLifecycleStageInput(
       data.lifecycleStage,
       'lifecycleStage',
@@ -333,9 +446,15 @@ export class AdminLotController {
       'salesMode',
     );
     const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const normalizedFrontageCoordinate = parseFrontageCoordinateInput(
+      Object.prototype.hasOwnProperty.call(data, 'frontageCoordinate')
+        ? data.frontageCoordinate
+        : extractFrontageCoordinateFromGeojson(data.geojson),
+      'frontageCoordinate',
+    );
 
     const createData: Prisma.lotUncheckedCreateInput = {
-      ...(data as Prisma.lotUncheckedCreateInput),
+      ...(createPayload as Prisma.lotUncheckedCreateInput),
       ...(normalizedLifecycleStage !== undefined
         ? { lifecycleStage: normalizedLifecycleStage }
         : {}),
@@ -344,10 +463,13 @@ export class AdminLotController {
     };
 
     const created = await this.prisma.lot.create({ data: createData });
+    if (normalizedFrontageCoordinate !== undefined) {
+      await this.persistFrontageCoordinate(created.id, normalizedFrontageCoordinate);
+    }
     if (created.estateId) {
       await this.designOnLotService.recomputeForLotId(created.id);
     }
-    return created;
+    return this.findLotRowById(created.id);
   }
 
   @Patch(':id')
@@ -355,8 +477,12 @@ export class AdminLotController {
   @EstateScope({ lotIdParam: 'id' })
   async update(
     @Param('id') id: string,
-    @Body() data: Prisma.lotUncheckedUpdateInput,
+    @Body()
+    data: Prisma.lotUncheckedUpdateInput & {
+      frontageCoordinate?: unknown;
+    },
   ) {
+    const { frontageCoordinate: _frontageCoordinate, ...updatePayload } = data;
     const normalizedLifecycleStage = normalizeLifecycleStageInput(
       data.lifecycleStage,
       'lifecycleStage',
@@ -366,9 +492,15 @@ export class AdminLotController {
       'salesMode',
     );
     const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const normalizedFrontageCoordinate = parseFrontageCoordinateInput(
+      Object.prototype.hasOwnProperty.call(data, 'frontageCoordinate')
+        ? data.frontageCoordinate
+        : extractFrontageCoordinateFromGeojson(data.geojson),
+      'frontageCoordinate',
+    );
 
     const updateData: Prisma.lotUncheckedUpdateInput = {
-      ...(data as Prisma.lotUncheckedUpdateInput),
+      ...(updatePayload as Prisma.lotUncheckedUpdateInput),
       ...(normalizedLifecycleStage !== undefined
         ? { lifecycleStage: normalizedLifecycleStage }
         : {}),
@@ -380,10 +512,13 @@ export class AdminLotController {
       where: { id: parseBigIntId(id, 'id') },
       data: updateData,
     });
+    if (normalizedFrontageCoordinate !== undefined) {
+      await this.persistFrontageCoordinate(updated.id, normalizedFrontageCoordinate);
+    }
     if (updated.estateId) {
       await this.designOnLotService.recomputeForLotId(updated.id);
     }
-    return updated;
+    return this.findLotRowById(updated.id);
   }
 
   @Delete(':id')
