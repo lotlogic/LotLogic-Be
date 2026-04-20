@@ -41,6 +41,12 @@ enum DesignOnLotStatus {
   MANUAL_REVIEW
 }
 
+enum DesignOnLotReviewDecision {
+  NONE
+  APPROVED
+  REJECTED
+}
+
 enum EnquiryStatus {
   PENDING
   PROCESSED
@@ -92,6 +98,7 @@ model user {
   updatedAt      DateTime      @updatedAt
   estates        userEstate[]
   builderUsers   builderUser[]
+  reviewedDesignOnLots designOnLot[] @relation("DesignOnLotReviewedBy")
 }
 
 model userEstate {
@@ -234,6 +241,15 @@ model designOnLot {
   manualReviewReasons String[]          @default([])
   matchedFilters      Json?
   assessedAt          DateTime          @default(now())
+  systemStatus              DesignOnLotStatus          @default(FAIL)
+  systemFailReasons         String[]                   @default([])
+  systemManualReviewReasons String[]                   @default([])
+  systemMatchedFilters      Json?
+  systemAssessedAt          DateTime                   @default(now())
+  reviewDecision            DesignOnLotReviewDecision  @default(NONE)
+  reviewNote                String?
+  reviewedAt                DateTime?
+  reviewedByUserId          BigInt?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   stateRuleSetId      BigInt?
@@ -242,10 +258,13 @@ model designOnLot {
   lot                 lot               @relation(fields: [lotId], references: [id], onDelete: Cascade)
   stateRuleSet        stateRuleSet?     @relation(fields: [stateRuleSetId], references: [id], onDelete: SetNull)
   estateRuleSet       estateRuleSet?    @relation(fields: [estateRuleSetId], references: [id], onDelete: SetNull)
+  reviewedBy          user?             @relation("DesignOnLotReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
 
   @@unique([lotId, floorPlanId])
   @@index([lotId, isCompatible])
   @@index([status])
+  @@index([reviewDecision])
+  @@index([reviewedByUserId])
 }
 
 model stateRuleSet {

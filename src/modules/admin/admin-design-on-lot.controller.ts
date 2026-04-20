@@ -1,127 +1,188 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import {
+  DesignOnLotReviewDecision,
+  Prisma,
+} from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
+import { AuthenticatedRequest } from '@/modules/auth/auth.request';
+import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
+
+const designOnLotInclude = {
+  lot: {
+    select: {
+      id: true,
+      blockKey: true,
+      blockNumber: true,
+      address: true,
+      areaSqm: true,
+      zoning: true,
+      lifecycleStage: true,
+      frontageM: true,
+      lotType: true,
+      roadFacing: true,
+      precinct: true,
+      estate: {
+        select: {
+          id: true,
+          name: true,
+          jurisdiction: true,
+        },
+      },
+    },
+  },
+  floorPlan: {
+    select: {
+      id: true,
+      name: true,
+      floorplanUrl: true,
+      bedrooms: true,
+      bathrooms: true,
+      garages: true,
+      areaSqm: true,
+      width: true,
+      depth: true,
+      storeys: true,
+      buildingHeight_m: true,
+      builder: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+  reviewedBy: {
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+    },
+  },
+} satisfies Prisma.designOnLotInclude;
+
+type AdminDesignOnLotRecord = Prisma.designOnLotGetPayload<{
+  include: typeof designOnLotInclude;
+}>;
+
+type ReviewDecisionBody = {
+  decision?: DesignOnLotReviewDecision | string | null;
+  note?: string | null;
+};
+
+type BulkReviewBody = ReviewDecisionBody & {
+  scope?: 'manual_review' | 'all' | 'selected' | string | null;
+  ids?: string[] | null;
+};
 
 @UseGuards(EasyAuthGuard, RolesGuard)
 @Controller('admin/design-on-lots')
 export class AdminDesignOnLotController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private designOnLotService: DesignOnLotService,
+  ) {}
 
-  private mapDesignOnLotRecord(record: {
-    id: bigint;
-    lotId: bigint;
-    floorPlanId: bigint;
-    status: string;
-    failReasons: string[];
-    manualReviewReasons: string[];
-    matchedFilters: Prisma.JsonValue | null;
-    assessedAt: Date;
-    createdAt: Date;
-    updatedAt: Date;
-    lot: {
-      id: bigint;
-      blockKey: string;
-      blockNumber: number | null;
-      address: string | null;
-      areaSqm: number;
-      zoning: string;
-      lifecycleStage: string | null;
-      frontageM: number | null;
-      lotType: string | null;
-      roadFacing: string | null;
-      precinct: string | null;
-      estate: {
-        id: bigint;
-        name: string;
-        jurisdiction: string;
-      } | null;
-    } | null;
-    floorPlan: {
-      id: bigint;
-      name: string;
-      floorplanUrl: string | null;
-      bedrooms: number;
-      bathrooms: number;
-      garages: number;
-      areaSqm: number;
-      width: number;
-      depth: number;
-      storeys: number | null;
-      buildingHeight_m: number | null;
-      builder: {
-        id: bigint;
-        name: string;
-      } | null;
-    } | null;
-  }) {
+  private mapDesignOnLotRecord(record: AdminDesignOnLotRecord) {
     const reasons =
       record.status === 'MANUAL_REVIEW'
         ? record.manualReviewReasons
         : record.failReasons;
+    const systemReasons =
+      record.systemStatus === 'MANUAL_REVIEW'
+        ? record.systemManualReviewReasons
+        : record.systemFailReasons;
 
     return {
       ...record,
       reasons,
+      systemReasons,
+      effectiveStatus: record.status,
+      isOverridden: record.reviewDecision !== DesignOnLotReviewDecision.NONE,
     };
+  }
+
+  private parseReviewDecision(
+    value: DesignOnLotReviewDecision | string | null | undefined,
+  ): DesignOnLotReviewDecision {
+    const normalized = String(value ?? '')
+      .trim()
+      .toUpperCase();
+    if (normalized === DesignOnLotReviewDecision.APPROVED) {
+      return DesignOnLotReviewDecision.APPROVED;
+    }
+    if (normalized === DesignOnLotReviewDecision.REJECTED) {
+      return DesignOnLotReviewDecision.REJECTED;
+    }
+    throw new BadRequestException(
+      'Invalid decision. Expected APPROVED or REJECTED.',
+    );
+  }
+
+  private parseBulkScope(
+    value: BulkReviewBody['scope'],
+  ): 'manual_review' | 'all' | 'selected' {
+    const normalized = String(value ?? 'manual_review')
+      .trim()
+      .toLowerCase();
+    if (
+      normalized === 'manual_review' ||
+      normalized === 'all' ||
+      normalized === 'selected'
+    ) {
+      return normalized;
+    }
+    throw new BadRequestException(
+      'Invalid scope. Expected manual_review, all, or selected.',
+    );
   }
 
   @Get()
   @Roles('ADMIN')
   async findAll() {
     const records = await this.prisma.designOnLot.findMany({
-      orderBy: { id: 'asc' },
-      include: {
-        lot: {
-          select: {
-            id: true,
-            blockKey: true,
-            blockNumber: true,
-            address: true,
-            areaSqm: true,
-            zoning: true,
-            lifecycleStage: true,
-            frontageM: true,
-            lotType: true,
-            roadFacing: true,
-            precinct: true,
-            estate: {
-              select: {
-                id: true,
-                name: true,
-                jurisdiction: true,
-              },
-            },
-          },
-        },
-        floorPlan: {
-          select: {
-            id: true,
-            name: true,
-            floorplanUrl: true,
-            bedrooms: true,
-            bathrooms: true,
-            garages: true,
-            areaSqm: true,
-            width: true,
-            depth: true,
-            storeys: true,
-            buildingHeight_m: true,
-            builder: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+      orderBy: [{ lotId: 'asc' }, { floorPlanId: 'asc' }],
+      include: designOnLotInclude,
     });
 
     return records.map((record) => this.mapDesignOnLotRecord(record));
+  }
+
+  @Post('lot/:lotId/review')
+  @Roles('ADMIN')
+  async reviewLot(
+    @Param('lotId') lotId: string,
+    @Body() body: BulkReviewBody,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const scope = this.parseBulkScope(body.scope);
+    const ids =
+      scope === 'selected'
+        ? (body.ids ?? []).map((value) => parseBigIntId(value, 'ids'))
+        : undefined;
+
+    return this.designOnLotService.reviewDesignOnLotsForLot({
+      lotId: parseBigIntId(lotId, 'lotId'),
+      reviewDecision: this.parseReviewDecision(body.decision),
+      reviewedByUserId: req.auth?.id ?? null,
+      scope,
+      ids,
+      reviewNote: body.note,
+    });
   }
 
   @Get(':id')
@@ -129,51 +190,7 @@ export class AdminDesignOnLotController {
   async findOne(@Param('id') id: string) {
     const record = await this.prisma.designOnLot.findUnique({
       where: { id: parseBigIntId(id, 'id') },
-      include: {
-        lot: {
-          select: {
-            id: true,
-            blockKey: true,
-            blockNumber: true,
-            address: true,
-            areaSqm: true,
-            zoning: true,
-            lifecycleStage: true,
-            frontageM: true,
-            lotType: true,
-            roadFacing: true,
-            precinct: true,
-            estate: {
-              select: {
-                id: true,
-                name: true,
-                jurisdiction: true,
-              },
-            },
-          },
-        },
-        floorPlan: {
-          select: {
-            id: true,
-            name: true,
-            floorplanUrl: true,
-            bedrooms: true,
-            bathrooms: true,
-            garages: true,
-            areaSqm: true,
-            width: true,
-            depth: true,
-            storeys: true,
-            buildingHeight_m: true,
-            builder: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+      include: designOnLotInclude,
     });
 
     if (!record) {
@@ -181,6 +198,33 @@ export class AdminDesignOnLotController {
     }
 
     return this.mapDesignOnLotRecord(record);
+  }
+
+  @Post(':id/review')
+  @Roles('ADMIN')
+  async reviewOne(
+    @Param('id') id: string,
+    @Body() body: ReviewDecisionBody,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.designOnLotService.reviewDesignOnLot(
+      parseBigIntId(id, 'id'),
+      this.parseReviewDecision(body.decision),
+      req.auth?.id ?? null,
+      body.note,
+    );
+
+    return this.findOne(id);
+  }
+
+  @Post(':id/clear-review')
+  @Roles('ADMIN')
+  async clearReview(@Param('id') id: string) {
+    await this.designOnLotService.clearDesignOnLotReview(
+      parseBigIntId(id, 'id'),
+    );
+
+    return this.findOne(id);
   }
 
   @Post()

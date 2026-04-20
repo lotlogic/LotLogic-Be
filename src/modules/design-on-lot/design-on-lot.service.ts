@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   BuilderEstateApprovalStatus,
+  DesignOnLotReviewDecision,
   DesignOnLotStatus,
   Jurisdiction,
   Prisma,
@@ -53,6 +54,45 @@ type EvaluationOutcome = {
   maxCoverageArea: number | null;
   usableWidth: number;
   usableDepth: number;
+};
+
+type DesignOnLotReviewState = {
+  reviewDecision: DesignOnLotReviewDecision;
+  reviewNote: string | null;
+  reviewedAt: Date | null;
+  reviewedByUserId: bigint | null;
+};
+
+type ExistingDesignOnLotRow = DesignOnLotReviewState & {
+  id: bigint;
+  lotId: bigint;
+  floorPlanId: bigint;
+  systemStatus: DesignOnLotStatus;
+  systemFailReasons: string[];
+  systemManualReviewReasons: string[];
+  systemMatchedFilters: Prisma.JsonValue | null;
+  systemAssessedAt: Date;
+  floorPlan: {
+    id: bigint;
+    builderId: bigint;
+  };
+};
+
+type SystemEvaluationState = {
+  status: DesignOnLotStatus;
+  failReasons: string[];
+  manualReviewReasons: string[];
+  matchedFilters: Prisma.InputJsonValue | Prisma.JsonValue | null;
+  assessedAt: Date;
+};
+
+type EffectiveDesignOnLotState = {
+  status: DesignOnLotStatus;
+  isCompatible: boolean;
+  failReasons: string[];
+  manualReviewReasons: string[];
+  matchedFilters: Prisma.InputJsonValue | Prisma.JsonValue | null;
+  assessedAt: Date;
 };
 
 type EvaluationLogContext = {
@@ -333,6 +373,158 @@ export class DesignOnLotService {
     };
   }
 
+  async reviewDesignOnLot(
+    id: bigint,
+    reviewDecision: DesignOnLotReviewDecision,
+    reviewedByUserId: bigint | null,
+    reviewNote?: string | null,
+  ) {
+    const existing = await this.prisma.designOnLot.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        systemStatus: true,
+        systemFailReasons: true,
+        systemManualReviewReasons: true,
+        systemMatchedFilters: true,
+        systemAssessedAt: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Design-on-lot record not found');
+    }
+
+    const normalizedNote = this.normalizeReviewNote_(reviewNote);
+    const reviewedAt = new Date();
+    const effectiveState = this.resolveEffectiveDesignOnLotState_(
+      {
+        status: existing.systemStatus,
+        failReasons: existing.systemFailReasons,
+        manualReviewReasons: existing.systemManualReviewReasons,
+        matchedFilters: existing.systemMatchedFilters,
+        assessedAt: existing.systemAssessedAt,
+      },
+      {
+        reviewDecision,
+        reviewNote: normalizedNote,
+        reviewedAt,
+        reviewedByUserId,
+      },
+    );
+
+    return this.prisma.designOnLot.update({
+      where: { id },
+      data: {
+        reviewDecision,
+        reviewNote: normalizedNote,
+        reviewedAt,
+        reviewedByUserId,
+        isCompatible: effectiveState.isCompatible,
+        status: effectiveState.status,
+        failReasons: effectiveState.failReasons,
+        manualReviewReasons: effectiveState.manualReviewReasons,
+        matchedFilters: this.toJsonFieldInput_(effectiveState.matchedFilters),
+        assessedAt: effectiveState.assessedAt,
+      },
+    });
+  }
+
+  async clearDesignOnLotReview(id: bigint) {
+    const existing = await this.prisma.designOnLot.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        systemStatus: true,
+        systemFailReasons: true,
+        systemManualReviewReasons: true,
+        systemMatchedFilters: true,
+        systemAssessedAt: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Design-on-lot record not found');
+    }
+
+    const effectiveState = this.resolveEffectiveDesignOnLotState_(
+      {
+        status: existing.systemStatus,
+        failReasons: existing.systemFailReasons,
+        manualReviewReasons: existing.systemManualReviewReasons,
+        matchedFilters: existing.systemMatchedFilters,
+        assessedAt: existing.systemAssessedAt,
+      },
+      this.createEmptyReviewState_(),
+    );
+
+    return this.prisma.designOnLot.update({
+      where: { id },
+      data: {
+        reviewDecision: DesignOnLotReviewDecision.NONE,
+        reviewNote: null,
+        reviewedAt: null,
+        reviewedByUserId: null,
+        isCompatible: effectiveState.isCompatible,
+        status: effectiveState.status,
+        failReasons: effectiveState.failReasons,
+        manualReviewReasons: effectiveState.manualReviewReasons,
+        matchedFilters: this.toJsonFieldInput_(effectiveState.matchedFilters),
+        assessedAt: effectiveState.assessedAt,
+      },
+    });
+  }
+
+  async reviewDesignOnLotsForLot(params: {
+    lotId: bigint;
+    reviewDecision: DesignOnLotReviewDecision;
+    reviewedByUserId: bigint | null;
+    scope: 'manual_review' | 'all' | 'selected';
+    ids?: bigint[];
+    reviewNote?: string | null;
+  }): Promise<{ lotId: string; updated: number; ids: string[] }> {
+    const where: Prisma.designOnLotWhereInput = {
+      lotId: params.lotId,
+    };
+
+    if (params.scope === 'manual_review') {
+      where.systemStatus = DesignOnLotStatus.MANUAL_REVIEW;
+    }
+
+    if (params.scope === 'selected') {
+      if (!params.ids?.length) {
+        return { lotId: params.lotId.toString(), updated: 0, ids: [] };
+      }
+      where.id = { in: params.ids };
+    }
+
+    const rows = await this.prisma.designOnLot.findMany({
+      where,
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
+
+    if (!rows.length) {
+      return { lotId: params.lotId.toString(), updated: 0, ids: [] };
+    }
+
+    const normalizedNote = this.normalizeReviewNote_(params.reviewNote);
+    for (const row of rows) {
+      await this.reviewDesignOnLot(
+        row.id,
+        params.reviewDecision,
+        params.reviewedByUserId,
+        normalizedNote,
+      );
+    }
+
+    return {
+      lotId: params.lotId.toString(),
+      updated: rows.length,
+      ids: rows.map((row) => row.id.toString()),
+    };
+  }
+
   private async recomputeForLot(
     lotId: bigint,
     options?: { floorPlanIds?: bigint[] },
@@ -415,6 +607,26 @@ export class DesignOnLotService {
       });
     }
 
+    const existingRows = await this.prisma.designOnLot.findMany({
+      where: {
+        lotId: lot.id,
+        ...(options?.floorPlanIds?.length
+          ? { floorPlanId: { in: options.floorPlanIds } }
+          : {}),
+      },
+      include: {
+        floorPlan: {
+          select: {
+            id: true,
+            builderId: true,
+          },
+        },
+      },
+    });
+    const existingRowByFloorPlanId = new Map(
+      existingRows.map((row) => [row.floorPlanId.toString(), row]),
+    );
+
     const frontageFromGeo = this.readNumber(this.asObject(lot.geojson), [
       ['frontageM'],
       ['frontage'],
@@ -490,7 +702,8 @@ export class DesignOnLotService {
               floorPlanId: floorPlan.id.toString(),
             },
           );
-      await this.upsertDesignOnLot_({
+      await this.persistDesignOnLotEvaluation_({
+        existingRow: existingRowByFloorPlanId.get(floorPlan.id.toString()) ?? null,
         lotId: lot.id,
         floorPlanId: floorPlan.id,
         outcome,
@@ -534,7 +747,8 @@ export class DesignOnLotService {
         failReason,
       );
 
-      await this.upsertDesignOnLot_({
+      await this.persistDesignOnLotEvaluation_({
+        existingRow: existingRowByFloorPlanId.get(floorPlan.id.toString()) ?? null,
         lotId: lot.id,
         floorPlanId: floorPlan.id,
         outcome,
@@ -550,23 +764,8 @@ export class DesignOnLotService {
       fail += 1;
     }
 
-    const existingRows = await this.prisma.designOnLot.findMany({
-      where: { lotId: lot.id },
-      include: {
-        floorPlan: {
-          select: {
-            id: true,
-            builderId: true,
-          },
-        },
-      },
-    });
-
     for (const row of existingRows) {
       const floorPlanIdText = row.floorPlanId.toString();
-      if (options?.floorPlanIds?.length && !options.floorPlanIds.some((id) => id === row.floorPlanId)) {
-        continue;
-      }
       if (touchedFloorPlanIds.has(floorPlanIdText)) {
         continue;
       }
@@ -577,27 +776,21 @@ export class DesignOnLotService {
         continue;
       }
 
-      await this.prisma.designOnLot.update({
-        where: { lotId_floorPlanId: { lotId: row.lotId, floorPlanId: row.floorPlanId } },
-        data: {
-          isCompatible: false,
-          status: DesignOnLotStatus.FAIL,
-          failReasons: [failReason],
-          manualReviewReasons: [],
-          assessedAt: now,
-          stateRuleSetId: stateRuleSet?.id ?? null,
-          estateRuleSetId: estateRuleSet?.id ?? null,
-          matchedFilters: {
-            effectiveRules,
-            sourceRefs,
-            lotContext,
-            spacing: {
-              front: effectiveRules.minFrontSetbackM,
-              rear: effectiveRules.minRearSetbackM,
-              side: effectiveRules.minSideSetbackM,
-            },
-          },
-        },
+      await this.persistDesignOnLotEvaluation_({
+        existingRow: row,
+        lotId: row.lotId,
+        floorPlanId: row.floorPlanId,
+        outcome: this.buildIneligibleLotOutcome_(
+          lot.areaSqm,
+          dimensions,
+          effectiveRules,
+          failReason,
+        ),
+        effectiveRules,
+        sourceRefs,
+        lotContext,
+        stateRuleSetId: stateRuleSet?.id ?? null,
+        estateRuleSetId: estateRuleSet?.id ?? null,
       });
 
       processed += 1;
@@ -613,7 +806,8 @@ export class DesignOnLotService {
     };
   }
 
-  private async upsertDesignOnLot_(params: {
+  private async persistDesignOnLotEvaluation_(params: {
+    existingRow: ExistingDesignOnLotRow | null;
     lotId: bigint;
     floorPlanId: bigint;
     outcome: EvaluationOutcome;
@@ -624,6 +818,7 @@ export class DesignOnLotService {
     estateRuleSetId: bigint | null;
   }) {
     const {
+      existingRow,
       lotId,
       floorPlanId,
       outcome,
@@ -634,47 +829,126 @@ export class DesignOnLotService {
       estateRuleSetId,
     } = params;
 
-    await this.prisma.designOnLot.upsert({
-      where: { lotId_floorPlanId: { lotId, floorPlanId } },
-      create: {
+    const systemAssessedAt = new Date();
+    const systemMatchedFilters = {
+      effectiveRules,
+      sourceRefs,
+      lotContext,
+      spacing: outcome.spacing,
+      maxCoverageArea: outcome.maxCoverageArea,
+      usableWidth: outcome.usableWidth,
+      usableDepth: outcome.usableDepth,
+    } satisfies Prisma.InputJsonObject;
+
+    const effectiveState = this.resolveEffectiveDesignOnLotState_(
+      {
+        status: outcome.status,
+        failReasons: outcome.failReasons,
+        manualReviewReasons: outcome.manualReviewReasons,
+        matchedFilters: systemMatchedFilters,
+        assessedAt: systemAssessedAt,
+      },
+      existingRow ?? this.createEmptyReviewState_(),
+    );
+
+    const commonData = {
+      isCompatible: effectiveState.isCompatible,
+      status: effectiveState.status,
+      failReasons: effectiveState.failReasons,
+      manualReviewReasons: effectiveState.manualReviewReasons,
+      matchedFilters: this.toJsonFieldInput_(effectiveState.matchedFilters),
+      assessedAt: effectiveState.assessedAt,
+      systemStatus: outcome.status,
+      systemFailReasons: outcome.failReasons,
+      systemManualReviewReasons: outcome.manualReviewReasons,
+      systemMatchedFilters: this.toJsonFieldInput_(systemMatchedFilters),
+      systemAssessedAt,
+      stateRuleSetId,
+      estateRuleSetId,
+    };
+
+    if (existingRow) {
+      await this.prisma.designOnLot.update({
+        where: { lotId_floorPlanId: { lotId, floorPlanId } },
+        data: commonData,
+      });
+      return;
+    }
+
+    await this.prisma.designOnLot.create({
+      data: {
         lotId,
         floorPlanId,
-        isCompatible: outcome.isCompatible,
-        status: outcome.status,
-        failReasons: outcome.failReasons,
-        manualReviewReasons: outcome.manualReviewReasons,
-        assessedAt: new Date(),
-        stateRuleSetId,
-        estateRuleSetId,
-        matchedFilters: {
-          effectiveRules,
-          sourceRefs,
-          lotContext,
-          spacing: outcome.spacing,
-          maxCoverageArea: outcome.maxCoverageArea,
-          usableWidth: outcome.usableWidth,
-          usableDepth: outcome.usableDepth,
-        },
-      },
-      update: {
-        isCompatible: outcome.isCompatible,
-        status: outcome.status,
-        failReasons: outcome.failReasons,
-        manualReviewReasons: outcome.manualReviewReasons,
-        assessedAt: new Date(),
-        stateRuleSetId,
-        estateRuleSetId,
-        matchedFilters: {
-          effectiveRules,
-          sourceRefs,
-          lotContext,
-          spacing: outcome.spacing,
-          maxCoverageArea: outcome.maxCoverageArea,
-          usableWidth: outcome.usableWidth,
-          usableDepth: outcome.usableDepth,
-        },
+        reviewDecision: DesignOnLotReviewDecision.NONE,
+        ...commonData,
       },
     });
+  }
+
+  private createEmptyReviewState_(): DesignOnLotReviewState {
+    return {
+      reviewDecision: DesignOnLotReviewDecision.NONE,
+      reviewNote: null,
+      reviewedAt: null,
+      reviewedByUserId: null,
+    };
+  }
+
+  private normalizeReviewNote_(value: string | null | undefined): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+
+  private toJsonFieldInput_(
+    value: Prisma.InputJsonValue | Prisma.JsonValue | null,
+  ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput {
+    if (value === null) {
+      return Prisma.JsonNull;
+    }
+    return value as Prisma.InputJsonValue;
+  }
+
+  private resolveEffectiveDesignOnLotState_(
+    systemState: SystemEvaluationState,
+    reviewState: DesignOnLotReviewState,
+  ): EffectiveDesignOnLotState {
+    const assessedAt = reviewState.reviewedAt ?? systemState.assessedAt;
+
+    if (reviewState.reviewDecision === DesignOnLotReviewDecision.APPROVED) {
+      return {
+        status: DesignOnLotStatus.PASS,
+        isCompatible: true,
+        failReasons: [],
+        manualReviewReasons: [],
+        matchedFilters: systemState.matchedFilters,
+        assessedAt,
+      };
+    }
+
+    if (reviewState.reviewDecision === DesignOnLotReviewDecision.REJECTED) {
+      return {
+        status: DesignOnLotStatus.FAIL,
+        isCompatible: false,
+        failReasons: [
+          reviewState.reviewNote?.trim() || 'Rejected by reviewer',
+        ],
+        manualReviewReasons: [],
+        matchedFilters: systemState.matchedFilters,
+        assessedAt,
+      };
+    }
+
+    return {
+      status: systemState.status,
+      isCompatible: systemState.status === DesignOnLotStatus.PASS,
+      failReasons: systemState.failReasons,
+      manualReviewReasons: systemState.manualReviewReasons,
+      matchedFilters: systemState.matchedFilters,
+      assessedAt: systemState.assessedAt,
+    };
   }
 
   private buildIneligibleLotOutcome_(

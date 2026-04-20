@@ -523,6 +523,14 @@ export const resolveAuditActionType = (
   if (normalizedPath.includes('/recompute-design-on-lot')) {
     return 'recompute';
   }
+  if (
+    normalizedPath.includes('/design-on-lots/') &&
+    (normalizedPath.endsWith('/review') ||
+      normalizedPath.endsWith('/clear-review') ||
+      normalizedPath.includes('/design-on-lots/lot/'))
+  ) {
+    return 'approve';
+  }
   if (normalizedPath.includes('/builder-approvals')) {
     return 'approve';
   }
