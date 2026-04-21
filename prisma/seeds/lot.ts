@@ -230,7 +230,7 @@ async function main() {
               $7, $8, $9, $10, $11,
               ST_GeomFromText($12, 4326), ST_GeomFromText($13, 4326), now(), now()
             )
-            ON CONFLICT ("blockKey")
+            ON CONFLICT ("estateId", "blockKey")
             DO UPDATE SET
               "blockNumber" = $2,
               "sectionNumber" = $3,
