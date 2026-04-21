@@ -10,6 +10,7 @@ export interface HouseDesignFilterResult   {
     id: string,
     title: string,
     area: number,
+    homeSize?: string | null,
     builderId?: string,
     builderName?: string | null,
     builder?: {
@@ -53,6 +54,7 @@ export class FloorPlanService {
             id: house.id.toString(),
             title: house.name,
             area: house.areaSqm,
+            homeSize: house.homeSize ?? null,
             builderId: house.builderId ? house.builderId.toString() : undefined,
             builderName: house.builder?.name ?? null,
             builder: house.builder
