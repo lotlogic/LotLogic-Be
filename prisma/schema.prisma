@@ -198,6 +198,7 @@ model floorPlan {
   bedrooms                   Int
   bathrooms                  Int
   garages                    Int
+  price                      Int?
   areaSqm                    Float
   homeSize                   String?
   width                      Float

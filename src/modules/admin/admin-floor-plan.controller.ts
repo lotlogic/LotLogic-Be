@@ -22,6 +22,39 @@ import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 import { parseBigIntId } from '@/modules/admin/admin.utils';
 import { DesignOnLotService } from '@/modules/design-on-lot/design-on-lot.service';
 
+const normalizePriceInput = (
+  value: unknown,
+  fieldName: string,
+): number | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const unwrapped =
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.prototype.hasOwnProperty.call(value, 'set')
+      ? (value as { set?: unknown }).set
+      : value;
+
+  if (unwrapped === undefined) {
+    return undefined;
+  }
+  if (unwrapped === null || unwrapped === '') {
+    return null;
+  }
+
+  const parsed = Number(unwrapped);
+  if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+    throw new BadRequestException(
+      `Invalid ${fieldName}. Expected a whole-dollar amount.`,
+    );
+  }
+
+  return parsed;
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, BuilderScopeGuard)
 @Controller('admin/floor-plans')
 export class AdminFloorPlanController {
@@ -78,7 +111,13 @@ export class AdminFloorPlanController {
   @Roles('ADMIN', 'USER')
   @BuilderScope({ builderIdBody: 'builderId' })
   async create(@Body() data: Prisma.floorPlanUncheckedCreateInput) {
-    const created = await this.prisma.floorPlan.create({ data });
+    const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const createData: Prisma.floorPlanUncheckedCreateInput = {
+      ...data,
+      ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
+    };
+
+    const created = await this.prisma.floorPlan.create({ data: createData });
     await this.designOnLotService.recomputeForFloorPlan(created.id);
     return created;
   }
@@ -95,9 +134,15 @@ export class AdminFloorPlanController {
       throw new BadRequestException('builderId cannot be updated');
     }
 
+    const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const updateData: Prisma.floorPlanUncheckedUpdateInput = {
+      ...data,
+      ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
+    };
+
     const updated = await this.prisma.floorPlan.update({
       where: { id: parseBigIntId(id, 'id') },
-      data,
+      data: updateData,
     });
     await this.designOnLotService.recomputeForFloorPlan(updated.id);
     return updated;
