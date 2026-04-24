@@ -1,7 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { randomInt } from 'crypto';
 import Stripe from 'stripe';
 
-export const GOOGLE_SHEETS_STRIPE_METADATA_KEYS = [
+const ACT_TIME_ZONE = 'Australia/Sydney';
+
+export const PAID_REPORT_STRIPE_METADATA_KEYS = [
   'reportId',
   'clientName',
   'clientEmail',
@@ -14,11 +17,11 @@ export const GOOGLE_SHEETS_STRIPE_METADATA_KEYS = [
   'stripePaymentId',
 ] as const;
 
-export type GoogleSheetsStripeMetadataKey =
-  (typeof GOOGLE_SHEETS_STRIPE_METADATA_KEYS)[number];
+export type PaidReportStripeMetadataKey =
+  (typeof PAID_REPORT_STRIPE_METADATA_KEYS)[number];
 
-export type GoogleSheetsStripeMetadata = Partial<
-  Record<GoogleSheetsStripeMetadataKey, unknown>
+export type PaidReportStripeMetadata = Partial<
+  Record<PaidReportStripeMetadataKey, unknown>
 >;
 
 @Injectable()
@@ -37,21 +40,19 @@ export class StripeService {
   async createCheckoutSession(params: {
     customerEmail: string;
     site: string;
-    metadata?: GoogleSheetsStripeMetadata;
+    metadata?: PaidReportStripeMetadata;
     intention?: string;
   }): Promise<string | null> {
     try {
-      const googleSheetsMetadata = this.normalizeGoogleSheetsMetadata(
-        params.metadata,
-      );
+      const reportMetadata = this.normalizePaidReportMetadata(params.metadata);
       const metadata: Record<string, string> = {
-        ...googleSheetsMetadata,
+        ...reportMetadata,
         intention: this.normalizeToMetadataValue(params.intention),
       };
 
       const session = await this.stripe.checkout.sessions.create({
         customer_email: params.customerEmail,
-        client_reference_id: googleSheetsMetadata.reportId || undefined,
+        client_reference_id: reportMetadata.reportId || undefined,
         line_items: [
           {
             quantity: 1,
@@ -76,6 +77,23 @@ export class StripeService {
     }
   }
 
+  generateReportId(now = new Date()): string {
+    const formatter = new Intl.DateTimeFormat('en-AU', {
+      timeZone: ACT_TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const parts = formatter.formatToParts(now);
+    const year =
+      parts.find((part) => part.type === 'year')?.value || '0000';
+    const month =
+      parts.find((part) => part.type === 'month')?.value || '01';
+    const day = parts.find((part) => part.type === 'day')?.value || '01';
+    const suffix = String(randomInt(1000, 10000));
+    return `BP-${year}${month}${day}-${suffix}`;
+  }
+
   constructWebhookEvent(
     rawBody: Buffer,
     signatureHeader: string,
@@ -88,9 +106,9 @@ export class StripeService {
     );
   }
 
-  async extractGoogleSheetsPayloadFromEvent(
+  async extractPaidReportPayloadFromEvent(
     event: Stripe.Event,
-  ): Promise<Record<GoogleSheetsStripeMetadataKey, string> | null> {
+  ): Promise<Record<PaidReportStripeMetadataKey, string> | null> {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const fallbackEmail =
@@ -120,10 +138,7 @@ export class StripeService {
         }
       }
 
-      const payload = this.buildGoogleSheetsPayload(
-        combinedMetadata,
-        fallbackEmail,
-      );
+      const payload = this.buildPaidReportPayload(combinedMetadata, fallbackEmail);
 
       if (paymentIntentId) {
         payload.stripePaymentId = paymentIntentId;
@@ -135,7 +150,7 @@ export class StripeService {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const fallbackEmail = paymentIntent.receipt_email || '';
-      const payload = this.buildGoogleSheetsPayload(
+      const payload = this.buildPaidReportPayload(
         paymentIntent.metadata,
         fallbackEmail,
       );
@@ -146,22 +161,22 @@ export class StripeService {
     return null;
   }
 
-  private normalizeGoogleSheetsMetadata(
-    input: GoogleSheetsStripeMetadata | undefined,
-  ): Record<GoogleSheetsStripeMetadataKey, string> {
-    const metadata = {} as Record<GoogleSheetsStripeMetadataKey, string>;
-    for (const key of GOOGLE_SHEETS_STRIPE_METADATA_KEYS) {
+  private normalizePaidReportMetadata(
+    input: PaidReportStripeMetadata | undefined,
+  ): Record<PaidReportStripeMetadataKey, string> {
+    const metadata = {} as Record<PaidReportStripeMetadataKey, string>;
+    for (const key of PAID_REPORT_STRIPE_METADATA_KEYS) {
       metadata[key] = this.normalizeToMetadataValue(input?.[key]);
     }
     return metadata;
   }
 
-  private buildGoogleSheetsPayload(
+  private buildPaidReportPayload(
     metadata: Stripe.Metadata | null | undefined,
     fallbackEmail: string,
-  ): Record<GoogleSheetsStripeMetadataKey, string> {
-    const payload = {} as Record<GoogleSheetsStripeMetadataKey, string>;
-    for (const key of GOOGLE_SHEETS_STRIPE_METADATA_KEYS) {
+  ): Record<PaidReportStripeMetadataKey, string> {
+    const payload = {} as Record<PaidReportStripeMetadataKey, string>;
+    for (const key of PAID_REPORT_STRIPE_METADATA_KEYS) {
       payload[key] = this.normalizeToMetadataValue(metadata?.[key]);
     }
 

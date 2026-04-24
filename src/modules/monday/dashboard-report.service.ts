@@ -1,11 +1,13 @@
-import { GoogleSheetsService } from '@modules/google-sheets/google-sheets.service';
 import { MailService } from '@modules/mail/mail.service';
+import { MondayService } from '@modules/monday/monday.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as pug from 'pug';
 import * as puppeteer from 'puppeteer-core';
+
+const ACT_TIME_ZONE = 'Australia/Sydney';
 
 type ReportKeyValue = { label: string; value: string };
 
@@ -105,7 +107,7 @@ export class DashboardReportService {
   private blobServiceClient: BlobServiceClient | null = null;
 
   constructor(
-    private readonly googleSheetsService: GoogleSheetsService,
+    private readonly mondayService: MondayService,
     private readonly mailService: MailService,
   ) {}
 
@@ -139,52 +141,33 @@ export class DashboardReportService {
   async processDashboardTrigger(
     payload: Record<string, unknown>,
   ): Promise<void> {
-    let rowNumber: number | undefined;
+    let itemId = '';
     let reportId: string | undefined;
     try {
-      rowNumber = this.readRequiredRowNumber(payload);
+      itemId = this.readRequiredItemId(payload);
       reportId = this.readValue(payload, 'Report ID');
+      const ctx = this.formatCtx_({ itemId, reportId });
 
-      this.logger.log(
-        `Dashboard report job started (row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
+      this.logger.log(`Dashboard report job started${ctx}`);
 
       const report = this.buildPaidReport(payload);
-      await this.resolveImagesForRender_(report, { rowNumber, reportId });
+      await this.resolveImagesForRender_(report, { itemId, reportId });
       const html = this.renderHtml(report);
-      const pdf = await this.renderPdf(html, { rowNumber, reportId });
-      const pdfUrl = await this.uploadPdf(pdf, { rowNumber, reportId });
-      const updateResponse =
-        await this.googleSheetsService.updateGoogleSheetsRow({
-          rowNumber,
-          finalPdfLink: pdfUrl,
-        });
+      const pdf = await this.renderPdf(html, { itemId, reportId });
+      const pdfUrl = await this.uploadPdf(pdf, { itemId, reportId });
 
-      const updateOk =
-        typeof updateResponse === 'object' &&
-        updateResponse !== null &&
-        'ok' in updateResponse
-          ? Boolean((updateResponse as { ok?: unknown }).ok)
-          : undefined;
+      await this.mondayService.updatePaidReportItem({
+        itemId,
+        finalPdfLink: pdfUrl,
+      });
 
-      if (updateOk === false) {
-        this.logger.warn(
-          `Dashboard report row update returned ok=false (row=${rowNumber})`,
-        );
-      }
-
-      this.logger.log(
-        `Dashboard report job completed (row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
+      this.logger.log(`Dashboard report job completed${ctx}`);
     } catch (error) {
       this.logger.error(
-        `Dashboard report generation failed (row=${
-          rowNumber ?? 'unknown'
-        }${reportId ? ` reportId=${reportId}` : ''})`,
+        `Dashboard report generation failed${this.formatCtx_({
+          itemId,
+          reportId,
+        })}`,
       );
     }
   }
@@ -192,37 +175,34 @@ export class DashboardReportService {
   async processDashboardDelivery(
     payload: Record<string, unknown>,
   ): Promise<boolean> {
-    let rowNumber: number | undefined;
+    let itemId = '';
     let reportId: string | undefined;
 
     try {
-      rowNumber = this.readRequiredRowNumber(payload);
+      itemId = this.readRequiredItemId(payload);
       reportId = this.readValue(payload, 'Report ID');
 
       const address = this.readValue(payload, 'Address');
       const suburb = this.readValue(payload, 'Suburb');
-      const fullAddress = [address, suburb].filter(Boolean).join(', ');
+      const fullAddress = this.buildCombinedAddress_(address, suburb);
 
       const clientName = this.readValue(payload, 'Client name') || 'there';
       const clientEmail = this.readValue(payload, 'Client email');
       const pdfUrl = this.readValue(payload, 'Final PDF link');
       const emailOverride = String(
-        process.env.GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE || '',
+        process.env.MONDAY_DELIVERY_EMAIL_OVERRIDE || '',
       ).trim();
       const recipientEmail = emailOverride || clientEmail;
+      const ctx = this.formatCtx_({ itemId, reportId });
 
-      this.logger.log(
-        `Dashboard delivery job started (row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
+      this.logger.log(`Dashboard delivery job started${ctx}`);
 
       if (!pdfUrl) {
         throw new Error('Missing Final PDF link');
       }
       if (!recipientEmail) {
         throw new Error(
-          'Missing Client email (and GOOGLE_SHEETS_DELIVERY_EMAIL_OVERRIDE is not set)',
+          'Missing Client email (and MONDAY_DELIVERY_EMAIL_OVERRIDE is not set)',
         );
       }
 
@@ -234,7 +214,7 @@ export class DashboardReportService {
 
       const filename = this.buildDeliveryAttachmentFilename_({
         reportId,
-        rowNumber,
+        itemId,
         fullAddress,
       });
       const contact = this.buildContactDetails_();
@@ -260,38 +240,21 @@ export class DashboardReportService {
       });
 
       const deliveryDate = new Date().toISOString();
-      const updateResponse =
-        await this.googleSheetsService.updateGoogleSheetsDelivery({
-          rowNumber,
-          deliveryStatus: 'Sent',
-          deliveryDate,
-        });
+      await this.mondayService.updatePaidReportItem({
+        itemId,
+        deliveryStatus: 'Sent',
+        deliveryDate,
+      });
 
-      const updateOk =
-        typeof updateResponse === 'object' &&
-        updateResponse !== null &&
-        'ok' in updateResponse
-          ? Boolean((updateResponse as { ok?: unknown }).ok)
-          : undefined;
-
-      if (updateOk === false) {
-        this.logger.warn(
-          `Dashboard delivery row update returned ok=false (row=${rowNumber})`,
-        );
-      }
-
-      this.logger.log(
-        `Dashboard delivery job completed (row=${rowNumber}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
-      );
+      this.logger.log(`Dashboard delivery job completed${ctx}`);
 
       return true;
     } catch (error) {
       this.logger.error(
-        `Dashboard delivery failed (row=${rowNumber ?? 'unknown'}${
-          reportId ? ` reportId=${reportId}` : ''
-        })`,
+        `Dashboard delivery failed${this.formatCtx_({
+          itemId,
+          reportId,
+        })}`,
       );
       return false;
     }
@@ -314,7 +277,7 @@ export class DashboardReportService {
       timestampRaw ? new Date(String(timestampRaw)) : new Date(),
     );
 
-    const coverAddress = [address, suburb].filter(Boolean).join(', ') || '—';
+    const coverAddress = this.buildCombinedAddress_(address, suburb) || '—';
     const blockSection = this.buildBlockSection_(payload);
     const coverImage = this.buildCoverImage_(payload, {
       address,
@@ -519,11 +482,9 @@ export class DashboardReportService {
 
   private async renderPdf(
     html: string,
-    context?: { rowNumber: number; reportId?: string },
+    context?: { itemId?: string; reportId?: string },
   ): Promise<Buffer> {
-    const ctx = context
-      ? ` (row=${context.rowNumber}${context.reportId ? ` reportId=${context.reportId}` : ''})`
-      : '';
+    const ctx = this.formatCtx_(context);
 
     const executablePath = this.getChromeExecutablePath();
     if (!executablePath) {
@@ -584,7 +545,7 @@ export class DashboardReportService {
 
   private async uploadPdf(
     pdf: Buffer,
-    params: { rowNumber: number; reportId: string },
+    params: { itemId?: string; reportId?: string },
   ): Promise<string> {
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const containerName = process.env.AZURE_STORAGE_CONTAINER;
@@ -608,7 +569,8 @@ export class DashboardReportService {
 
     const baseId =
       (params.reportId && String(params.reportId).trim()) ||
-      `row-${params.rowNumber}`;
+      (params.itemId && String(params.itemId).trim()) ||
+      'dashboard-report';
 
     const safeId = baseId.replace(/[^a-zA-Z0-9._-]+/g, '-');
     const blobName = `${folder}/${safeId}.pdf`;
@@ -652,15 +614,16 @@ export class DashboardReportService {
     return null;
   }
 
-  private readRequiredRowNumber(payload: Record<string, unknown>): number {
-    const rowNumberRaw =
-      this.readRaw(payload, 'Row Number') ?? this.readRaw(payload, 'rowNumber');
-
-    const rowNumber = this.normalizeToInt(rowNumberRaw);
-    if (!rowNumber || rowNumber < 1) {
-      throw new Error('Missing/invalid Row Number');
+  private readRequiredItemId(payload: Record<string, unknown>): string {
+    const raw =
+      this.readRaw(payload, 'Item ID') ??
+      this.readRaw(payload, 'itemId') ??
+      this.readRaw(payload, 'item_id');
+    const itemId = String(raw || '').trim();
+    if (!itemId) {
+      throw new Error('Missing Item ID');
     }
-    return rowNumber;
+    return itemId;
   }
 
   private readValue(payload: Record<string, unknown>, label: string): string {
@@ -803,21 +766,12 @@ export class DashboardReportService {
   private formatDate_(date: Date): string {
     const d =
       date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    return new Intl.DateTimeFormat('en-AU', {
+      timeZone: ACT_TIME_ZONE,
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(d);
   }
 
   private formatZoneDisplay_(zoneRaw: string): string {
@@ -993,7 +947,7 @@ export class DashboardReportService {
     const mapQuery =
       lat !== null && lng !== null
         ? `${lat},${lng}`
-        : [params.address, params.suburb].filter(Boolean).join(', ');
+        : params.coverAddress;
 
     if (!mapQuery || mapQuery === '—') {
       return null;
@@ -1007,7 +961,7 @@ export class DashboardReportService {
 
   private async resolveImagesForRender_(
     report: PaidReport,
-    ctxArgs?: { rowNumber?: number; reportId?: string },
+    ctxArgs?: { itemId?: string; reportId?: string },
   ): Promise<void> {
     const cache = new Map<string, string | null>();
     report.coverImage = await this.resolveImageForRender_(
@@ -1025,7 +979,7 @@ export class DashboardReportService {
   private async resolveImageForRender_(
     image: ReportImage | null,
     cache: Map<string, string | null>,
-    ctxArgs?: { rowNumber?: number; reportId?: string },
+    ctxArgs?: { itemId?: string; reportId?: string },
   ): Promise<ReportImage | null> {
     if (!image?.url) {
       return null;
@@ -1058,7 +1012,11 @@ export class DashboardReportService {
 
   private async fetchImageAsDataUrl_(
     url: string,
-    ctxArgs?: { rowNumber?: number; reportId?: string; label?: string },
+    ctxArgs?: {
+      itemId?: string;
+      reportId?: string;
+      label?: string;
+    },
   ): Promise<string | null> {
     const timeoutMs = Number(
       process.env.DASHBOARD_IMAGE_FETCH_TIMEOUT_MS || 20_000,
@@ -1365,13 +1323,17 @@ export class DashboardReportService {
     const s = String(easementRaw || '')
       .trim()
       .toLowerCase();
-    const isYes = this.isYesLike_(easementRaw);
+    const isPositive =
+      this.isYesLike_(easementRaw) ||
+      s.includes('through') ||
+      s.includes('boundary') ||
+      s.includes('easement');
     const isUnsure =
       s.includes('unsure') || s.includes('unknown') || s.includes('not sure');
 
     const metaValue = easementRaw
       ? easementRaw
-      : isYes
+      : isPositive
         ? 'Yes'
         : isUnsure
           ? 'Unsure'
@@ -1388,13 +1350,19 @@ export class DashboardReportService {
       };
     }
 
-    if (isYes) {
+    if (isPositive) {
+      const summary = s.includes('boundary')
+        ? 'Based on the available mapping, there appears to be an easement running along the boundary edge of your block.'
+        : s.includes('through')
+          ? 'Based on the available mapping, there appears to be an easement running through your block.'
+          : 'Based on the available mapping, there appears to be an easement affecting your block.';
+
       return {
         metaItems: [{ label: 'Easements', value: metaValue }],
         paragraphs: [
-          'Based on the available mapping, there appears to be an easement running through your block.',
+          summary,
           'Easements are legal rights for utilities or access that restrict what you can build in certain areas. You typically cannot construct permanent buildings over an easement, and access must be maintained for maintenance.',
-          'Depending on where the easement is located, this may affect where a new dwelling or driveway can be positioned. In some cases, easements through the middle of a block can significantly limit redevelopment options.',
+          'Depending on where the easement is located, this may affect where a new dwelling or driveway can be positioned. Easements through the middle of a block are usually more restrictive, while boundary easements still need to be worked around carefully.',
           'A detailed feasibility review can confirm the exact easement location and how it affects your options.',
         ],
       };
@@ -1514,8 +1482,8 @@ export class DashboardReportService {
       metaItems,
       paragraphs: [
         intro,
-        `Your frontage of ${frontageText} is unlikely to accommodate a second driveway under standard requirements. This may limit redevelopment options that require independent access to each dwelling.`,
-        'Alternative arrangements — such as a shared driveway or battle-axe configuration — may be possible but would require detailed design assessment.',
+        `Based on the current desktop review, a second driveway is not considered feasible from a frontage of ${frontageText}. This may limit redevelopment options that rely on fully separate access to each dwelling.`,
+        'A detailed feasibility review can confirm whether any alternate access arrangement — such as a shared driveway or another site-specific solution — is realistic.',
       ],
     };
   }
@@ -1681,7 +1649,6 @@ export class DashboardReportService {
   private buildSamplePreviewPayload_(): Record<string, unknown> {
     return this.buildSampleScenarioPayload_(
       {
-        'Row Number': 999,
         'Report ID': 'PREVIEW-001',
         'Client name': 'Alex Example',
         'Client email': 'alex@example.com',
@@ -1757,7 +1724,6 @@ export class DashboardReportService {
         ],
         payload: this.buildSampleScenarioPayload_(
           {
-            'Row Number': 1001,
             'Report ID': 'PREVIEW-SELL',
             'Client name': 'Sophie Seller',
             'Client email': 'sophie@example.com',
@@ -1812,7 +1778,6 @@ export class DashboardReportService {
         ],
         payload: this.buildSampleScenarioPayload_(
           {
-            'Row Number': 1002,
             'Report ID': 'PREVIEW-DEVELOP',
             'Client name': 'Dylan Developer',
             'Client email': 'dylan@example.com',
@@ -1865,7 +1830,6 @@ export class DashboardReportService {
         ],
         payload: this.buildSampleScenarioPayload_(
           {
-            'Row Number': 1003,
             'Report ID': 'PREVIEW-PARTNER',
             'Client name': 'Priya Partner',
             'Client email': 'priya@example.com',
@@ -1915,7 +1879,6 @@ export class DashboardReportService {
         ],
         payload: this.buildSampleScenarioPayload_(
           {
-            'Row Number': 1004,
             'Report ID': 'PREVIEW-MINIMAL',
             'Client name': 'Morgan Minimal',
             'Client email': 'morgan@example.com',
@@ -2176,7 +2139,7 @@ export class DashboardReportService {
   }
 
   private formatCtx_(params?: {
-    rowNumber?: number;
+    itemId?: string;
     reportId?: string;
   }): string {
     if (!params) {
@@ -2184,7 +2147,7 @@ export class DashboardReportService {
     }
 
     const parts = [
-      params.rowNumber ? `row=${params.rowNumber}` : null,
+      params.itemId ? `itemId=${params.itemId}` : null,
       params.reportId ? `reportId=${params.reportId}` : null,
     ].filter(Boolean);
 
@@ -2193,12 +2156,13 @@ export class DashboardReportService {
 
   private buildDeliveryAttachmentFilename_(params: {
     reportId?: string;
-    rowNumber: number;
+    itemId?: string;
     fullAddress: string;
   }): string {
     const id =
       (params.reportId && String(params.reportId).trim()) ||
-      `row-${params.rowNumber}`;
+      (params.itemId && String(params.itemId).trim()) ||
+      'dashboard-report';
 
     const addressPart = String(params.fullAddress || '')
       .trim()
@@ -2254,5 +2218,24 @@ export class DashboardReportService {
     if (labels.length === 1) return labels[0];
     if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
     return `${labels.slice(0, -1).join(', ')}, and ${labels[labels.length - 1]}`;
+  }
+
+  private buildCombinedAddress_(address: string, suburb: string): string {
+    const normalizedAddress = String(address || '').trim();
+    const normalizedSuburb = String(suburb || '').trim();
+
+    if (!normalizedAddress) {
+      return normalizedSuburb;
+    }
+
+    if (!normalizedSuburb) {
+      return normalizedAddress;
+    }
+
+    if (normalizedAddress.toLowerCase().includes(normalizedSuburb.toLowerCase())) {
+      return normalizedAddress;
+    }
+
+    return `${normalizedAddress}, ${normalizedSuburb}`;
   }
 }

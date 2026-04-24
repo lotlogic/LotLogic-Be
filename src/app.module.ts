@@ -9,9 +9,9 @@ import { EstateModule } from '@modules/estate/estate.module';
 import { FacadeModule } from '@modules/facade/facade.module';
 import { FloorPlanModule } from '@modules/floor-plan/floor-plan.module';
 import { GeoModule } from '@modules/geo/geo.module';
-import { GoogleSheetsModule } from '@modules/google-sheets/google-sheets.module';
 import { LotModule } from '@modules/lot/lot.module';
 import { MailModule } from '@modules/mail/mail.module';
+import { MondayModule } from '@modules/monday/monday.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { StripeModule } from '@modules/stripe/stripe.module';
 import { Module } from '@nestjs/common';
@@ -29,7 +29,7 @@ import { Module } from '@nestjs/common';
     FacadeModule,
     BrandModule,
     GeoModule,
-    GoogleSheetsModule,
+    MondayModule,
     StripeModule.forRootAsync(),
     AdminModule,
   ],

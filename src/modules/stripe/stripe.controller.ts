@@ -11,7 +11,7 @@ import {
   RawBody,
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
-import { GoogleSheetsService } from '@modules/google-sheets/google-sheets.service';
+import { MondayService } from '@modules/monday/monday.service';
 import { StripeService } from './stripe.service';
 
 @Controller('stripe')
@@ -20,7 +20,7 @@ export class StripeController {
 
   constructor(
     private readonly stripeService: StripeService,
-    private readonly googleSheetsService: GoogleSheetsService,
+    private readonly mondayService: MondayService,
   ) {}
 
   private isStripeWebhookDebugEnabled(): boolean {
@@ -76,7 +76,7 @@ export class StripeController {
     return digits.length <= 4 ? digits : digits.slice(-4);
   }
 
-  private summarizeGoogleSheetsPayload(payload: Record<string, unknown>): {
+  private summarizeReportRequestPayload(payload: Record<string, unknown>): {
     keysCount: number;
     presentKeys: string[];
     emptyKeys: string[];
@@ -169,7 +169,6 @@ export class StripeController {
       // Backwards-compatible alias
       email?: string;
 
-      reportId?: string;
       clientName?: string;
       clientEmail?: string;
       clientPhone?: string;
@@ -194,12 +193,14 @@ export class StripeController {
       throw new BadRequestException('Missing address');
     }
 
+    const reportId = this.stripeService.generateReportId();
+
     const sessionUrl = await this.stripeService.createCheckoutSession({
       customerEmail: clientEmail,
       site,
       intention: String(body.intention || '').trim(),
       metadata: {
-        reportId: String(body.reportId || '').trim(),
+        reportId,
         clientName: String(body.clientName || '').trim(),
         clientEmail,
         clientPhone: String(body.clientPhone || '').trim(),
@@ -316,7 +317,7 @@ export class StripeController {
     const extractStartedAt = Date.now();
     try {
       payload =
-        await this.stripeService.extractGoogleSheetsPayloadFromEvent(event);
+        await this.stripeService.extractPaidReportPayloadFromEvent(event);
     } catch (error) {
       this.logger.error(
         `Stripe webhook payload extraction failed (requestId=${requestId} type=${event.type} id=${event.id} extractMs=${
@@ -335,9 +336,9 @@ export class StripeController {
       return { received: true };
     }
 
-    const payloadSummary = this.summarizeGoogleSheetsPayload(payload);
+    const payloadSummary = this.summarizeReportRequestPayload(payload);
     this.logger.log(
-      `Stripe webhook extracted Google Sheets payload (requestId=${requestId} type=${event.type} id=${event.id} extractMs=${
+      `Stripe webhook extracted report request payload (requestId=${requestId} type=${event.type} id=${event.id} extractMs=${
         Date.now() - extractStartedAt
       }): ${JSON.stringify(payloadSummary)}`,
     );
@@ -349,16 +350,16 @@ export class StripeController {
     }
 
     this.logger.log(
-      `Stripe webhook forwarding to Google Sheets (requestId=${requestId} type=${event.type} id=${event.id})`,
+      `Stripe webhook forwarding to monday (requestId=${requestId} type=${event.type} id=${event.id})`,
     );
 
     const forwardStartedAt = Date.now();
     try {
       const forwardResult =
-        await this.googleSheetsService.forwardToGoogleSheetsWebhook(payload);
+        await this.mondayService.upsertPaidReportRequest(payload);
 
       this.logger.log(
-        `Stripe webhook forwarded to Google Sheets OK (requestId=${requestId} type=${event.type} id=${event.id} forwardMs=${
+        `Stripe webhook forwarded to monday OK (requestId=${requestId} type=${event.type} id=${event.id} forwardMs=${
           Date.now() - forwardStartedAt
         } totalMs=${Date.now() - startedAt})`,
       );
@@ -370,7 +371,7 @@ export class StripeController {
       }
     } catch (error) {
       this.logger.error(
-        `Stripe webhook failed forwarding to Google Sheets (requestId=${requestId} type=${event.type} id=${event.id} forwardMs=${
+        `Stripe webhook failed forwarding to monday (requestId=${requestId} type=${event.type} id=${event.id} forwardMs=${
           Date.now() - forwardStartedAt
         } totalMs=${Date.now() - startedAt}): ${JSON.stringify(
           this.serializeError(error),

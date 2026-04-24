@@ -315,54 +315,52 @@ Behavior:
 | `PORT` | Application port | 3000 |
 | `NODE_ENV` | Environment mode | development |
 
-## 📄 Form Post → Google Sheets
+## 💳 Stripe Webhook → monday.com
 
-This service exposes an endpoint that accepts a form POST and forwards it to a Google Apps Script webhook which appends a row into a Google Sheet:
-
-- `POST /api/google-sheets/append`
-- Accepts `application/x-www-form-urlencoded`, `multipart/form-data`, or JSON bodies.
-- Sends a JSON payload with keys: `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`, `stripePaymentId`.
-
-## 💳 Stripe Webhook → Google Sheets
-
-This service exposes a Stripe webhook endpoint and forwards the checkout metadata to the same Google Apps Script webhook (as an append):
+This service exposes a Stripe webhook endpoint and upserts a paid-report item into the BlockPlanner monday board.
 
 - `POST /api/stripe/webhook`
 - Requires Stripe signature verification via env var `STRIPE_WEBHOOK_SECRET`.
-- On `checkout.session.completed` (and `payment_intent.succeeded`), extracts these metadata keys and forwards them:
+- `POST /api/stripe/create-checkout-session` now generates the `reportId` in the backend before creating the Stripe Checkout Session.
+- On `checkout.session.completed` (and `payment_intent.succeeded`), the webhook extracts these metadata keys and forwards them to monday:
   `reportId`, `clientName`, `clientEmail`, `clientPhone`, `address`, `suburb`, `blockSizeM2`, `zone`, `stripePaymentId`.
 
 ### Setup
 
-1. Deploy your Google Apps Script as a Web App and note the `/exec` URL.
-2. Set env vars (see `.env-example`):
-   - `GOOGLE_SHEETS_WEB_APP_URL`
-   - `GOOGLE_SHEETS_WEB_APP_SECRET` (sent as query param `?secret=...` and also as JSON field `secret`)
-   - Optional: `GOOGLE_SHEETS_INBOUND_WEBHOOK_SECRET` (requires callers of this API to send header `x-webhook-secret`)
+Set env vars (see `.env-example`):
+
+- `MONDAY_API_TOKEN`
+- Optional: `MONDAY_API_BASE_URL` (defaults to `https://api.monday.com/v2`)
+- Optional: `MONDAY_API_VERSION`
+- Optional: `MONDAY_PAID_REPORTS_BOARD_ID`
+- Optional: `MONDAY_PAID_REPORTS_GROUP_ID`
+- Optional: `MONDAY_WEBHOOK_SECRET`
 
 ### Example request
 
 ```bash
-curl -X POST "http://localhost:3000/api/google-sheets/append" \
+curl -X POST "http://localhost:3000/api/stripe/create-checkout-session" \
   -H "Content-Type: application/json" \
-  -d '{"reportId":"R-123","clientName":"Jane Citizen","clientEmail":"jane@example.com","clientPhone":"+61 400 000 000","address":"1 George St","suburb":"Sydney","blockSizeM2":"450","zone":"R2"}'
+  -d '{"site":"http://localhost:5173","intention":"Open to options","clientName":"Jane Citizen","clientEmail":"jane@example.com","clientPhone":"+61 400 000 000","address":"1 George St","suburb":"Sydney","blockSizeM2":"450","zone":"R2"}'
 ```
 
-## 📄 Google Sheets Dashboard Trigger → PDF
+## 📄 monday Dashboard Trigger → PDF
 
-This service exposes an endpoint that accepts a JSON payload from a Google Sheets trigger, generates a PDF in the background, uploads it to Azure Blob Storage, then updates the originating sheet row with the final PDF link:
+This service exposes endpoints that accept monday webhook payloads, load the monday item data from the BlockPlanner paid-reports board, generate the PDF in the background, upload it to Azure Blob Storage, then update the originating monday item with the final PDF link or delivery status:
 
-- `POST /api/google-sheets/dashboard-trigger`
-- Requires the same secret as the Apps Script webhook: `GOOGLE_SHEETS_WEB_APP_SECRET` (accepted as query param `?secret=...`, header `x-webhook-secret`, or JSON field `secret`).
-- Expects `Row Number` (or `rowNumber`) plus the dashboard columns as fields.
-- Responds with `true` immediately (background processing).
+- `POST /api/monday/dashboard-trigger`
+- `POST /api/monday/dashboard-delivery`
+- If monday sends a webhook challenge, the backend echoes it back automatically.
+- If `MONDAY_WEBHOOK_SECRET` is set, send it as `?secret=...`, `x-webhook-secret`, or JSON field `secret`.
+- Expects a monday item id (for example `itemId` or `event.pulseId`) and fetches the board data directly.
+- Responds immediately while the PDF/email work continues in the background.
 
 ### Background flow
 
 1. Render HTML from `src/templates/dashboard-report.pug`.
 2. Convert HTML → PDF via headless Chromium (`puppeteer-core`).
 3. Upload PDF to Azure Blob Storage.
-4. Call `GOOGLE_SHEETS_WEB_APP_URL` with `{ action: "update", rowNumber, finalPdfLink }` to update the row.
+4. Update the monday item with `Final PDF link`, `Delivery status`, and `Delivery date` as required.
 
 ### Setup
 
