@@ -46,6 +46,15 @@ export class MondayController {
       itemId,
     );
 
+    if (!this.mondayService.shouldProcessDashboardTrigger(payload)) {
+      this.logger.log(
+        `Monday dashboard trigger skipped (requestId=${requestId} itemId=${itemId} sendForQa=${JSON.stringify(
+          payload['send for QA?'] || '',
+        )})`,
+      );
+      return { ok: true, itemId, skipped: true };
+    }
+
     setImmediate(() => {
       void this.dashboardReportService.processDashboardTrigger(payload);
     });
@@ -75,6 +84,15 @@ export class MondayController {
     const payload = await this.mondayService.getNormalizedPaidReportPayload(
       itemId,
     );
+
+    if (!this.mondayService.shouldProcessDashboardDelivery(payload)) {
+      this.logger.log(
+        `Monday dashboard delivery skipped (requestId=${requestId} itemId=${itemId} deliveryStatus=${JSON.stringify(
+          payload['Delivery status'] || '',
+        )})`,
+      );
+      return { ok: true, itemId, skipped: true };
+    }
 
     const pdfUrl = String(payload['Final PDF link'] || '').trim();
     const clientEmail = String(payload['Client email'] || '').trim();

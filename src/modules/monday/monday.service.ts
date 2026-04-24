@@ -158,6 +158,22 @@ export class MondayService {
     return '';
   }
 
+  shouldProcessDashboardTrigger(payload: Record<string, unknown>): boolean {
+    return (
+      this.normalizeStatusLabel(this.readPayloadValue(payload, 'send for QA?')) ===
+      this.normalizeStatusLabel(this.getBoardSchema().statusLabels.yes)
+    );
+  }
+
+  shouldProcessDashboardDelivery(payload: Record<string, unknown>): boolean {
+    return (
+      this.normalizeStatusLabel(this.readPayloadValue(payload, 'Delivery status')) ===
+      this.normalizeStatusLabel(
+        this.getBoardSchema().statusLabels.deliveryStatus.readyToSend,
+      )
+    );
+  }
+
   private async findExistingPaidReportItem(
     payload: ReportRequestPayload,
   ): Promise<MondayItemSummary | undefined> {
@@ -625,6 +641,79 @@ export class MondayService {
     if (typeof value === 'bigint') return value.toString();
     if (value instanceof Date) return value.toISOString();
     return String(value);
+  }
+
+  private readPayloadValue(
+    payload: Record<string, unknown>,
+    label: string,
+  ): string {
+    const variants = this.getKeyVariants(label);
+    for (const key of variants) {
+      if (key in payload) {
+        return this.normalizeToString(payload[key]);
+      }
+    }
+    return '';
+  }
+
+  private getKeyVariants(label: string): string[] {
+    const base = String(label || '').trim();
+    const camel = this.toCamelCase(base);
+    const snake = this.toSnakeCase(base);
+    const noSpaces = base.replace(/\s+/g, '');
+
+    const variants = new Set<string>([
+      base,
+      camel,
+      snake,
+      noSpaces,
+      base.toLowerCase(),
+    ]);
+
+    if (camel.endsWith('Id')) {
+      variants.add(`${camel.slice(0, -2)}ID`);
+    }
+    if (camel.includes('Qa')) {
+      variants.add(camel.replace(/Qa/g, 'QA'));
+    }
+    if (snake.includes('qa')) {
+      variants.add(snake.replace(/qa/g, 'QA'));
+    }
+
+    return [...variants].filter(Boolean);
+  }
+
+  private toCamelCase(label: string): string {
+    const words = this.toWords(label);
+    if (!words.length) return '';
+    return (
+      words[0].toLowerCase() +
+      words
+        .slice(1)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join('')
+    );
+  }
+
+  private toSnakeCase(label: string): string {
+    return this.toWords(label)
+      .map((word) => word.toLowerCase())
+      .join('_');
+  }
+
+  private toWords(label: string): string[] {
+    return String(label || '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .split(/[^a-zA-Z0-9]+/)
+      .map((word) => word.trim())
+      .filter(Boolean);
+  }
+
+  private normalizeStatusLabel(value: string): string {
+    return String(value || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
   }
 
   private getClient(): MondayApiClient {
