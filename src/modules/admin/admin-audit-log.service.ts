@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '@/modules/auth/auth.request';
 const MIXPANEL_EXPORT_URL = 'https://data.mixpanel.com/api/2.0/export';
 const MIXPANEL_IMPORT_URL = 'https://api.mixpanel.com/import';
 const MIXPANEL_TRACK_URL = 'https://api.mixpanel.com/track';
-const MIXPANEL_PROJECT_ID = '3834941';
+const DEFAULT_MIXPANEL_PROJECT_ID = '3834941';
 const AUDIT_EVENT_NAME = 'Admin Audit';
 const LOGIN_EVENT_NAME = 'Admin Login';
 const DEFAULT_PAGE_SIZE = 25;
@@ -161,6 +161,10 @@ export class AdminAuditLogService {
     );
   }
 
+  private getProjectId(): string {
+    return normalizeText(process.env.MIXPANEL_PROJECT_ID) || DEFAULT_MIXPANEL_PROJECT_ID;
+  }
+
   private resolveEventTimestampMs(event: MixpanelEventRecord): number {
     const raw = event.properties?.time ?? event.properties?.timestamp;
     if (typeof raw === 'number') {
@@ -180,7 +184,7 @@ export class AdminAuditLogService {
     }
 
     const response = await fetch(
-      `${MIXPANEL_IMPORT_URL}?strict=1&project_id=${encodeURIComponent(MIXPANEL_PROJECT_ID)}`,
+      `${MIXPANEL_IMPORT_URL}?strict=1&project_id=${encodeURIComponent(this.getProjectId())}`,
       {
         method: 'POST',
         headers: {
@@ -196,6 +200,21 @@ export class AdminAuditLogService {
       throw new Error(
         `Mixpanel import failed (${response.status}): ${bodyText || 'unknown error'}`,
       );
+    }
+
+    const bodyText = await response.text();
+    if (bodyText) {
+      let parsed: unknown = null;
+      try {
+        parsed = JSON.parse(bodyText);
+      } catch {
+        parsed = null;
+      }
+      const parsedRecord =
+        parsed && typeof parsed === 'object' ? (parsed as { status?: number; error?: string }) : null;
+      if (parsedRecord?.status === 0) {
+        throw new Error(`Mixpanel import failed: ${parsedRecord.error || bodyText}`);
+      }
     }
   }
 
@@ -221,25 +240,53 @@ export class AdminAuditLogService {
       body: JSON.stringify(withToken),
     });
 
+    const bodyText = await response.text();
     if (!response.ok) {
-      const bodyText = await response.text();
       throw new Error(
         `Mixpanel track failed (${response.status}): ${bodyText || 'unknown error'}`,
       );
     }
+
+    if (bodyText) {
+      let parsed: unknown = null;
+      try {
+        parsed = JSON.parse(bodyText);
+      } catch {
+        parsed = null;
+      }
+      const parsedRecord =
+        parsed && typeof parsed === 'object' ? (parsed as { status?: number; error?: string }) : null;
+      if (parsedRecord?.status === 0) {
+        throw new Error(`Mixpanel track failed: ${parsedRecord.error || bodyText}`);
+      }
+    }
   }
 
   private async sendEvents(events: Array<Record<string, unknown>>): Promise<void> {
-    try {
-      if (this.getServiceAccountAuthHeader()) {
+    const errors: string[] = [];
+
+    if (this.getProjectToken()) {
+      try {
+        await this.postViaTrack(events);
+        return;
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : String(error));
+      }
+    }
+
+    if (this.getServiceAccountAuthHeader()) {
+      try {
         await this.postViaImport(events);
         return;
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : String(error));
       }
-      await this.postViaTrack(events);
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Audit log event failed to send to Mixpanel: ${reason}`);
     }
+
+    const reason = errors.length
+      ? errors.join(' | ')
+      : 'Mixpanel project token/service account credentials are not configured';
+    this.logger.warn(`Audit log event failed to send to Mixpanel: ${reason}`);
   }
 
   private toAuditItem(event: MixpanelEventRecord): AuditLogItem {
@@ -284,7 +331,7 @@ export class AdminAuditLogService {
     }
 
     const params = new URLSearchParams({
-      project_id: MIXPANEL_PROJECT_ID,
+      project_id: this.getProjectId(),
       from_date: fromDate,
       to_date: toDate,
       event: JSON.stringify([AUDIT_EVENT_NAME, LOGIN_EVENT_NAME]),
@@ -410,6 +457,9 @@ export class AdminAuditLogService {
           provider: 'mixpanel',
           configured: false,
           available: false,
+          projectId: this.getProjectId(),
+          trackingConfigured: Boolean(this.getProjectToken() || this.getServiceAccountAuthHeader()),
+          eventNames: [AUDIT_EVENT_NAME, LOGIN_EVENT_NAME],
           message:
             'Mixpanel service account credentials are not configured in backend environment variables.',
         },
@@ -461,6 +511,11 @@ export class AdminAuditLogService {
         provider: 'mixpanel',
         configured: true,
         available: true,
+        projectId: this.getProjectId(),
+        trackingConfigured: Boolean(this.getProjectToken() || this.getServiceAccountAuthHeader()),
+        trackTokenConfigured: Boolean(this.getProjectToken()),
+        importConfigured: Boolean(this.getServiceAccountAuthHeader()),
+        eventNames: [AUDIT_EVENT_NAME, LOGIN_EVENT_NAME],
       },
       filters: {
         from,
