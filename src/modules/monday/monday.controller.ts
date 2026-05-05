@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  Header,
   Headers,
   Logger,
   Post,
@@ -22,6 +24,18 @@ export class MondayController {
     private readonly mondayService: MondayService,
     private readonly dashboardReportService: DashboardReportService,
   ) {}
+
+  @Get('dashboard-preview')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  dashboardPreview() {
+    return this.dashboardReportService.renderSampleHtml();
+  }
+
+  @Get('dashboard-preview/all')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  dashboardPreviewAll() {
+    return this.dashboardReportService.renderAllSampleHtml();
+  }
 
   @Post('dashboard-trigger')
   @UseInterceptors(AnyFilesInterceptor({ limits: { files: 0 } }))
