@@ -1,5 +1,6 @@
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
 import { LotService } from '@modules/lot/lot.service';
+import { DesignOnLotService } from '@modules/design-on-lot/design-on-lot.service';
 import { Controller, Get, Param, Query } from '@nestjs/common';
 
 @Controller('house-design')
@@ -7,6 +8,7 @@ export class FloorPlanController {
   constructor(
     private readonly floorPlanService: FloorPlanService,
     private readonly lotService: LotService,
+    private readonly designOnLotService: DesignOnLotService,
   ) {}
 
   @Get(':lot_id')
@@ -60,6 +62,8 @@ export class FloorPlanController {
     const rumpusBool = rumpus === 'true' ? true : rumpus === 'false' ? false : undefined;
     const alfrescoBool = alfresco === 'true' ? true : alfresco === 'false' ? false : undefined;
     const pergolaBool = pergola === 'true' ? true : pergola === 'false' ? false : undefined;
+
+    await this.designOnLotService.ensureLotEvaluationCurrent(lotIdValue);
 
     const houseDesigns = await this.floorPlanService.getPrecomputedHouseDesignsForLot(
       lotIdValue,
