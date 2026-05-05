@@ -166,6 +166,43 @@ type ResolvedRules = {
   matchedRuleLabels: string[];
 };
 
+type RuleResolutionLot = {
+  id: bigint;
+  areaSqm: number;
+  frontageM: number | null;
+  lotType: string | null;
+  roadFacing: string | null;
+  lifecycleStage: string | null;
+  precinct: string | null;
+  geojson: Prisma.JsonValue | null;
+  ruleOverrides: Prisma.JsonValue | null;
+  estateId: bigint | null;
+  estate: {
+    id: bigint;
+    jurisdiction: Jurisdiction;
+  } | null;
+  lotZoningRules: Array<{
+    zoningRule: {
+      id: bigint;
+      minFrontSetback_m: number | null;
+      minRearSetback_m: number | null;
+      minSideSetback_m: number | null;
+      maxFSR: number | null;
+      minFSR: number | null;
+      maxStoreys: number | null;
+      maxBuildingHeight_m: number | null;
+    };
+  }>;
+};
+
+type LotRuleResolution = {
+  effectiveRules: NormalizedRules;
+  sourceRefs: RuleSourceRefs;
+  lotContext: LotRuleContext;
+  stateRuleSetId: bigint | null;
+  estateRuleSetId: bigint | null;
+};
+
 type RangeCondition = {
   min: number | null;
   max: number | null;
@@ -202,6 +239,31 @@ export interface EstateRecomputeSummary {
   pass: number;
   fail: number;
   manualReview: number;
+}
+
+export interface EffectiveLotRuleSummary {
+  spacing: {
+    front: number | null;
+    rear: number | null;
+    side: number | null;
+  };
+  maxCoverageArea: number | null;
+  usableWidth: number;
+  usableDepth: number;
+  effectiveRules: {
+    minFrontSetbackM: number | null;
+    minRearSetbackM: number | null;
+    minSideSetbackM: number | null;
+    maxSiteCoverageRatio: number | null;
+    minGfaM2: number | null;
+    maxGfaM2: number | null;
+    maxStoreys: number | null;
+    maxBuildingHeightM: number | null;
+    requiresArchitecturalReview: boolean;
+    architecturalNotes: string[];
+  };
+  sourceRefs: RuleSourceRefs;
+  lotContext: LotRuleContext;
 }
 
 interface DesignOnLotMatch {
@@ -367,6 +429,60 @@ export class DesignOnLotService {
     }
 
     return this.recomputeForLot(lotId);
+  }
+
+  async getEffectiveRulesForLot(lotId: bigint): Promise<EffectiveLotRuleSummary> {
+    const lot = await this.prisma.lot.findUnique({
+      where: { id: lotId },
+      include: {
+        estate: {
+          select: {
+            id: true,
+            jurisdiction: true,
+          },
+        },
+        lotZoningRules: {
+          include: { zoningRule: true },
+          orderBy: { zoningRuleId: 'asc' },
+        },
+      },
+    });
+
+    if (!lot) {
+      throw new NotFoundException('Lot not found');
+    }
+
+    const dimensions = this.extractLotDimensions(lot.geojson);
+    const { effectiveRules, sourceRefs, lotContext } =
+      await this.resolveEffectiveRulesForLot_(lot, dimensions, new Date());
+
+    const front = effectiveRules.minFrontSetbackM;
+    const rear = effectiveRules.minRearSetbackM;
+    const side = effectiveRules.minSideSetbackM;
+    const usableWidth = Number(
+      (dimensions.width - 2 * (side ?? 0)).toFixed(2),
+    );
+    const usableDepth = Number(
+      (dimensions.depth - ((front ?? 0) + (rear ?? 0))).toFixed(2),
+    );
+    const maxCoverageArea =
+      effectiveRules.maxSiteCoverageRatio !== null
+        ? Number((lot.areaSqm * effectiveRules.maxSiteCoverageRatio).toFixed(2))
+        : null;
+
+    return {
+      spacing: {
+        front,
+        rear,
+        side,
+      },
+      maxCoverageArea,
+      usableWidth,
+      usableDepth,
+      effectiveRules,
+      sourceRefs,
+      lotContext,
+    };
   }
 
   async recomputeForFloorPlan(floorPlanId: bigint): Promise<{
@@ -596,6 +712,86 @@ export class DesignOnLotService {
     };
   }
 
+  private async resolveEffectiveRulesForLot_(
+    lot: RuleResolutionLot,
+    dimensions: LotDimensions,
+    now: Date,
+  ): Promise<LotRuleResolution> {
+    const zoningRule = lot.lotZoningRules[0]?.zoningRule ?? null;
+    const stateRuleSet = lot.estate
+      ? await this.getActiveStateRuleSet_(lot.estate.jurisdiction, now)
+      : null;
+    const estateRuleSet = lot.estate
+      ? await this.getActiveEstateRuleSet_(lot.estate.id, now)
+      : null;
+    const lotConstraints =
+      lot.estate && lot.estateId
+        ? await this.prisma.estateLotConstraint.findMany({
+            where: {
+              estateId: lot.estate.id,
+              lotId: lot.id,
+              isActive: true,
+            },
+            orderBy: { id: 'asc' },
+          })
+        : [];
+
+    const frontageFromGeo = this.readNumber(this.asObject(lot.geojson), [
+      ['frontageM'],
+      ['frontage'],
+    ]);
+    const normalizedLifecycleStage = normalizeLotLifecycleStage(lot.lifecycleStage);
+
+    const lotContext: LotRuleContext = {
+      lotAreaSqm: lot.areaSqm,
+      lotWidthM: dimensions.width,
+      lotDepthM: dimensions.depth,
+      frontageM: lot.frontageM ?? frontageFromGeo ?? null,
+      lotType: lot.lotType ?? null,
+      roadFacing: lot.roadFacing ?? null,
+      lifecycleStage: normalizedLifecycleStage,
+      precinct: lot.precinct ?? null,
+    };
+
+    const baseRules = this.normalizeRulesFromZoning_(zoningRule);
+    const stateResolved = this.resolveRulesWithConditions_(stateRuleSet?.rules, lotContext);
+    const estateResolved = this.resolveRulesWithConditions_(estateRuleSet?.rules, lotContext);
+    const lotConstraintResolved = lotConstraints.map((item) => ({
+      constraintId: item.id.toString(),
+      resolved: this.resolveRulesWithConditions_(item.rules, lotContext),
+    }));
+    const lotOverrideResolved = this.resolveRulesWithConditions_(lot.ruleOverrides, lotContext);
+
+    let effectiveRules = this.mergeRules_(baseRules, stateResolved.rules);
+    effectiveRules = this.mergeRules_(effectiveRules, estateResolved.rules);
+    for (const item of lotConstraintResolved) {
+      effectiveRules = this.mergeRules_(effectiveRules, item.resolved.rules);
+    }
+    effectiveRules = this.mergeRules_(effectiveRules, lotOverrideResolved.rules);
+
+    const sourceRefs: RuleSourceRefs = {
+      zoningRuleId: zoningRule ? zoningRule.id.toString() : null,
+      stateRuleSetId: stateRuleSet ? stateRuleSet.id.toString() : null,
+      estateRuleSetId: estateRuleSet ? estateRuleSet.id.toString() : null,
+      lotConstraintIds: lotConstraints.map((item) => item.id.toString()),
+      stateMatchedRuleLabels: stateResolved.matchedRuleLabels,
+      estateMatchedRuleLabels: estateResolved.matchedRuleLabels,
+      lotOverrideMatchedRuleLabels: lotOverrideResolved.matchedRuleLabels,
+      lotConstraintMatchedRuleLabels: lotConstraintResolved.map((item) => ({
+        constraintId: item.constraintId,
+        labels: item.resolved.matchedRuleLabels,
+      })),
+    };
+
+    return {
+      effectiveRules,
+      sourceRefs,
+      lotContext,
+      stateRuleSetId: stateRuleSet?.id ?? null,
+      estateRuleSetId: estateRuleSet?.id ?? null,
+    };
+  }
+
   private async recomputeForLot(
     lotId: bigint,
     options?: { floorPlanIds?: bigint[] },
@@ -623,24 +819,13 @@ export class DesignOnLotService {
     const now = new Date();
     const dimensions = this.extractLotDimensions(lot.geojson);
     const lotGeometry = await this.getLotPlacementGeometry_(lot.id, lot.geojson);
-    const zoningRule = lot.lotZoningRules[0]?.zoningRule ?? null;
-    const stateRuleSet = lot.estate
-      ? await this.getActiveStateRuleSet_(lot.estate.jurisdiction, now)
-      : null;
-    const estateRuleSet = lot.estate
-      ? await this.getActiveEstateRuleSet_(lot.estate.id, now)
-      : null;
-    const lotConstraints =
-      lot.estate && lot.estateId
-        ? await this.prisma.estateLotConstraint.findMany({
-            where: {
-              estateId: lot.estate.id,
-              lotId: lot.id,
-              isActive: true,
-            },
-            orderBy: { id: 'asc' },
-          })
-        : [];
+    const {
+      effectiveRules,
+      sourceRefs,
+      lotContext,
+      stateRuleSetId,
+      estateRuleSetId,
+    } = await this.resolveEffectiveRulesForLot_(lot, dimensions, now);
 
     const approvedBuilderIds =
       lot.estate && lot.estateId
@@ -699,56 +884,11 @@ export class DesignOnLotService {
       existingRows.map((row) => [row.floorPlanId.toString(), row]),
     );
 
-    const frontageFromGeo = this.readNumber(this.asObject(lot.geojson), [
-      ['frontageM'],
-      ['frontage'],
-    ]);
     const normalizedLifecycleStage = normalizeLotLifecycleStage(lot.lifecycleStage);
     const lotUnavailableReason =
       normalizedLifecycleStage === 'available'
         ? null
         : `Lot is not available for plan matching (stage: ${normalizedLifecycleStage ?? 'unset'})`;
-
-    const lotContext: LotRuleContext = {
-      lotAreaSqm: lot.areaSqm,
-      lotWidthM: dimensions.width,
-      lotDepthM: dimensions.depth,
-      frontageM: lot.frontageM ?? frontageFromGeo ?? null,
-      lotType: lot.lotType ?? null,
-      roadFacing: lot.roadFacing ?? null,
-      lifecycleStage: normalizedLifecycleStage,
-      precinct: lot.precinct ?? null,
-    };
-
-    const baseRules = this.normalizeRulesFromZoning_(zoningRule);
-    const stateResolved = this.resolveRulesWithConditions_(stateRuleSet?.rules, lotContext);
-    const estateResolved = this.resolveRulesWithConditions_(estateRuleSet?.rules, lotContext);
-    const lotConstraintResolved = lotConstraints.map((item) => ({
-      constraintId: item.id.toString(),
-      resolved: this.resolveRulesWithConditions_(item.rules, lotContext),
-    }));
-    const lotOverrideResolved = this.resolveRulesWithConditions_(lot.ruleOverrides, lotContext);
-
-    let effectiveRules = this.mergeRules_(baseRules, stateResolved.rules);
-    effectiveRules = this.mergeRules_(effectiveRules, estateResolved.rules);
-    for (const item of lotConstraintResolved) {
-      effectiveRules = this.mergeRules_(effectiveRules, item.resolved.rules);
-    }
-    effectiveRules = this.mergeRules_(effectiveRules, lotOverrideResolved.rules);
-
-    const sourceRefs: RuleSourceRefs = {
-      zoningRuleId: zoningRule ? zoningRule.id.toString() : null,
-      stateRuleSetId: stateRuleSet ? stateRuleSet.id.toString() : null,
-      estateRuleSetId: estateRuleSet ? estateRuleSet.id.toString() : null,
-      lotConstraintIds: lotConstraints.map((item) => item.id.toString()),
-      stateMatchedRuleLabels: stateResolved.matchedRuleLabels,
-      estateMatchedRuleLabels: estateResolved.matchedRuleLabels,
-      lotOverrideMatchedRuleLabels: lotOverrideResolved.matchedRuleLabels,
-      lotConstraintMatchedRuleLabels: lotConstraintResolved.map((item) => ({
-        constraintId: item.constraintId,
-        labels: item.resolved.matchedRuleLabels,
-      })),
-    };
 
     let processed = 0;
     let pass = 0;
@@ -783,8 +923,8 @@ export class DesignOnLotService {
         effectiveRules,
         sourceRefs,
         lotContext,
-        stateRuleSetId: stateRuleSet?.id ?? null,
-        estateRuleSetId: estateRuleSet?.id ?? null,
+        stateRuleSetId,
+        estateRuleSetId,
       });
 
       touchedFloorPlanIds.add(floorPlan.id.toString());
@@ -828,8 +968,8 @@ export class DesignOnLotService {
         effectiveRules,
         sourceRefs,
         lotContext,
-        stateRuleSetId: stateRuleSet?.id ?? null,
-        estateRuleSetId: estateRuleSet?.id ?? null,
+        stateRuleSetId,
+        estateRuleSetId,
       });
 
       touchedFloorPlanIds.add(floorPlan.id.toString());
@@ -862,8 +1002,8 @@ export class DesignOnLotService {
         effectiveRules,
         sourceRefs,
         lotContext,
-        stateRuleSetId: stateRuleSet?.id ?? null,
-        estateRuleSetId: estateRuleSet?.id ?? null,
+        stateRuleSetId,
+        estateRuleSetId,
       });
 
       processed += 1;

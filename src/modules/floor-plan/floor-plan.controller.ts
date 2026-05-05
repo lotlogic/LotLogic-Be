@@ -64,6 +64,8 @@ export class FloorPlanController {
     const pergolaBool = pergola === 'true' ? true : pergola === 'false' ? false : undefined;
 
     await this.designOnLotService.ensureLotEvaluationCurrent(lotIdValue);
+    const effectiveRuleSummary =
+      await this.designOnLotService.getEffectiveRulesForLot(lotIdValue);
 
     const houseDesigns = await this.floorPlanService.getPrecomputedHouseDesignsForLot(
       lotIdValue,
@@ -79,7 +81,21 @@ export class FloorPlanController {
 
     return {
       houseDesigns,
-      zoning: lotDetail.zoningSetbacks || {},
+      zoning: {
+        ...(lotDetail.zoningSetbacks || {}),
+        fsr: effectiveRuleSummary.maxCoverageArea ?? undefined,
+        frontSetback:
+          effectiveRuleSummary.spacing.front ??
+          lotDetail.zoningSetbacks?.frontSetback,
+        rearSetback:
+          effectiveRuleSummary.spacing.rear ??
+          lotDetail.zoningSetbacks?.rearSetback,
+        sideSetback:
+          effectiveRuleSummary.spacing.side ??
+          lotDetail.zoningSetbacks?.sideSetback,
+        effectiveRules: effectiveRuleSummary.effectiveRules,
+        sourceRefs: effectiveRuleSummary.sourceRefs,
+      },
     };
   }
 }
