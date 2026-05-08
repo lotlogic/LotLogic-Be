@@ -137,7 +137,7 @@ Based on contour mapping, your block has a **steep slope**. This will affect con
 
 **TREES**
 
-\[Dropdown: Large trees visible \= 0 / 1 / 2 / 3+\] \[Dropdown: Tree location \= Front / Rear left / Rear right / Rear centre / Side / Multiple\] \[Dropdown: Registered tree on block \= Yes / No\]
+\[Dropdown: Large trees visible \= 0 / 1 / 2 / 3+\] \[Dropdown: Tree location \= north / south / east / west / multiple / middle of block\] \[Dropdown: Registered trees \= yes / no\]
 
 \[If 0 trees:\]
 
@@ -410,4 +410,3 @@ BlockPlanner is not a licensed planning consultancy. Where formal planning advic
 4. **Choose your pathway** — develop yourself, partner with us, or sell with confidence.
 
 **\[Book a Call\]** | **\[Email Us\]** | **\[Learn About Joint Ventures\]**
-

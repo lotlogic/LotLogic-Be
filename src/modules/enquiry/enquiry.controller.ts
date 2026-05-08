@@ -31,6 +31,7 @@ interface GetInTouchBody {
   name?: string;
   email?: string;
   phone?: string;
+  intent?: string;
   message?: string;
   company?: string;
   recaptchaToken?: string;
@@ -246,6 +247,7 @@ export class EnquiryController {
     const name = normalizeText(body.name);
     const email = normalizeText(body.email).toLowerCase();
     const phone = normalizeText(body.phone);
+    const intent = normalizeText(body.intent);
     const message = normalizeText(body.message);
     const company = normalizeText(body.company);
     const recaptchaToken = normalizeText(body.recaptchaToken);
@@ -282,6 +284,7 @@ export class EnquiryController {
         name: name || 'Not provided',
         email,
         phone,
+        intent: intent || 'Not provided',
         message: message || 'Not provided',
         submittedAt: new Date().toISOString(),
         sourceIp: normalizeText(req.ip) || 'unknown',

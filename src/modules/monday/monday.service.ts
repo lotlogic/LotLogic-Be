@@ -298,6 +298,10 @@ export class MondayService {
         columnMap,
         board.columns.treeLocation.id,
       ),
+      'Registered trees': this.readMondayText(
+        columnMap,
+        board.columns.registeredTrees.id,
+      ),
       'Heritage overlay': this.readMondayText(
         columnMap,
         board.columns.heritageOverlay.id,
@@ -733,14 +737,31 @@ export class MondayService {
   }
 
   private getBoardSchema(): BlockplannerPaidReportsBoardSchema {
+    const base = BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA;
+
     return {
-      ...BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA,
+      ...base,
+      columns: {
+        ...base.columns,
+        treeLocation: {
+          ...base.columns.treeLocation,
+          id:
+            process.env.MONDAY_TREE_LOCATION_COLUMN_ID ||
+            base.columns.treeLocation.id,
+        },
+        registeredTrees: {
+          ...base.columns.registeredTrees,
+          id:
+            process.env.MONDAY_REGISTERED_TREES_COLUMN_ID ||
+            base.columns.registeredTrees.id,
+        },
+      },
       boardId:
         process.env.MONDAY_PAID_REPORTS_BOARD_ID ||
-        BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA.boardId,
+        base.boardId,
       defaultGroupId:
         process.env.MONDAY_PAID_REPORTS_GROUP_ID ||
-        BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA.defaultGroupId,
+        base.defaultGroupId,
     };
   }
 

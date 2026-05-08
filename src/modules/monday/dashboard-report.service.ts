@@ -329,6 +329,10 @@ export class DashboardReportService {
       this.readValue(payload, 'Large trees visible'),
     );
     const treeLocation = this.readValue(payload, 'Tree location');
+    const registeredTrees = this.readFirstValue_(payload, [
+      'Registered trees',
+      'Registered tree on block',
+    ]);
 
     const heritageOverlay = this.readValue(payload, 'Heritage overlay');
     const easementImpact = this.readValue(payload, 'Easement impact');
@@ -406,6 +410,7 @@ export class DashboardReportService {
         ...this.buildTreesSection_({
           treesVisibleCount,
           treeLocation,
+          registeredTrees,
         }),
       },
       {
@@ -1236,8 +1241,12 @@ export class DashboardReportService {
   private buildTreesSection_(params: {
     treesVisibleCount: number;
     treeLocation: string;
+    registeredTrees: string;
   }): SectionContent {
-    const { treesVisibleCount, treeLocation } = params;
+    const { treesVisibleCount, treeLocation, registeredTrees } = params;
+    const hasRegisteredTrees =
+      this.isYesLike_(registeredTrees) ||
+      this.isRegisteredTreeConstraint_(registeredTrees);
 
     const metaItems: ReportKeyValue[] = [
       {
@@ -1250,13 +1259,17 @@ export class DashboardReportService {
     ];
     if (treeLocation)
       metaItems.push({ label: 'Tree location', value: treeLocation });
+    if (registeredTrees)
+      metaItems.push({ label: 'Registered trees', value: registeredTrees });
 
     if (!treesVisibleCount) {
       return {
         metaItems,
         paragraphs: [
           'Based on the latest aerial imagery, there do not appear to be any significant trees on your block.',
-          'This is favourable for redevelopment flexibility, as there are no tree protection zones to work around. However, be aware that the ACT Government is increasing tree canopy requirements for new developments. You may be required to plant new trees as part of any development.',
+          hasRegisteredTrees
+            ? 'The ACTmapi Registered Trees layer indicates a registered tree on the block. Registered trees have a higher level of protection and should be confirmed before any design work.'
+            : 'This is favourable for redevelopment flexibility, as there are no tree protection zones to work around. However, be aware that the ACT Government is increasing tree canopy requirements for new developments. You may be required to plant new trees as part of any development.',
         ],
         bullets: [],
       };
@@ -1277,7 +1290,9 @@ export class DashboardReportService {
         `Based on the latest aerial imagery, there appears to be ${countText} significant tree(s) on your block${locationText}.`,
         'Trees in the ACT are protected under the Urban Forest Act 2023 if they meet any of the following criteria:',
         'Protected trees have a tree protection zone that includes the area under the canopy plus 4 metres from the trunk in all directions. You cannot build, excavate, or disturb roots within this zone without approval from the ACT Tree Protection Unit.',
-        "We have not confirmed whether any trees on your site are on the ACT Registered Tree list. A detailed feasibility review can confirm the tree's status and map protection zones.",
+        hasRegisteredTrees
+          ? 'The ACTmapi Registered Trees layer indicates at least one registered tree on the block. Registered trees have a higher level of protection and can significantly affect where any new dwelling, driveway or excavation can be positioned.'
+          : "The ACTmapi Registered Trees layer does not currently flag a registered tree for this block. A detailed feasibility review can still confirm each tree's status and map protection zones.",
       ],
       bullets: [
         '8 metres or taller',
@@ -1292,6 +1307,21 @@ export class DashboardReportService {
       .trim()
       .toLowerCase();
     return s === 'yes' || s === 'y' || s === 'true' || s === '1' || s === 'on';
+  }
+
+  private isRegisteredTreeConstraint_(value: string): boolean {
+    const s = String(value || '')
+      .trim()
+      .toLowerCase();
+    if (!s || s === 'no' || s === 'none' || s === 'unknown' || s === 'n/a') {
+      return false;
+    }
+
+    return (
+      s.includes('tree') ||
+      s.includes('protected') ||
+      /^\d+\+?$/.test(s)
+    );
   }
 
   private buildHeritageSection_(

@@ -334,6 +334,8 @@ Set env vars (see `.env-example`):
 - Optional: `MONDAY_API_VERSION`
 - Optional: `MONDAY_PAID_REPORTS_BOARD_ID`
 - Optional: `MONDAY_PAID_REPORTS_GROUP_ID`
+- Optional: `MONDAY_TREE_LOCATION_COLUMN_ID`
+- Optional: `MONDAY_REGISTERED_TREES_COLUMN_ID`
 - Optional: `MONDAY_WEBHOOK_SECRET`
 
 ### Example request

@@ -24,6 +24,7 @@ export interface BlockplannerPaidReportsBoardSchema {
     rearYardDepthM: MondayColumnDefinition;
     largeTreesVisible: MondayColumnDefinition;
     treeLocation: MondayColumnDefinition;
+    registeredTrees: MondayColumnDefinition;
     heritageOverlay: MondayColumnDefinition;
     sewerLocation: MondayColumnDefinition;
     easementImpact: MondayColumnDefinition;
@@ -50,6 +51,24 @@ export interface BlockplannerPaidReportsBoardSchema {
   statusLabels: {
     yes: string;
     no: string;
+    treeLocation: {
+      north: string;
+      south: string;
+      east: string;
+      west: string;
+      multiple: string;
+      middleOfBlock: string;
+      notApplicable: string;
+    };
+    registeredTrees: {
+      none: string;
+      oneTree: string;
+      multipleTrees: string;
+      protected: string;
+      unknown: string;
+      yes: string;
+      no: string;
+    };
     deliveryStatus: {
       sent: string;
       notStarted: string;
@@ -105,9 +124,14 @@ export const BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA: BlockplannerPaidReportsBoar
         type: 'text',
       },
       treeLocation: {
-        id: 'text_mm2qypy6',
+        id: 'dropdown_mm35539t',
         title: 'Tree location',
-        type: 'text',
+        type: 'dropdown',
+      },
+      registeredTrees: {
+        id: 'dropdown_mm35eqsb',
+        title: 'Registered trees',
+        type: 'dropdown',
       },
       heritageOverlay: {
         id: 'color_mm2qkyrj',
@@ -223,6 +247,24 @@ export const BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA: BlockplannerPaidReportsBoar
     statusLabels: {
       yes: 'Yes',
       no: 'No',
+      treeLocation: {
+        north: 'north',
+        south: 'south',
+        east: 'east',
+        west: 'west',
+        multiple: 'multiple',
+        middleOfBlock: 'middle of block',
+        notApplicable: 'N/A',
+      },
+      registeredTrees: {
+        none: 'None',
+        oneTree: '1 Tree',
+        multipleTrees: '2+ Trees',
+        protected: 'Protected',
+        unknown: 'Unknown',
+        yes: 'Yes',
+        no: 'No',
+      },
       deliveryStatus: {
         sent: 'Sent',
         notStarted: 'Not Started',

@@ -182,11 +182,13 @@ export class LotCheckRulesService {
 
   private normalizeCopyText(value: string | null | undefined): string {
     return (value ?? '')
+      .replace(/\r\n?/g, '\n')
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter(Boolean)
-      .join(' ')
-      .trim();
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+      .replace(/[ \t]{2,}/g, ' ');
   }
 
   private parseNullableNumber(raw: string | null | undefined): number | null {
