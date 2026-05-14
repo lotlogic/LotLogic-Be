@@ -140,6 +140,7 @@ model lot {
   district             String?
   division             String?
   lifecycleStage       String?
+  houseAndLandFloorPlanId BigInt?
   ruleOverrides        Json?
   geojson              Json?
   geometry             Unsupported("geometry")?
@@ -150,12 +151,14 @@ model lot {
   designOnLots         designOnLot[]
   enquiries            enquiry[]
   estate               estate?                  @relation(fields: [estateId], references: [id])
+  houseAndLandFloorPlan   floorPlan?               @relation("LotHouseAndLandFloorPlan", fields: [houseAndLandFloorPlanId], references: [id], onDelete: SetNull)
   lotZoningRules       lotZoningRule[]
   estateLotConstraints estateLotConstraint[]
   frontageCoordinate   Unsupported("geometry")?
 
   @@index([geometry], map: "geometry_index")
   @@unique([estateId, blockKey])
+  @@index([houseAndLandFloorPlanId])
 }
 
 model zoningRule {
@@ -219,8 +222,25 @@ model floorPlan {
   designOnLots               designOnLot[]
   enquiries                  enquiry[]
   facades                    facade[]
+  documents                  floorPlanDocument[]
+  houseAndLandLots           lot[]         @relation("LotHouseAndLandFloorPlan")
 
   @@index([builderId])
+}
+
+model floorPlanDocument {
+  id            BigInt    @id @default(autoincrement())
+  floorPlanId   BigInt
+  documentName  String?
+  fileName      String
+  documentUrl   String
+  fileSizeBytes Int?
+  mimeType      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  floorPlan     floorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+
+  @@index([floorPlanId])
 }
 
 model facade {

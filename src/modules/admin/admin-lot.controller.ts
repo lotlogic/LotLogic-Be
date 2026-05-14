@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { DesignOnLotStatus, Prisma } from '@prisma/client';
 import { EasyAuthGuard } from '@/modules/auth/guards/easy-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { EstateScopeGuard } from '@/modules/auth/guards/estate-scope.guard';
@@ -32,6 +32,7 @@ type LotWithGeometryRow = {
   areaSqm: number;
   salesMode: string | null;
   price: number | null;
+  houseAndLandFloorPlanId: bigint | null;
   frontageM: number | null;
   lotType: string | null;
   roadFacing: string | null;
@@ -240,6 +241,25 @@ const normalizePriceInput = (
   return parsed;
 };
 
+const normalizeHouseAndLandFloorPlanIdInput = (
+  value: unknown,
+  fieldName: string,
+): bigint | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const unwrapped = unwrapSetInputValue(value);
+  if (unwrapped === undefined) {
+    return undefined;
+  }
+  if (unwrapped === null || unwrapped === '') {
+    return null;
+  }
+
+  return parseBigIntId(unwrapped, fieldName);
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, EstateScopeGuard)
 @Controller('admin/lots')
 export class AdminLotController {
@@ -251,11 +271,71 @@ export class AdminLotController {
   private mapLotRow(lot: LotWithGeometryRow) {
     return {
       ...lot,
+      houseAndLandFloorPlanId: lot.houseAndLandFloorPlanId?.toString() ?? null,
       geometry: lot.geometry ? JSON.parse(lot.geometry) : null,
       frontageCoordinate: lot.frontageCoordinate
         ? JSON.parse(lot.frontageCoordinate)
         : null,
     };
+  }
+
+  private mapApprovedFloorPlanRow(row: Prisma.designOnLotGetPayload<{
+    include: {
+      floorPlan: {
+        include: {
+          builder: { select: { id: true; name: true } };
+          facades: { select: { id: true; label: true; imageUrl: true } };
+        };
+      };
+    };
+  }>) {
+    return {
+      designOnLotId: row.id.toString(),
+      lotId: row.lotId.toString(),
+      floorPlanId: row.floorPlanId.toString(),
+      floorPlan: {
+        ...row.floorPlan,
+        id: row.floorPlan.id.toString(),
+        builderId: row.floorPlan.builderId.toString(),
+        builder: row.floorPlan.builder
+          ? {
+              ...row.floorPlan.builder,
+              id: row.floorPlan.builder.id.toString(),
+            }
+          : null,
+        facades: row.floorPlan.facades.map((facade) => ({
+          ...facade,
+          id: facade.id.toString(),
+        })),
+      },
+    };
+  }
+
+  private async isApprovedFloorPlanForLot(lotId: bigint, floorPlanId: bigint) {
+    const record = await this.prisma.designOnLot.findFirst({
+      where: {
+        lotId,
+        floorPlanId,
+        isCompatible: true,
+        status: DesignOnLotStatus.PASS,
+      },
+      select: { id: true },
+    });
+
+    return Boolean(record);
+  }
+
+  private async assertApprovedFloorPlanForLot(
+    lotId: bigint,
+    floorPlanId: bigint,
+  ) {
+    await this.designOnLotService.ensureLotEvaluationCurrent(lotId);
+    const isApproved = await this.isApprovedFloorPlanForLot(lotId, floorPlanId);
+    if (!isApproved) {
+      throw new BadRequestException(
+        'Selected House & Land floor plan must be an approved compatible floor plan for this lot.',
+      );
+    }
   }
 
   private async findLotRowById(lotId: bigint) {
@@ -268,6 +348,7 @@ export class AdminLotController {
         "areaSqm",
         "salesMode",
         price,
+        "houseAndLandFloorPlanId",
         "frontageM",
         "lotType",
         "roadFacing",
@@ -339,6 +420,7 @@ export class AdminLotController {
           "areaSqm",
           "salesMode",
           price,
+          "houseAndLandFloorPlanId",
           "frontageM",
           "lotType",
           "roadFacing",
@@ -393,6 +475,7 @@ export class AdminLotController {
         "areaSqm",
         "salesMode",
         price,
+        "houseAndLandFloorPlanId",
         "frontageM",
         "lotType",
         "roadFacing",
@@ -427,6 +510,45 @@ export class AdminLotController {
     return this.findLotRowById(lotId);
   }
 
+  @Get(':id/approved-floor-plans')
+  @Roles('ADMIN', 'USER')
+  @EstateScope({ lotIdParam: 'id' })
+  async findApprovedFloorPlansForLot(@Param('id') id: string) {
+    const lotId = parseBigIntId(id, 'id');
+    await this.designOnLotService.ensureLotEvaluationCurrent(lotId);
+
+    const rows = await this.prisma.designOnLot.findMany({
+      where: {
+        lotId,
+        isCompatible: true,
+        status: DesignOnLotStatus.PASS,
+      },
+      include: {
+        floorPlan: {
+          include: {
+            builder: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            facades: {
+              select: {
+                id: true,
+                label: true,
+                imageUrl: true,
+              },
+              orderBy: { id: 'asc' },
+            },
+          },
+        },
+      },
+      orderBy: { floorPlanId: 'asc' },
+    });
+
+    return rows.map((row) => this.mapApprovedFloorPlanRow(row));
+  }
+
   @Post()
   @Roles('ADMIN', 'USER')
   @EstateScope({ estateIdBody: 'estateId' })
@@ -434,9 +556,14 @@ export class AdminLotController {
     @Body()
     data: Prisma.lotUncheckedCreateInput & {
       frontageCoordinate?: unknown;
+      houseAndLandFloorPlanId?: unknown;
     },
   ) {
-    const { frontageCoordinate: _frontageCoordinate, ...createPayload } = data;
+    const {
+      frontageCoordinate: _frontageCoordinate,
+      houseAndLandFloorPlanId: _houseAndLandFloorPlanId,
+      ...createPayload
+    } = data;
     const normalizedLifecycleStage = normalizeLifecycleStageInput(
       data.lifecycleStage,
       'lifecycleStage',
@@ -446,6 +573,11 @@ export class AdminLotController {
       'salesMode',
     );
     const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const normalizedHouseAndLandFloorPlanId =
+      normalizeHouseAndLandFloorPlanIdInput(
+        data.houseAndLandFloorPlanId,
+        'houseAndLandFloorPlanId',
+      );
     const normalizedFrontageCoordinate = parseFrontageCoordinateInput(
       Object.prototype.hasOwnProperty.call(data, 'frontageCoordinate')
         ? data.frontageCoordinate
@@ -461,6 +593,12 @@ export class AdminLotController {
       ...(normalizedSalesMode !== undefined ? { salesMode: normalizedSalesMode } : {}),
       ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
     };
+
+    if (normalizedHouseAndLandFloorPlanId !== undefined) {
+      throw new BadRequestException(
+        'Select a House & Land floor plan after the lot has been created.',
+      );
+    }
 
     const created = await this.prisma.lot.create({ data: createData });
     if (normalizedFrontageCoordinate !== undefined) {
@@ -480,9 +618,26 @@ export class AdminLotController {
     @Body()
     data: Prisma.lotUncheckedUpdateInput & {
       frontageCoordinate?: unknown;
+      houseAndLandFloorPlanId?: unknown;
     },
   ) {
-    const { frontageCoordinate: _frontageCoordinate, ...updatePayload } = data;
+    const {
+      frontageCoordinate: _frontageCoordinate,
+      houseAndLandFloorPlanId: _houseAndLandFloorPlanId,
+      ...updatePayload
+    } = data;
+    const lotId = parseBigIntId(id, 'id');
+    const existingLot = await this.prisma.lot.findUnique({
+      where: { id: lotId },
+      select: {
+        id: true,
+        salesMode: true,
+        houseAndLandFloorPlanId: true,
+      },
+    });
+    if (!existingLot) {
+      throw new BadRequestException('Lot not found');
+    }
     const normalizedLifecycleStage = normalizeLifecycleStageInput(
       data.lifecycleStage,
       'lifecycleStage',
@@ -492,12 +647,41 @@ export class AdminLotController {
       'salesMode',
     );
     const normalizedPrice = normalizePriceInput(data.price, 'price');
+    const normalizedHouseAndLandFloorPlanId =
+      normalizeHouseAndLandFloorPlanIdInput(
+        data.houseAndLandFloorPlanId,
+        'houseAndLandFloorPlanId',
+      );
     const normalizedFrontageCoordinate = parseFrontageCoordinateInput(
       Object.prototype.hasOwnProperty.call(data, 'frontageCoordinate')
         ? data.frontageCoordinate
         : extractFrontageCoordinateFromGeojson(data.geojson),
       'frontageCoordinate',
     );
+
+    const finalSalesMode = normalizedSalesMode ?? existingLot.salesMode;
+    const nextHouseAndLandFloorPlanId =
+      finalSalesMode === 'house_and_land'
+        ? normalizedHouseAndLandFloorPlanId !== undefined
+          ? normalizedHouseAndLandFloorPlanId
+          : existingLot.houseAndLandFloorPlanId
+        : null;
+
+    if (
+      finalSalesMode !== 'house_and_land' &&
+      normalizedHouseAndLandFloorPlanId
+    ) {
+      throw new BadRequestException(
+        'House & Land floor plan can only be selected when salesMode is house_and_land.',
+      );
+    }
+
+    if (nextHouseAndLandFloorPlanId) {
+      await this.assertApprovedFloorPlanForLot(
+        existingLot.id,
+        nextHouseAndLandFloorPlanId,
+      );
+    }
 
     const updateData: Prisma.lotUncheckedUpdateInput = {
       ...(updatePayload as Prisma.lotUncheckedUpdateInput),
@@ -506,10 +690,11 @@ export class AdminLotController {
         : {}),
       ...(normalizedSalesMode !== undefined ? { salesMode: normalizedSalesMode } : {}),
       ...(normalizedPrice !== undefined ? { price: normalizedPrice } : {}),
+      houseAndLandFloorPlanId: nextHouseAndLandFloorPlanId,
     };
 
     const updated = await this.prisma.lot.update({
-      where: { id: parseBigIntId(id, 'id') },
+      where: { id: lotId },
       data: updateData,
     });
     if (normalizedFrontageCoordinate !== undefined) {

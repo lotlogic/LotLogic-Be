@@ -25,6 +25,7 @@ export interface HouseDesignFilterResult   {
     depth: number,
     image: string,
     images: Images[] | [],
+    documents: FloorPlanDocumentResult[],
     bedrooms: number,
     bathrooms: number,
     cars: number,
@@ -38,6 +39,15 @@ export interface Images   {
     faced: string
 }
 
+export interface FloorPlanDocumentResult {
+    id: string,
+    documentName: string | null,
+    fileName: string,
+    documentUrl: string,
+    fileSizeBytes: number | null,
+    mimeType: string | null
+}
+
 @Injectable()
 export class FloorPlanService {
     constructor(private prisma: PrismaService) {}
@@ -48,6 +58,16 @@ export class FloorPlanService {
                 facadeId: facade.id?.toString?.() ?? facade.id,
                 src: facade.imageUrl,
                 faced: facade.label
+            };
+        }) || [];
+        const documents = house.documents?.map((document: any) => {
+            return {
+                id: document.id?.toString?.() ?? document.id,
+                documentName: document.documentName ?? null,
+                fileName: document.fileName,
+                documentUrl: document.documentUrl,
+                fileSizeBytes: document.fileSizeBytes ?? null,
+                mimeType: document.mimeType ?? null
             };
         }) || [];
 
@@ -72,6 +92,7 @@ export class FloorPlanService {
             depth: house.depth,
             image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
             images,
+            documents,
             bedrooms: house.bedrooms,
             bathrooms: house.bathrooms,
             cars: house.garages,
@@ -113,6 +134,9 @@ export class FloorPlanService {
             where: whereClause,
             include: {
                 facades: true,
+                documents: {
+                    orderBy: { id: 'asc' },
+                },
                 builder: {
                     select: {
                         id: true,
@@ -170,6 +194,9 @@ export class FloorPlanService {
                 floorPlan: {
                     include: {
                         facades: true,
+                        documents: {
+                            orderBy: { id: 'asc' },
+                        },
                         builder: {
                             select: {
                                 id: true,
@@ -194,7 +221,10 @@ export class FloorPlanService {
                 id: BigInt(house_design_id)
             },
             include: {
-                facades: true
+                facades: true,
+                documents: {
+                    orderBy: { id: 'asc' },
+                }
             }
         });
     }

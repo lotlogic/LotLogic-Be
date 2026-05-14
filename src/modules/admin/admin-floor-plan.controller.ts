@@ -55,6 +55,12 @@ const normalizePriceInput = (
   return parsed;
 };
 
+const floorPlanInclude = {
+  documents: {
+    orderBy: { id: 'asc' as const },
+  },
+};
+
 @UseGuards(EasyAuthGuard, RolesGuard, BuilderScopeGuard)
 @Controller('admin/floor-plans')
 export class AdminFloorPlanController {
@@ -75,7 +81,11 @@ export class AdminFloorPlanController {
       const where: Prisma.floorPlanWhereInput = builderIdFilter
         ? { builderId: builderIdFilter }
         : {};
-      return this.prisma.floorPlan.findMany({ where, orderBy: { id: 'asc' } });
+      return this.prisma.floorPlan.findMany({
+        where,
+        include: floorPlanInclude,
+        orderBy: { id: 'asc' },
+      });
     }
 
     const builderIds = await this.prisma.builderUser.findMany({
@@ -94,6 +104,7 @@ export class AdminFloorPlanController {
 
     return this.prisma.floorPlan.findMany({
       where: { builderId: { in: builderIdsForQuery } },
+      include: floorPlanInclude,
       orderBy: { id: 'asc' },
     });
   }
@@ -104,6 +115,7 @@ export class AdminFloorPlanController {
   async findOne(@Param('id') id: string) {
     return this.prisma.floorPlan.findUnique({
       where: { id: parseBigIntId(id, 'id') },
+      include: floorPlanInclude,
     });
   }
 

@@ -10,6 +10,9 @@ interface DatabaseLot {
   areaSqm: number;
   salesMode: string | null;
   price: number | null;
+  houseAndLandFloorPlanId: bigint | null;
+  houseAndLandFloorPlanName: string | null;
+  houseAndLandBuildPrice: number | null;
   frontageM: number | null;
   lotType: string | null;
   roadFacing: string | null;
@@ -53,43 +56,48 @@ export class LotService {
     const estateFilter =
       estateId === undefined || estateId === null
         ? Prisma.sql``
-        : Prisma.sql`WHERE "estateId" = ${estateId}`;
+        : Prisma.sql`WHERE lot."estateId" = ${estateId}`;
     const lots = await this.prisma.$queryRaw<DatabaseLot[]>`
       SELECT
-        id,
-        "blockKey",
-        "blockNumber",
-        "sectionNumber",
-        "areaSqm",
-        "salesMode",
-        price,
-        "frontageM",
-        "lotType",
-        "roadFacing",
-        "precinct",
-        zoning,
-        address,
-        district,
-        division,
-        "lifecycleStage",
-        "ruleOverrides",
-        "estateId",
-        overlays,
-        geojson,
-        ST_AsGeoJSON(geometry) as geometry,
-        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate",
-        "createdAt",
-        "updatedAt"
+        lot.id,
+        lot."blockKey",
+        lot."blockNumber",
+        lot."sectionNumber",
+        lot."areaSqm",
+        lot."salesMode",
+        lot.price,
+        lot."houseAndLandFloorPlanId",
+        hlfp.name AS "houseAndLandFloorPlanName",
+        hlfp.price AS "houseAndLandBuildPrice",
+        lot."frontageM",
+        lot."lotType",
+        lot."roadFacing",
+        lot."precinct",
+        lot.zoning,
+        lot.address,
+        lot.district,
+        lot.division,
+        lot."lifecycleStage",
+        lot."ruleOverrides",
+        lot."estateId",
+        lot.overlays,
+        lot.geojson,
+        ST_AsGeoJSON(lot.geometry) as geometry,
+        ST_AsGeoJSON(lot."frontageCoordinate") as "frontageCoordinate",
+        lot."createdAt",
+        lot."updatedAt"
       FROM
         lot
+      LEFT JOIN "floorPlan" hlfp ON hlfp.id = lot."houseAndLandFloorPlanId"
       ${estateFilter}
-      ORDER BY id
+      ORDER BY lot.id
     `;
 
     return lots.map((lot) => ({
       ...lot,
       id: lot.id.toString(),
       estateId: lot.estateId?.toString(),
+      houseAndLandFloorPlanId: lot.houseAndLandFloorPlanId?.toString() ?? null,
       geometry: JSON.parse(lot.geometry),
       frontageCoordinate: lot.frontageCoordinate,
     }));
@@ -98,32 +106,36 @@ export class LotService {
   async findLot(lotId: number | bigint) {
     const lot: any = await this.prisma.$queryRawUnsafe(
       `SELECT
-        id,
-        "blockKey",
-        "blockNumber",
-        "sectionNumber",
-        "areaSqm",
-        "salesMode",
-        price,
-        "frontageM",
-        "lotType",
-        "roadFacing",
-        "precinct",
-        zoning,
-        address,
-        district,
-        division,
-        "lifecycleStage",
-        "ruleOverrides",
-        "estateId",
-        overlays,
-        geojson,
-        ST_AsGeoJSON(geometry) as geometry,
-        ST_AsGeoJSON("frontageCoordinate") as "frontageCoordinate"
+        lot.id,
+        lot."blockKey",
+        lot."blockNumber",
+        lot."sectionNumber",
+        lot."areaSqm",
+        lot."salesMode",
+        lot.price,
+        lot."houseAndLandFloorPlanId",
+        hlfp.name AS "houseAndLandFloorPlanName",
+        hlfp.price AS "houseAndLandBuildPrice",
+        lot."frontageM",
+        lot."lotType",
+        lot."roadFacing",
+        lot."precinct",
+        lot.zoning,
+        lot.address,
+        lot.district,
+        lot.division,
+        lot."lifecycleStage",
+        lot."ruleOverrides",
+        lot."estateId",
+        lot.overlays,
+        lot.geojson,
+        ST_AsGeoJSON(lot.geometry) as geometry,
+        ST_AsGeoJSON(lot."frontageCoordinate") as "frontageCoordinate"
       FROM
         lot
+      LEFT JOIN "floorPlan" hlfp ON hlfp.id = lot."houseAndLandFloorPlanId"
       WHERE
-        id = $1`,
+        lot.id = $1`,
       lotId,
     );
     
@@ -151,6 +163,10 @@ export class LotService {
         ...lotData,
         id: lotData.id.toString(),
         estateId: lotData.estateId?.toString(),
+        houseAndLandFloorPlanId:
+          lotData.houseAndLandFloorPlanId?.toString?.() ??
+          lotData.houseAndLandFloorPlanId ??
+          null,
         geometry: lotData.geometry ? JSON.parse(lotData.geometry) : null,
         frontageCoordinate: lotData.frontageCoordinate,
         zoningSetbacks

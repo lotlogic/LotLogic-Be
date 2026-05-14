@@ -249,6 +249,13 @@ export class AdminUploadService {
     }
 
     if (folder !== 'floorplans') {
+      if (folder === 'floorplan-documents') {
+        if (!contentType || contentType.toLowerCase() !== 'application/pdf') {
+          throw new BadRequestException(
+            'Floor plan document uploads must be PDF files.',
+          );
+        }
+      }
       return;
     }
 

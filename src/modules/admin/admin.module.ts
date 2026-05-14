@@ -7,6 +7,7 @@ import { AdminZoningRuleController } from '@/modules/admin/admin-zoning-rule.con
 import { AdminLotZoningRuleController } from '@/modules/admin/admin-lot-zoning-rule.controller';
 import { AdminFloorPlanController } from '@/modules/admin/admin-floor-plan.controller';
 import { AdminFloorPlanFacadeController } from '@/modules/admin/admin-floor-plan-facade.controller';
+import { AdminFloorPlanDocumentController } from '@/modules/admin/admin-floor-plan-document.controller';
 import { AdminFacadeController } from '@/modules/admin/admin-facade.controller';
 import { AdminDesignOnLotController } from '@/modules/admin/admin-design-on-lot.controller';
 import { AdminBuilderController } from '@/modules/admin/admin-builder.controller';
@@ -38,6 +39,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     AdminLotZoningRuleController,
     AdminFloorPlanController,
     AdminFloorPlanFacadeController,
+    AdminFloorPlanDocumentController,
     AdminFacadeController,
     AdminDesignOnLotController,
     AdminBuilderController,
