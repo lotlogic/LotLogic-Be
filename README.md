@@ -180,6 +180,31 @@ npx tsx prisma/seeds/seed.ts
 npx tsx prisma/seeds/lot.ts
 ```
 
+## 🗺️ ACT Land Use Zones (Address → Zone Lookup)
+
+This repo supports importing ACT Gov GeoJSON datasets (EPSG:4326) into PostGIS and querying them via the API:
+- `data/ACTGOV_BLOCKS_-3707349334185229602.geojson` (blocks; includes `BLOCK_DERIVED_AREA`)
+- `data/ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson` (land use zones; includes `LAND_USE_ZONE_CODE_ID`)
+
+### 1) Configure Google Geocoding
+- Add `GOOGLE_MAPS_API_KEY` to your `.env` (see `.env-example`).
+
+### 2) Apply DB migrations + import GeoJSON (Docker)
+```bash
+docker exec lotcheck-backend npx prisma migrate deploy
+docker exec lotcheck-backend npx tsx prisma/seeds/actLandUseZone.ts --skip-if-exists
+docker exec lotcheck-backend npx tsx prisma/seeds/actBlock.ts --skip-if-exists
+```
+
+- Use `--truncate` to force a full re-import (drops existing rows first).
+- In Azure Container Apps, you can set `AUTO_IMPORT_ACT_DATA=true` to run these imports in the background on boot.
+
+### 3) Call the endpoint
+- By address: `GET http://localhost:3000/api/geo/act-zone?address=1%20Bunda%20St%20Canberra%20ACT`
+- By coordinates (no Google call): `GET http://localhost:3000/api/geo/act-zone?lat=-35.2809&lng=149.1310`
+- Response includes both `block` and `zone` (when available). `source` indicates which matched dataset is preferred (blocks first, then land-use zones).
+- If `data/2. LotCheck - Reference Data - Rules v3.csv` exists, matching rules for the resolved zone are included under `lotCheckRules` (override path via `LOT_CHECK_RULES_CSV_PATH`).
+
 ## 🔧 Development Tools
 
 ### Code Quality

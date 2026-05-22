@@ -1,0 +1,93 @@
+name: Deploy Backend (Prod)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      ACR_REGISTRY: lotcheck.azurecr.io
+      IMAGE_NAME: lotlogic-be
+      RESOURCE_GROUP: Production
+      CONTAINERAPP_NAME: lotcheck-be
+      PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short,prefix=sha-
+            type=raw,value=prod-latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.runtime
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Select image to deploy
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="$(echo "${{ steps.meta.outputs.tags }}" | grep ':sha-' | head -n 1)"
+          if [ -z "$IMAGE" ]; then
+            echo "No sha tag found in generated tags:"
+            echo "${{ steps.meta.outputs.tags }}"
+            exit 1
+          fi
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "Deploying $IMAGE"
+
+      - name: Deploy to Azure Container Apps
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENV_VARS=(
+            "AUTO_MIGRATE=true"
+            "AUTO_SEED=false"
+            "AUTO_SEED_SKIP_IF_DATA=true"
+            "AUTO_IMPORT_ACT_DATA=false"
+          )
+
+          if [ -n "${PROD_DATABASE_URL}" ]; then
+            ENV_VARS+=("DATABASE_URL=${PROD_DATABASE_URL}")
+          else
+            echo "PROD_DATABASE_URL secret not set; leaving DATABASE_URL unchanged."
+          fi
+
+          az containerapp update \
+            --name "${CONTAINERAPP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --image "${{ steps.image.outputs.image }}" \
+            --set-env-vars "${ENV_VARS[@]}"
