@@ -6,8 +6,9 @@ export class AppService {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'LotLogic Backend',
+      service: 'LotCheck Backend',
       version: '1.0.0'
     };
   }
 }
+

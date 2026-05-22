@@ -21,14 +21,47 @@ export type BrandUpsertData = {
 export class BrandService {
   constructor(private prisma: PrismaService) {}
 
-  // Read the one-and-only brand record
-  async get() {
+  // Default brand prefers the prototype estate brand when configured.
+  async getDefault() {
+    const prototypeEstate = await this.prisma.estate.findFirst({
+      where: {
+        isPrototype: true,
+        brandGuid: { not: null },
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        brandSetting: true,
+      },
+    });
+    if (prototypeEstate?.brandSetting) {
+      return prototypeEstate.brandSetting;
+    }
+
     const data = await this.prisma.brandSetting.findUnique({ where: { id: BRAND_ID } });
     return data || {};
   }
 
-  // Create or update the singleton brand
-  upsert(data: BrandUpsertData) {
+  async getByGuid(guid: string) {
+    return this.prisma.brandSetting.findUnique({ where: { guid } });
+  }
+
+  async getByEstateId(estateId: string) {
+    const estate = await this.prisma.estate.findUnique({
+      where: { id: BigInt(estateId) },
+      select: {
+        brandSetting: true,
+      },
+    });
+
+    if (estate?.brandSetting) {
+      return estate.brandSetting;
+    }
+
+    return this.getDefault();
+  }
+
+  // Create or update the legacy singleton brand
+  upsertDefault(data: BrandUpsertData) {
     return this.prisma.brandSetting.upsert({
       where: { id: BRAND_ID },
       create: { id: BRAND_ID, ...data },

@@ -20,6 +20,7 @@ export class MailController {
                 imageUrl: 'https://i.pinimg.com/originals/20/9d/6f/209d6f3896b1a9f4ff1c6fd53cd9e788.jpg',
             },
             emailsList: 'sherpalakpa443@gmail.com',
+            senderProfile: 'blockplanner',
         });
         return { message: "Mail sent successfully" };
     }

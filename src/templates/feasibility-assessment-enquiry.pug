@@ -1,0 +1,74 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    style.
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #f3f5f7;
+        font-family: Arial, sans-serif;
+        color: #1f2937;
+      }
+
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 24px;
+        border: 1px solid #e5e7eb;
+      }
+
+      h2 {
+        margin: 0 0 16px 0;
+        font-size: 20px;
+      }
+
+      p {
+        margin: 8px 0;
+        font-size: 15px;
+      }
+
+      .label {
+        font-weight: 700;
+      }
+
+      .message {
+        margin-top: 16px;
+        padding: 12px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        white-space: pre-wrap;
+      }
+  body
+    .container
+      h2 New Feasibility Assessment Enquiry
+      p
+        span.label Block address:
+        |  #{address}
+      p
+        span.label Client name:
+        |  #{name}
+      p
+        span.label Client email:
+        |  #{email}
+      p
+        span.label Phone:
+        |  #{phone}
+      p
+        span.label Intent:
+        |  #{intent}
+      p
+        span.label Submitted at:
+        |  #{submittedAt}
+      p
+        span.label Source IP:
+        |  #{sourceIp}
+
+      .message
+        p
+          span.label Message:
+        p #{message}

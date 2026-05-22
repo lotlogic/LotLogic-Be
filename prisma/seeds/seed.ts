@@ -8,16 +8,175 @@ async function main(): Promise<void> {
   console.log('🌱 Seeding estate...');
   await prisma.estate.upsert({
     where: { id: 1 },
-    update: {},
+    update: {
+      jurisdiction: 'NSW',
+    },
     create: {
       id: 1,
       name: 'Hamilton Rise Yass',
+      jurisdiction: 'NSW',
       logoUrl:
         'https://www.hamiltonriseyass.com.au/wp-content/uploads/2021/10/logo-768x82.png',
-      themeColor: '#2F5D62',
       email: 'info@hamiltonriseyass.com.au',
       phone: '0417 710 772',
       address: '14 Mitchell St YASS NSW 2582',
+    },
+  });
+
+  console.log('🌱 Seeding state rule sets...');
+  await prisma.stateRuleSet.upsert({
+    where: {
+      jurisdiction_version: {
+        jurisdiction: 'NSW',
+        version: 1,
+      },
+    },
+    update: {
+      name: 'NSW baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 0.9,
+      },
+      sourceUrl:
+        'https://www.planning.nsw.gov.au/sites/default/files/2023-02/guide-to-complying-development.pdf',
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+    create: {
+      jurisdiction: 'NSW',
+      version: 1,
+      name: 'NSW baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 0.9,
+      },
+      sourceUrl:
+        'https://www.planning.nsw.gov.au/sites/default/files/2023-02/guide-to-complying-development.pdf',
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+  });
+
+  await prisma.stateRuleSet.upsert({
+    where: {
+      jurisdiction_version: {
+        jurisdiction: 'ACT',
+        version: 1,
+      },
+    },
+    update: {
+      name: 'ACT baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 3,
+      },
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+    create: {
+      jurisdiction: 'ACT',
+      version: 1,
+      name: 'ACT baseline v1',
+      status: 'PUBLISHED',
+      rules: {
+        minFrontSetbackM: 4,
+        minRearSetbackM: 3,
+        minSideSetbackM: 3,
+      },
+      notes: 'Seed baseline only. Replace with policy-accurate values per release.',
+    },
+  });
+
+  console.log('🌱 Seeding estate rule sets...');
+  await prisma.estateRuleSet.upsert({
+    where: {
+      estateId_version: {
+        estateId: 1,
+        version: 1,
+      },
+    },
+    update: {
+      name: 'Hamilton Rise guidelines v1',
+      status: 'PUBLISHED',
+      rules: {
+        minGfaM2: 170,
+        maxStoreys: 2,
+        maxBuildingHeightM: 10.5,
+        lotAreaBands: [
+          {
+            label: '700-900sqm',
+            minAreaSqm: 700,
+            maxAreaSqm: 900,
+            maxGfaM2: 380,
+            maxSiteCoverageRatio: 0.5,
+          },
+          {
+            label: '900-1500sqm',
+            minAreaSqm: 900,
+            maxAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.4,
+          },
+          {
+            label: '1500sqm+',
+            minAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.3,
+          },
+        ],
+        requiresArchitecturalReview: true,
+        architecturalNotes: [
+          'Roof pitch minimum 22.5 degrees (single storey)',
+          'Traditional Australian vernacular style',
+          'Garages integrated within main roofline',
+          'Service areas must not face Yass Valley Way',
+        ],
+      },
+      notes: 'Seed baseline for conditional estate rules',
+    },
+    create: {
+      estateId: 1,
+      version: 1,
+      name: 'Hamilton Rise guidelines v1',
+      status: 'PUBLISHED',
+      rules: {
+        minGfaM2: 170,
+        maxStoreys: 2,
+        maxBuildingHeightM: 10.5,
+        lotAreaBands: [
+          {
+            label: '700-900sqm',
+            minAreaSqm: 700,
+            maxAreaSqm: 900,
+            maxGfaM2: 380,
+            maxSiteCoverageRatio: 0.5,
+          },
+          {
+            label: '900-1500sqm',
+            minAreaSqm: 900,
+            maxAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.4,
+          },
+          {
+            label: '1500sqm+',
+            minAreaSqm: 1500,
+            maxGfaM2: 430,
+            maxSiteCoverageRatio: 0.3,
+          },
+        ],
+        requiresArchitecturalReview: true,
+        architecturalNotes: [
+          'Roof pitch minimum 22.5 degrees (single storey)',
+          'Traditional Australian vernacular style',
+          'Garages integrated within main roofline',
+          'Service areas must not face Yass Valley Way',
+        ],
+      },
+      notes: 'Seed baseline for conditional estate rules',
     },
   });
 
@@ -177,6 +336,42 @@ async function main(): Promise<void> {
     },
   });
 
+  console.log('🌱 Seeding builders...');
+  const builder1 = await prisma.builder.create({
+    data: {
+      name: 'Beyond Himalaya Pty Ltd',
+      email: 'info@beyondhimalayatech.com.au',
+      phone: '+610435581311',
+    },
+  });
+  const builder2 = await prisma.builder.create({
+    data: {
+      name: 'Lotlogic BlockPlanner Pty Ltd',
+      email: 'mitch@blockplanner.com.au',
+      phone: '+61 401 637 961',
+    },
+  });
+
+  await prisma.builderEstateApproval.upsert({
+    where: { builderId_estateId: { builderId: builder1.id, estateId: 1 } },
+    update: { status: 'APPROVED' },
+    create: {
+      builderId: builder1.id,
+      estateId: 1,
+      status: 'APPROVED',
+    },
+  });
+
+  await prisma.builderEstateApproval.upsert({
+    where: { builderId_estateId: { builderId: builder2.id, estateId: 1 } },
+    update: { status: 'APPROVED' },
+    create: {
+      builderId: builder2.id,
+      estateId: 1,
+      status: 'APPROVED',
+    },
+  });
+
   console.log('🌱 Seeding floor plans...');
   const floorPlan1 = await prisma.floorPlan.create({
     data: {
@@ -187,11 +382,12 @@ async function main(): Promise<void> {
       bathrooms: 2,
       garages: 1,
       areaSqm: 150.0,
-      minLotWidth: 12.0,
-      minLotDepth: 15.0,
+      width: 12.0,
+      depth: 15.0,
       rumpus: false,
       alfresco: true,
       pergola: false,
+      builderId: builder1.id,
     },
   });
 
@@ -204,11 +400,12 @@ async function main(): Promise<void> {
       bathrooms: 1,
       garages: 1,
       areaSqm: 100.0,
-      minLotWidth: 10.0,
-      minLotDepth: 12.0,
+      width: 10.0,
+      depth: 12.0,
       rumpus: false,
       alfresco: false,
       pergola: true,
+      builderId: builder1.id,
     },
   });
 
@@ -221,11 +418,12 @@ async function main(): Promise<void> {
       bathrooms: 1,
       garages: 1,
       areaSqm: 100.0,
-      minLotWidth: 10.0,
-      minLotDepth: 12.0,
+      width: 10.0,
+      depth: 12.0,
       rumpus: false,
       alfresco: false,
       pergola: true,
+      builderId: builder2.id,
     },
   });
 
@@ -257,15 +455,6 @@ async function main(): Promise<void> {
     },
   });
 
-  console.log('🌱 Seeding builders...');
-  await prisma.builder.create({
-    data: {
-      name: 'Beyond Himalaya Pty Ltd',
-      email: 'info@beyondhimalayatech.com.au',
-      phone: '+610435581311',
-    },
-  });
-
   console.log('✅ Seeding completed successfully!');
 
   // sample house designs
@@ -290,8 +479,8 @@ async function main(): Promise<void> {
   //                 bathrooms: ba,
   //                 garages: ga,
   //                 areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
-  //                 minLotWidth: 12.0,
-  //                 minLotDepth: 15.0,
+  //                 width: 12.0,
+  //                 depth: 15.0,
   //                 rumpus,
   //                 alfresco,
   //                 pergola
@@ -318,8 +507,8 @@ async function main(): Promise<void> {
   //                 bathrooms: ba,
   //                 garages: ga,
   //                 areaSqm: Math.floor(Math.random() * (1000 - 200 + 1)) + 200,
-  //                 minLotWidth: 12.0,
-  //                 minLotDepth: 15.0,
+  //                 width: 12.0,
+  //                 depth: 15.0,
   //                 rumpus,
   //                 alfresco,
   //                 pergola

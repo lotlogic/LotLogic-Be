@@ -1,8 +1,146 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as turf from '@turf/turf';
+import {
+  calculateArea,
+  calculateDistance,
+  findClosestRoad,
+  findFrontSideByRoad,
+  getWidthHeight,
+} from '../../src/helper/turf';
 
 const prisma = new PrismaClient();
+
+type Coordinate = [number, number];
+type Edge = [Coordinate, Coordinate];
+
+type SeedLotFeature = {
+  geo_type: 'lot' | string;
+  blockKey: string;
+  blockNumber: number | null;
+  sectionNumber: number | null;
+  zoning: string;
+  address: string | null;
+  district: string | null;
+  division: string | null;
+  lifecycleArea?: string | null;
+  estateId?: string | null;
+  geometry: { coordinates: Coordinate[][] };
+};
+
+type LotSeedPayload = {
+  blockKey: string;
+  blockNumber: number | null;
+  sectionNumber: number | null;
+  areaSqm: number;
+  zoning: string;
+  address: string | null;
+  district: string | null;
+  division: string | null;
+  lifecycleStage: string | null | undefined;
+  estateId: string | null | undefined;
+  geojson: Record<string, unknown>;
+  geometry: string;
+  frontageCoordinate: string | null;
+};
+
+const EDGE_DECIMALS = 8;
+const POINT_EPSILON = 1e-9;
+
+const pointsEqual = (a: Coordinate, b: Coordinate) =>
+  Math.abs(a[0] - b[0]) <= POINT_EPSILON &&
+  Math.abs(a[1] - b[1]) <= POINT_EPSILON;
+
+const normalizeRing = (coordinates: Coordinate[]) => {
+  const ring = coordinates.map(
+    (point) => [Number(point[0]), Number(point[1])] as Coordinate,
+  );
+
+  if (ring.length < 2) {
+    return ring;
+  }
+
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  if (!pointsEqual(first, last)) {
+    ring.push(first);
+  }
+
+  return ring;
+};
+
+const getEdges = (ring: Coordinate[]) => {
+  const edges: Edge[] = [];
+  for (let i = 0; i < ring.length - 1; i += 1) {
+    const start = ring[i];
+    const end = ring[i + 1];
+    if (!pointsEqual(start, end)) {
+      edges.push([start, end]);
+    }
+  }
+  return edges;
+};
+
+const coordinateKey = (coordinate: Coordinate) =>
+  `${coordinate[0].toFixed(EDGE_DECIMALS)},${coordinate[1].toFixed(EDGE_DECIMALS)}`;
+
+const edgeKey = (edge: Edge) => {
+  const a = coordinateKey(edge[0]);
+  const b = coordinateKey(edge[1]);
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+};
+
+const buildEdgeUsageMap = (lotFeatures: SeedLotFeature[]) => {
+  const usage = new Map<string, number>();
+  for (const lot of lotFeatures) {
+    const ring = normalizeRing(lot.geometry.coordinates[0] ?? []);
+    for (const edge of getEdges(ring)) {
+      const key = edgeKey(edge);
+      usage.set(key, (usage.get(key) ?? 0) + 1);
+    }
+  }
+  return usage;
+};
+
+const chooseLongestEdge = (edges: Edge[]) => {
+  let selected: Edge | null = null;
+  let maxLength = -Infinity;
+  for (const edge of edges) {
+    const length = calculateDistance(edge[0], edge[1]);
+    if (length > maxLength) {
+      maxLength = length;
+      selected = edge;
+    }
+  }
+  return selected;
+};
+
+const distanceFromEdgeToRoad = (edge: Edge, road: Coordinate[]) => {
+  if (!road.length) {
+    return Infinity;
+  }
+  const roadLine = turf.lineString(road);
+  const midpoint = turf.midpoint(turf.point(edge[0]), turf.point(edge[1]));
+  const nearestPoint = turf.nearestPointOnLine(roadLine, midpoint);
+  return turf.distance(midpoint, nearestPoint, { units: 'meters' });
+};
+
+const chooseEdgeClosestToRoad = (edges: Edge[], road: Coordinate[]) => {
+  let selected: Edge | null = null;
+  let minDistance = Infinity;
+  for (const edge of edges) {
+    const distance = distanceFromEdgeToRoad(edge, road);
+    if (distance < minDistance) {
+      minDistance = distance;
+      selected = edge;
+    }
+  }
+  return selected;
+};
+
+const edgeToLineString = (edge: Edge) =>
+  `LINESTRING(${edge[0][0]} ${edge[0][1]}, ${edge[1][0]} ${edge[1][1]})`;
 
 async function main() {
   const filePath = path.join(
@@ -10,119 +148,134 @@ async function main() {
     '../../src/data/hamiltonRiseMitchell.json',
   );
   const fileContent = fs.readFileSync(filePath, 'utf-8');
-  const lots = JSON.parse(fileContent);
-  for (const lot of lots.features) {
-    if (lot.geo_type === 'lot') {
-      let data: {
-        blockKey,
-        blockNumber,
-        sectionNumber,
-        areaSqm,
-        zoning,
-        address,
-        district,
-        division,
-        lifecycleStage,
-        estateId,
-        geojson,
-        geometry,
-      } = {
-        blockKey: lot.blockKey,
-        blockNumber: lot.blockNumber,
-        sectionNumber: lot.sectionNumber,
-        areaSqm: calculateArea(lot.geometry.coordinates[0]),
-        zoning: lot.zoning,
-        address: lot.address,
-        district: lot.district,
-        division: lot.division,
-        lifecycleStage: lot.lifecycleArea,
-        estateId: lot.estateId,
-        geojson: {},
-        geometry: toPolygon(
-          lot.geometry.coordinates[0].map((c) => c.join(' ')).toString(),
-        ),
-      };
-      let properties: { [key: string]: number }[] = [];
-      const coordinates = lot.geometry.coordinates[0];
-      for (let i = 0; i < coordinates.length - 1; i++) {
-        const distance = calculateDistance(coordinates[i], coordinates[i + 1]);
-        properties.push({ [`s${i + 1}`]: distance });
-      }
+  const lots = JSON.parse(fileContent) as { features: SeedLotFeature[] };
+  const lotFeatures = lots.features.filter(
+    (feature) => feature.geo_type === 'lot',
+  );
+  const edgeUsageMap = buildEdgeUsageMap(lotFeatures);
 
-      let minLat = Infinity,
-        maxLat = -Infinity,
-        minLon = Infinity,
-        maxLon = -Infinity;
+  const geoData = await prisma.geoData.findMany({
+    where: {
+      geoType: {
+        in: ['Road'],
+      },
+    },
+  });
 
-      lot.geometry.coordinates[0].forEach(([lon, lat]) => {
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lon < minLon) minLon = lon;
-        if (lon > maxLon) maxLon = lon;
-      });
-      const midLat = (minLat + maxLat) / 2;
-      const width = calculateDistance([minLon, midLat], [maxLon, midLat]);
-      const depth = calculateDistance([minLon, minLat], [minLon, maxLat]);
+  const roads = geoData.map((data) => {
+    const coordinates: Coordinate[] = [];
+    const arrayData = data.coordinates.split(',');
+    for (let coor = 0; coor < arrayData.length; coor += 2) {
+      coordinates.push([Number(arrayData[coor]), Number(arrayData[coor + 1])]);
+    }
+    return coordinates;
+  });
 
-      data.geojson = { properties, width, depth };
-      try {
-        const sql = `
-              INSERT INTO lot (
-                "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
-                "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "createdAt", "updatedAt"
-              ) VALUES (
-                $1, $2, $3, $4, $5, $6,
-                $7, $8, $9, $10, $11,
-                ST_GeomFromText($12, 4326), now(), now()
-              )
-              ON CONFLICT ("blockKey")
-              DO UPDATE SET 
-                "blockNumber" = $2,
-                "sectionNumber" = $3,
-                "areaSqm" = $4,
-                "zoning" = $5,
-                "address" = $6,
-                "district" = $7,
-                "division" = $8,
-                "lifecycleStage" = $9,
-                "estateId" = $10,
-                "geojson" = $11,
-                "geometry" = ST_GeomFromText($12, 4326),
-                "updatedAt" = now()
-        `;
+  for (const lot of lotFeatures) {
+    const coordinates = normalizeRing(lot.geometry.coordinates[0] ?? []);
+    const lotEdges = getEdges(coordinates);
+    const unsharedEdges = lotEdges.filter(
+      (edge) => edgeUsageMap.get(edgeKey(edge)) === 1,
+    );
 
-        await prisma.$executeRawUnsafe(
-          sql,
-          data.blockKey,
-          data.blockNumber,
-          data.sectionNumber,
-          data.areaSqm,
-          data.zoning,
-          data.address,
-          data.district,
-          data.division,
-          data.lifecycleStage,
-          data.estateId,
-          data.geojson,
-          data.geometry,
-        );
-      } catch (error) {
-        console.error('Error: ' + error);
-      }
+    const nearestRoad = findClosestRoad(coordinates, roads);
+    const selectedUnsharedEdge = nearestRoad
+      ? chooseEdgeClosestToRoad(unsharedEdges, nearestRoad)
+      : chooseLongestEdge(unsharedEdges);
+
+    const fallbackRoadEdge = nearestRoad
+      ? findFrontSideByRoad(coordinates, nearestRoad)?.frontSide ?? null
+      : null;
+
+    const selectedFrontageEdge =
+      selectedUnsharedEdge ??
+      (fallbackRoadEdge as Edge | null) ??
+      chooseLongestEdge(lotEdges);
+
+    const data: LotSeedPayload = {
+      blockKey: lot.blockKey,
+      blockNumber: lot.blockNumber,
+      sectionNumber: lot.sectionNumber,
+      areaSqm: calculateArea(coordinates),
+      zoning: lot.zoning,
+      address: lot.address,
+      district: lot.district,
+      division: lot.division,
+      lifecycleStage: lot.lifecycleArea,
+      estateId: lot.estateId,
+      geojson: {},
+      geometry: toPolygon(coordinates.map((c) => c.join(' ')).toString()),
+      frontageCoordinate: selectedFrontageEdge
+        ? edgeToLineString(selectedFrontageEdge)
+        : null,
+    };
+
+    const properties: { [key: string]: number }[] = [];
+    for (let i = 0; i < coordinates.length - 1; i += 1) {
+      const distance = Number(
+        calculateDistance(coordinates[i], coordinates[i + 1]).toFixed(2),
+      );
+      properties.push({ [`s${i + 1}`]: distance });
+    }
+    const { width, height } = getWidthHeight(coordinates);
+
+    data.geojson = { properties, width, depth: height };
+    try {
+      const sql = `
+            INSERT INTO lot (
+              "blockKey", "blockNumber", "sectionNumber", "areaSqm", "zoning", "address",
+              "district", "division", "lifecycleStage", "estateId", "geojson", "geometry", "frontageCoordinate", "createdAt", "updatedAt"
+            ) VALUES (
+              $1, $2, $3, $4, $5, $6,
+              $7, $8, $9, $10, $11,
+              ST_GeomFromText($12, 4326), ST_GeomFromText($13, 4326), now(), now()
+            )
+            ON CONFLICT ("estateId", "blockKey")
+            DO UPDATE SET
+              "blockNumber" = $2,
+              "sectionNumber" = $3,
+              "areaSqm" = $4,
+              "zoning" = $5,
+              "address" = $6,
+              "district" = $7,
+              "division" = $8,
+              "lifecycleStage" = $9,
+              "estateId" = $10,
+              "geojson" = $11,
+              "geometry" = ST_GeomFromText($12, 4326),
+              "frontageCoordinate" = ST_GeomFromText($13, 4326),
+              "updatedAt" = now()
+      `;
+
+      await prisma.$executeRawUnsafe(
+        sql,
+        data.blockKey,
+        data.blockNumber,
+        data.sectionNumber,
+        data.areaSqm,
+        data.zoning,
+        data.address,
+        data.district,
+        data.division,
+        data.lifecycleStage,
+        data.estateId,
+        data.geojson,
+        data.geometry,
+        data.frontageCoordinate,
+      );
+    } catch (error) {
+      console.error('Error: ' + error);
     }
   }
-  // await prisma.lot.createMany({ data: lotData })
   console.log('Lots added successfully.');
 }
 
 function toPolygon(coordString) {
-  // split into coordinates
   const coords = coordString
     .trim()
     .split(',')
     .map((p) => p.trim());
 
-  // ensure first point is repeated at end to close polygon
   if (coords[0] !== coords[coords.length - 1]) {
     coords.push(coords[0]);
   }
@@ -130,54 +283,6 @@ function toPolygon(coordString) {
   return `POLYGON((${coords.join(', ')}))`;
 }
 
-// using the spherical “trapezoid” formula:
-const calculateArea = (coords: [number, number][]) => {
-  const R = 6378137; // WGS84 semi-major, meters
-  const toRad = (d: number) => (d * Math.PI) / 180;
-
-  // In case the ring is not closed, close it
-  const ring =
-    coords[0][0] === coords[coords.length - 1][0] &&
-    coords[0][1] === coords[coords.length - 1][1]
-      ? coords
-      : [...coords, coords[0]];
-
-  let sum = 0;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [lon1, lat1] = ring[i];
-    const [lon2, lat2] = ring[i + 1];
-    let dLambda = toRad(lon2) - toRad(lon1);
-
-    // normalize Δλ into [-π, π] to be safe for rings that might cross 180°
-    if (dLambda > Math.PI) dLambda -= 2 * Math.PI;
-    else if (dLambda < -Math.PI) dLambda += 2 * Math.PI;
-
-    sum += dLambda * (Math.sin(toRad(lat1)) + Math.sin(toRad(lat2)));
-  }
-  const area = Math.abs(((R * R) / 2) * sum);
-  return Math.round(area * 100) / 100; // two decimals
-};
-
-const calculateDistance = (start, end) => {
-  const toRadians = (deg) => (deg * Math.PI) / 180;
-
-  const lat1 = toRadians(start[1]);
-  const lon1 = toRadians(start[0]);
-  const lat2 = toRadians(end[1]);
-  const lon2 = toRadians(end[0]);
-
-  const dlat = lat2 - lat1;
-  const dlon = lon2 - lon1;
-
-  const a =
-    Math.sin(dlat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
-
-  const c = 2 * Math.asin(Math.sqrt(a));
-  const radius = 6378; // Earth radius in km
-
-  return Math.round(c * radius * 10000) / 10; // to meters
-};
 
 main()
   .catch((e) => {

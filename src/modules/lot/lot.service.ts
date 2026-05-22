@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 
 interface DatabaseLot {
@@ -7,15 +8,26 @@ interface DatabaseLot {
   blockNumber: number | null;
   sectionNumber: number | null;
   areaSqm: number;
+  salesMode: string | null;
+  price: number | null;
+  houseAndLandFloorPlanId: bigint | null;
+  houseAndLandFloorPlanName: string | null;
+  houseAndLandBuildPrice: number | null;
+  frontageM: number | null;
+  lotType: string | null;
+  roadFacing: string | null;
+  precinct: string | null;
   zoning: string;
   address: string | null;
   district: string | null;
   division: string | null;
   lifecycleStage: string | null;
+  ruleOverrides: unknown;
   estateId: bigint | null;
   overlays: string[];
   geojson: any;
   geometry: string;
+  frontageCoordinate: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,51 +52,126 @@ export class LotService {
     });
   }
 
-  async findAllLots() {
+  async findAllLots(estateId?: bigint | null) {
+    const estateFilter =
+      estateId === undefined || estateId === null
+        ? Prisma.sql``
+        : Prisma.sql`WHERE lot."estateId" = ${estateId}`;
     const lots = await this.prisma.$queryRaw<DatabaseLot[]>`
       SELECT
-        id,
-        "blockKey",
-        "blockNumber",
-        "sectionNumber",
-        "areaSqm",
-        zoning,
-        address,
-        district,
-        division,
-        "lifecycleStage",
-        "estateId",
-        overlays,
-        geojson,
-        ST_AsGeoJSON(geometry) as geometry,
-        "createdAt",
-        "updatedAt"
+        lot.id,
+        lot."blockKey",
+        lot."blockNumber",
+        lot."sectionNumber",
+        lot."areaSqm",
+        lot."salesMode",
+        lot.price,
+        lot."houseAndLandFloorPlanId",
+        hlfp.name AS "houseAndLandFloorPlanName",
+        hlfp.price AS "houseAndLandBuildPrice",
+        lot."frontageM",
+        lot."lotType",
+        lot."roadFacing",
+        lot."precinct",
+        lot.zoning,
+        lot.address,
+        lot.district,
+        lot.division,
+        lot."lifecycleStage",
+        lot."ruleOverrides",
+        lot."estateId",
+        lot.overlays,
+        lot.geojson,
+        ST_AsGeoJSON(lot.geometry) as geometry,
+        ST_AsGeoJSON(lot."frontageCoordinate") as "frontageCoordinate",
+        lot."createdAt",
+        lot."updatedAt"
       FROM
         lot
-      ORDER BY id
+      LEFT JOIN "floorPlan" hlfp ON hlfp.id = lot."houseAndLandFloorPlanId"
+      ${estateFilter}
+      ORDER BY lot.id
     `;
 
     return lots.map((lot) => ({
       ...lot,
       id: lot.id.toString(),
       estateId: lot.estateId?.toString(),
-      geometry: JSON.parse(lot.geometry)
+      houseAndLandFloorPlanId: lot.houseAndLandFloorPlanId?.toString() ?? null,
+      geometry: JSON.parse(lot.geometry),
+      frontageCoordinate: lot.frontageCoordinate,
     }));
   }
 
-  async findLot(lotId: number) {
-    const lot = await this.prisma.lot.findUnique({
-      where: {
-        id: lotId
+  async findLot(lotId: number | bigint) {
+    const lot: any = await this.prisma.$queryRawUnsafe(
+      `SELECT
+        lot.id,
+        lot."blockKey",
+        lot."blockNumber",
+        lot."sectionNumber",
+        lot."areaSqm",
+        lot."salesMode",
+        lot.price,
+        lot."houseAndLandFloorPlanId",
+        hlfp.name AS "houseAndLandFloorPlanName",
+        hlfp.price AS "houseAndLandBuildPrice",
+        lot."frontageM",
+        lot."lotType",
+        lot."roadFacing",
+        lot."precinct",
+        lot.zoning,
+        lot.address,
+        lot.district,
+        lot.division,
+        lot."lifecycleStage",
+        lot."ruleOverrides",
+        lot."estateId",
+        lot.overlays,
+        lot.geojson,
+        ST_AsGeoJSON(lot.geometry) as geometry,
+        ST_AsGeoJSON(lot."frontageCoordinate") as "frontageCoordinate"
+      FROM
+        lot
+      LEFT JOIN "floorPlan" hlfp ON hlfp.id = lot."houseAndLandFloorPlanId"
+      WHERE
+        lot.id = $1`,
+      lotId,
+    );
+    
+    if (lot && lot.length > 0) {
+      const lotData = lot[0];
+      
+      // Get zoning setback data directly from zoning table
+      let zoningSetbacks: any = null;
+      if (lotData.zoning) {
+        const zoneCode = lotData.zoning.split(":")[0];
+        const zoningData: any = await this.prisma.zoningRule.findUnique({
+          where: { code: zoneCode }
+        });
+        
+        if (zoningData) {
+          zoningSetbacks = {
+            frontSetback: zoningData.minFrontSetback_m ,
+            rearSetback: zoningData.minRearSetback_m ,
+            sideSetback: zoningData.minSideSetback_m
+          };
+        }
       }
-    });
-    if (lot) {
+      
       return {
-        ...lot,
-        id: lot.id.toString(),
-        estateId: lot.estateId?.toString()
+        ...lotData,
+        id: lotData.id.toString(),
+        estateId: lotData.estateId?.toString(),
+        houseAndLandFloorPlanId:
+          lotData.houseAndLandFloorPlanId?.toString?.() ??
+          lotData.houseAndLandFloorPlanId ??
+          null,
+        geometry: lotData.geometry ? JSON.parse(lotData.geometry) : null,
+        frontageCoordinate: lotData.frontageCoordinate,
+        zoningSetbacks
       };
     }
-    return lot;
+    return null;
   }
 }

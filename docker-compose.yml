@@ -2,24 +2,24 @@ services:
   # PostgreSQL Database with PostGIS
   postgres:
     image: postgis/postgis:15-3.3
-    container_name: lotlogic-postgres
+    container_name: lotcheck-postgres
     environment:
-      POSTGRES_DB: lotlogic
+      POSTGRES_DB: lotcheck
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: lotlogic123
+      POSTGRES_PASSWORD: lotcheck123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - lotlogic-network
+      - lotcheck-network
 
   # pgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: lotlogic-pgadmin
+    container_name: lotcheck-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@lotlogic.com
+      PGADMIN_DEFAULT_EMAIL: admin@lotcheck.com
       PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
@@ -29,18 +29,29 @@ services:
     depends_on:
       - postgres
     networks:
-      - lotlogic-network
+      - lotcheck-network
 
   # NestJS Backend Application
   backend:
-    build: .
-    container_name: lotlogic-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: lotcheck-backend
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://postgres:lotlogic123@postgres:5432/lotlogic
+      DATABASE_URL: postgresql://postgres:lotcheck123@postgres:5432/lotcheck
       NODE_ENV: development
       PORT: 3000
+      SMTP_HOST: smtp.titan.email
+      SMTP_PORT: 587
+      SMTP_USER: dev@beyondhimalayatech.com.au
+      SMTP_PASS: "ZqcG(1*tY5oE[ @"
+      GOOGLE_MAPS_API_KEY: "AIzaSyCcNZsGEqV4sb_8-SfgunyeFb3qNEmbwlc"  
+      GOOGLE_GEOCODING_REGION: "au"
+      GOOGLE_GEOCODING_COMPONENTS: "country:AU|administrative_area:ACT"
+      LOT_CHECK_RULES_CSV_PATH: "data/2. LotCheck - Reference Data - Rules v3.csv"
+      AUTO_IMPORT_ACT_DATA: "true"
     ports:
       - "3000:3000"
     volumes:
@@ -51,12 +62,13 @@ services:
     depends_on:
       - postgres
     networks:
-      - lotlogic-network
+      - lotcheck-network
 
 volumes:
   postgres_data:
   pgadmin_data:
 
 networks:
-  lotlogic-network:
+  lotcheck-network:
     driver: bridge 
+

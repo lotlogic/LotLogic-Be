@@ -3,14 +3,29 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/await-thenable */
 import { Injectable } from '@nestjs/common';
+import { DesignOnLotStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 
 export interface HouseDesignFilterResult   {
     id: string,
     title: string,
     area: number,
+    homeSize?: string | null,
+    price?: number | null,
+    builderId?: string,
+    builderName?: string | null,
+    builder?: {
+        id?: string,
+        name?: string | null,
+        logoUrl?: string | null,
+        brandingBgColor?: string | null,
+        brandingTextColor?: string | null,
+    } | null,
+    width: number,
+    depth: number,
     image: string,
     images: Images[] | [],
+    documents: FloorPlanDocumentResult[],
     bedrooms: number,
     bathrooms: number,
     cars: number,
@@ -19,13 +34,72 @@ export interface HouseDesignFilterResult   {
 }
 
 export interface Images   {
+    facadeId?: string,
     src: string,
     faced: string
+}
+
+export interface FloorPlanDocumentResult {
+    id: string,
+    documentName: string | null,
+    fileName: string,
+    documentUrl: string,
+    fileSizeBytes: number | null,
+    mimeType: string | null
 }
 
 @Injectable()
 export class FloorPlanService {
     constructor(private prisma: PrismaService) {}
+
+    private mapHouseDesignResult(house: any): HouseDesignFilterResult {
+        const images = house.facades?.map((facade: any) => {
+            return {
+                facadeId: facade.id?.toString?.() ?? facade.id,
+                src: facade.imageUrl,
+                faced: facade.label
+            };
+        }) || [];
+        const documents = house.documents?.map((document: any) => {
+            return {
+                id: document.id?.toString?.() ?? document.id,
+                documentName: document.documentName ?? null,
+                fileName: document.fileName,
+                documentUrl: document.documentUrl,
+                fileSizeBytes: document.fileSizeBytes ?? null,
+                mimeType: document.mimeType ?? null
+            };
+        }) || [];
+
+        return {
+            id: house.id.toString(),
+            title: house.name,
+            area: house.areaSqm,
+            homeSize: house.homeSize ?? null,
+            price: house.price ?? null,
+            builderId: house.builderId ? house.builderId.toString() : undefined,
+            builderName: house.builder?.name ?? null,
+            builder: house.builder
+                ? {
+                    id: house.builder.id?.toString?.() ?? house.builder.id,
+                    name: house.builder.name ?? null,
+                    logoUrl: house.builder.logoUrl ?? null,
+                    brandingBgColor: house.builder.brandingBgColor ?? null,
+                    brandingTextColor: house.builder.brandingTextColor ?? null,
+                }
+                : null,
+            width: house.width,
+            depth: house.depth,
+            image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
+            images,
+            documents,
+            bedrooms: house.bedrooms,
+            bathrooms: house.bathrooms,
+            cars: house.garages,
+            isFavorite: false,
+            floorPlanImage: house.floorplanUrl
+        };
+    }
 
     async getFilteredHouseDesigns(
         bedroom?: number[],
@@ -53,37 +127,92 @@ export class FloorPlanService {
             if (min_size !== undefined) whereClause.areaSqm = { gte: min_size };
             if (max_size !== undefined) whereClause.areaSqm = { lte: max_size };
         }
-        if (width !== undefined) whereClause.minLotWidth = {lt: width };
-        if (depth !== undefined) whereClause.minLotDepth = {lt: depth };
+        if (width !== undefined) whereClause.width = { lt: width };
+        if (depth !== undefined) whereClause.depth = { lt: depth };
 
         const houseDesigns = await this.prisma.floorPlan.findMany({
             where: whereClause,
             include: {
-                facades: true
+                facades: true,
+                documents: {
+                    orderBy: { id: 'asc' },
+                },
+                builder: {
+                    select: {
+                        id: true,
+                        name: true,
+                        logoUrl: true,
+                        brandingBgColor: true,
+                        brandingTextColor: true,
+                    }
+                }
             }
         }) as any;
-        const filteredDesign = houseDesigns.map((house: any) => {
-            const images = house.facades?.map((facade: any) => {
-                return {
-                    facadeId: facade.id,
-                    src: facade.imageUrl,
-                    faced: facade.label
-                };
-            }) || [];
-            return {
-                id: house.id.toString(),
-                title: house.name,
-                area: house.areaSqm,
-                image: house.facades && house.facades.length > 0 ? house.facades[0].imageUrl : "",
-                images,
-                bedrooms: house.bedrooms,
-                bathrooms: house.bathrooms,
-                cars: house.garages,
-                isFavorite: false,
-                floorPlanImage: house.floorplanUrl
-            };
-        });
+        const filteredDesign = houseDesigns.map((house: any) =>
+            this.mapHouseDesignResult(house)
+        );
         return filteredDesign;
+    }
+
+    async getPrecomputedHouseDesignsForLot(
+        lotId: bigint,
+        bedroom?: number[],
+        bathroom?: number[],
+        car?: number[],
+        min_size?: number,
+        max_size?: number,
+        rumpus?: boolean,
+        alfresco?: boolean,
+        pergola?: boolean
+    ): Promise<HouseDesignFilterResult[]> {
+        const floorPlanWhere: Prisma.floorPlanWhereInput = {};
+        if (bedroom !== undefined) floorPlanWhere.bedrooms = { in: bedroom };
+        if (bathroom !== undefined) floorPlanWhere.bathrooms = { in: bathroom };
+        if (car !== undefined) floorPlanWhere.garages = { in: car };
+        if (rumpus !== undefined) floorPlanWhere.rumpus = rumpus;
+        if (alfresco !== undefined) floorPlanWhere.alfresco = alfresco;
+        if (pergola !== undefined) floorPlanWhere.pergola = pergola;
+        if (min_size !== undefined || max_size !== undefined) {
+            const areaFilter: Prisma.FloatFilter = {};
+            if (min_size !== undefined) {
+                areaFilter.gte = min_size;
+            }
+            if (max_size !== undefined) {
+                areaFilter.lte = max_size;
+            }
+            floorPlanWhere.areaSqm = areaFilter;
+        }
+
+        const rows = await this.prisma.designOnLot.findMany({
+            where: {
+                lotId,
+                isCompatible: true,
+                status: DesignOnLotStatus.PASS,
+                floorPlan: floorPlanWhere,
+            },
+            include: {
+                floorPlan: {
+                    include: {
+                        facades: true,
+                        documents: {
+                            orderBy: { id: 'asc' },
+                        },
+                        builder: {
+                            select: {
+                                id: true,
+                                name: true,
+                                logoUrl: true,
+                                brandingBgColor: true,
+                                brandingTextColor: true,
+                            }
+                        }
+                    },
+                },
+            },
+            orderBy: { floorPlanId: 'asc' },
+        });
+
+        return rows.map((row) => this.mapHouseDesignResult(row.floorPlan as any));
     }
 
     async getHouseDesignById(house_design_id: string) {
@@ -92,8 +221,12 @@ export class FloorPlanService {
                 id: BigInt(house_design_id)
             },
             include: {
-                facades: true
+                facades: true,
+                documents: {
+                    orderBy: { id: 'asc' },
+                }
             }
         });
     }
 }
+

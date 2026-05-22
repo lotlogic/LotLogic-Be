@@ -1,0 +1,29 @@
+# Local dev image (used by docker-compose.yml)
+FROM node:20-alpine
+
+# Headless Chrome deps (for puppeteer-core HTML -> PDF)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Generate Prisma client then start Nest in watch mode
+CMD ["sh", "-c", "npx prisma generate && npm run start:dev"] 

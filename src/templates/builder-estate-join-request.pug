@@ -1,0 +1,153 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    title LotCheck Estate Join Request
+    style.
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #f5f4f2;
+        font-family: Montserrat, Arial, sans-serif;
+        color: #2b3d48;
+      }
+
+      .shell {
+        max-width: 620px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid #d0cfc9;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .header {
+        background: #2b3d48;
+        padding: 20px 28px;
+      }
+
+      .logo {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: #ffffff;
+      }
+
+      .logo-lot {
+        color: #ef7b6c;
+      }
+
+      .accent {
+        height: 4px;
+        background: #ef7b6c;
+      }
+
+      .content {
+        padding: 32px 28px;
+        line-height: 1.65;
+      }
+
+      .content p {
+        margin: 0 0 14px 0;
+        font-size: 14px;
+      }
+
+      .greeting {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .details {
+        margin: 0 0 14px 0;
+        padding: 14px 16px;
+        border-radius: 6px;
+        background: #f5f4f2;
+        border: 1px solid #e8e7e5;
+      }
+
+      .details p {
+        margin: 0 0 8px 0;
+      }
+
+      .details p:last-child {
+        margin-bottom: 0;
+      }
+
+      .label {
+        font-weight: 700;
+      }
+
+      .email-ps {
+        font-size: 12px;
+        color: #7a8c95;
+        font-style: italic;
+        padding-top: 16px;
+        border-top: 1px solid #e8e7e5;
+        margin-top: 8px !important;
+      }
+
+      .footer {
+        background: #2b3d48;
+        border-top: 1px solid #d0cfc9;
+        padding: 16px 28px;
+      }
+
+      .footer p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+      }
+  body
+    .shell
+      .card
+        .header
+          p.logo
+            span.logo-lot lot
+            | check.
+        .accent
+        .content
+          p.greeting New estate join request
+          p A builder has asked to be considered for an estate that may not yet be active on LotCheck.
+          .details
+            p
+              span.label Estate name:
+              |  #{estateName}
+            p
+              span.label Estate location:
+              |  #{estateLocation}
+            p
+              span.label Builder:
+              |  #{builderName} (#{builderId})
+            p
+              span.label Builder email:
+              |  #{builderEmail}
+            p
+              span.label Builder phone:
+              |  #{builderPhone}
+            p
+              span.label Submitted by:
+              |  #{requesterName}
+            p
+              span.label Requester email:
+              |  #{requesterEmail}
+            p
+              span.label Requester role:
+              |  #{requesterRole}
+            p
+              span.label Submitted at:
+              |  #{submittedAt}
+            p
+              span.label Source IP:
+              |  #{sourceIp}
+          p
+            span.label Why they are a good fit:
+          .details
+            p #{fitReason}
+          p.email-ps This message was submitted from the builder dashboard in LotCheck.
+        .footer
+          p This is an automated LotCheck message.

@@ -1,0 +1,171 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    title BlockPlanner Report Delivery
+    style.
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #e9e6da;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        color: #2a2f2b;
+      }
+
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .header {
+        background: #494f4a;
+        color: #f8f6e4;
+        padding: 24px 28px;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(248, 246, 228, 0.58);
+        margin-bottom: 8px;
+      }
+
+      .brand {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .brand span {
+        font-weight: 300;
+      }
+
+      .content {
+        padding: 28px;
+      }
+
+      p, li {
+        font-size: 15px;
+        line-height: 1.65;
+        color: #434843;
+        margin: 0;
+      }
+
+      p + p {
+        margin-top: 12px;
+      }
+
+      .meta,
+      .callout,
+      .signature {
+        border: 1px solid #dedad0;
+        border-radius: 4px;
+        padding: 16px 18px;
+        margin-top: 18px;
+      }
+
+      .meta {
+        background: #f8f6e4;
+      }
+
+      .callout {
+        background: #fbfaf5;
+      }
+
+      .signature {
+        background: #f9f8f3;
+      }
+
+      .meta strong,
+      .signature strong {
+        color: #2a2f2b;
+      }
+
+      ul {
+        margin: 12px 0 0 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .signature p + p {
+        margin-top: 8px;
+      }
+
+      .signature-name {
+        color: #2a2f2b;
+        font-weight: 600;
+      }
+
+      .signature-links {
+        margin-top: 10px;
+      }
+
+      .signature-links a {
+        color: #6d7a70;
+        text-decoration: underline;
+      }
+
+      .footer {
+        padding: 0 28px 24px;
+        color: #72756f;
+        font-size: 12px;
+      }
+  body
+    .container
+      .header
+        .eyebrow Property Assessment Delivery
+        .brand
+          | Block
+          span Planner
+
+      .content
+        p Hi #{clientName},
+        p Your BlockPlanner property assessment report is attached to this email.
+
+        if address || reportId
+          .meta
+            if address
+              p
+                strong Address:
+                |  #{address}
+            if reportId
+              p
+                strong Report ID:
+                |  #{reportId}
+
+        p This report is designed to give you a clear, honest starting point based on the site constraints visible from mapping, imagery and publicly available planning information.
+
+        .callout
+          p If you want to take the next step, we can help with:
+          ul
+            li Detailed feasibility analysis
+            li Professional planning advice
+            li Understanding likely delivery pathways
+            li Introductions to the right local specialists
+
+        .signature
+          p
+            strong= contact.name
+            if contact.role
+              |  · #{contact.role}
+          p.signature-name Mitch Porteous
+          p CEO
+          if contact.phone
+            p= contact.phone
+          .signature-links
+            a(href=contact.websiteUrl) Website
+            if contact.linkedinUrl
+              |  | 
+              a(href=contact.linkedinUrl) Linkedin
+
+      .footer
+        p This is an automated delivery email. If you have questions about the report, contact the BlockPlanner team using the details above.

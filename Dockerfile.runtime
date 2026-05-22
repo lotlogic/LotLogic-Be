@@ -1,0 +1,70 @@
+# Runtime image (production deploys)
+# - No Postgres server bundled (expects DATABASE_URL)
+# - Excludes large ACT GeoJSON files; only ships CSV rules
+
+# ----------------------
+# Stage 1: Build the app
+# ----------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies (dev + prod)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy only what we need to build (avoid large GeoJSON files in /data)
+COPY nest-cli.json tsconfig.json tsconfig.build.json ./
+COPY src ./src
+COPY prisma ./prisma
+
+# Optional runtime scripts (used by runtime-entrypoint.sh)
+COPY scripts ./scripts
+
+# Ship only CSV data (rules). GeoJSON imports are handled elsewhere for Azure.
+COPY data/*.csv ./data/
+
+# Generate Prisma client + build NestJS
+RUN npx prisma generate
+RUN npm run build
+
+
+# -------------------------------
+# Stage 2: Final production image
+# -------------------------------
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Headless Chrome deps (for puppeteer-core HTML -> PDF)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
+
+# Copy node_modules (includes Prisma CLI + tsx for optional seeding)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy built app
+COPY --from=builder /app/dist ./dist
+
+# Copy Prisma schema/migrations + scripts
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
+
+# Copy helper/data needed by TypeScript seed scripts
+COPY --from=builder /app/src/helper ./src/helper
+COPY --from=builder /app/src/data ./src/data
+
+# Copy CSV rules
+COPY --from=builder /app/data ./data
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+# Runs migrations + optional seeds then starts the app
+CMD ["sh", "./scripts/runtime-entrypoint.sh"]
