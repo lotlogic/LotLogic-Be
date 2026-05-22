@@ -19,6 +19,12 @@ export class StripeModule {
             configService.get('STRIPE_API_KEY'),
           inject: [ConfigService],
         },
+        {
+          provide: 'STRIPE_CHECKOUT_PRICE_ID',
+          useFactory: async (configService: ConfigService) =>
+            configService.get('STRIPE_CHECKOUT_PRICE_ID'),
+          inject: [ConfigService],
+        },
       ],
     };
   }

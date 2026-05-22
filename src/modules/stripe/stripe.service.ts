@@ -32,6 +32,8 @@ export class StripeService {
   constructor(
     @Inject('STRIPE_API_KEY')
     private readonly apiKey: string,
+    @Inject('STRIPE_CHECKOUT_PRICE_ID')
+    private readonly checkoutPriceId: string,
   ) {
     this.stripe = new Stripe(this.apiKey, {});
   }
@@ -44,6 +46,11 @@ export class StripeService {
     intention?: string;
   }): Promise<string | null> {
     try {
+      const checkoutPriceId = this.checkoutPriceId?.trim();
+      if (!checkoutPriceId) {
+        throw new Error('Missing env var STRIPE_CHECKOUT_PRICE_ID');
+      }
+
       const reportMetadata = this.normalizePaidReportMetadata(params.metadata);
       const metadata: Record<string, string> = {
         ...reportMetadata,
@@ -56,7 +63,7 @@ export class StripeService {
         line_items: [
           {
             quantity: 1,
-            price: 'price_1Sr7jTL0WBX6DtDJZlje3U91',
+            price: checkoutPriceId,
           },
         ],
         payment_intent_data: {

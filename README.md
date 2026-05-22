@@ -329,6 +329,9 @@ This service exposes a Stripe webhook endpoint and upserts a paid-report item in
 
 Set env vars (see `.env-example`):
 
+- `STRIPE_API_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_CHECKOUT_PRICE_ID` (`price_...` id used for Checkout sessions)
 - `MONDAY_API_TOKEN`
 - Optional: `MONDAY_API_BASE_URL` (defaults to `https://api.monday.com/v2`)
 - Optional: `MONDAY_API_VERSION`
