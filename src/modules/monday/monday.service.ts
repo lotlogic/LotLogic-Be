@@ -1,6 +1,13 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import {
+  BLOCKPLANNER_LEADS_BOARD_SCHEMA,
   BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA,
+  BlockplannerLeadsBoardSchema,
   BlockplannerPaidReportsBoardSchema,
 } from '@modules/monday/monday-board.schema';
 import {
@@ -24,6 +31,10 @@ type ReportRequestPayload = {
   stripePaymentId: string;
 };
 
+type FreeAssessmentLeadPayload = {
+  email: string;
+};
+
 @Injectable()
 export class MondayService {
   private readonly logger = new Logger(MondayService.name);
@@ -33,6 +44,44 @@ export class MondayService {
     const { year, month, day } = this.getActDateTimeParts(now);
     const suffix = String(randomInt(1000, 10000));
     return `BP-${year}${month}${day}-${suffix}`;
+  }
+
+  async createFreeAssessmentLead(rawPayload: Record<string, unknown>): Promise<{
+    itemId: string;
+  }> {
+    const payload = this.normalizeFreeAssessmentLeadPayload(rawPayload);
+    if (!this.isValidEmail(payload.email)) {
+      throw new BadRequestException('Missing or invalid email');
+    }
+
+    const board = this.getLeadsBoardSchema();
+    const client = this.getClient();
+    const columnValues = this.buildFreeAssessmentLeadColumnValues(
+      payload,
+      board,
+    );
+
+    const created = await client.createItem(
+      board.boardId,
+      board.defaultGroupId,
+      payload.email,
+    );
+
+    await client.changeMultipleColumnValues(
+      board.boardId,
+      created.id,
+      columnValues,
+    );
+
+    this.logger.log(
+      `Monday free assessment lead created (itemId=${created.id} email=${this.maskEmail(
+        payload.email,
+      )})`,
+    );
+
+    return {
+      itemId: created.id,
+    };
   }
 
   async upsertPaidReportRequest(
@@ -437,6 +486,29 @@ export class MondayService {
     );
   }
 
+  private buildFreeAssessmentLeadColumnValues(
+    payload: FreeAssessmentLeadPayload,
+    board: BlockplannerLeadsBoardSchema,
+  ): Record<string, unknown> {
+    return {
+      [board.columns.email.id]: {
+        email: payload.email,
+        text: payload.email,
+      },
+      [board.columns.leadSource.id]: {
+        label: board.statusLabels.leadSource.freeAssessment,
+      },
+    };
+  }
+
+  private normalizeFreeAssessmentLeadPayload(
+    payload: Record<string, unknown>,
+  ): FreeAssessmentLeadPayload {
+    return {
+      email: this.normalizeToString(payload.email),
+    };
+  }
+
   private normalizeReportRequestPayload(
     payload: Record<string, unknown>,
   ): ReportRequestPayload {
@@ -531,6 +603,21 @@ export class MondayService {
       return 'US';
     }
     return 'AU';
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private maskEmail(email: string): string {
+    const trimmed = String(email || '').trim();
+    if (!trimmed) return '';
+    const atIndex = trimmed.indexOf('@');
+    if (atIndex < 1) return '***';
+    const local = trimmed.slice(0, atIndex);
+    const domain = trimmed.slice(atIndex + 1);
+    const localMasked = local.length <= 1 ? '*' : `${local[0]}***`;
+    return `${localMasked}@${domain}`;
   }
 
   private readMondayText(
@@ -762,6 +849,29 @@ export class MondayService {
       defaultGroupId:
         process.env.MONDAY_PAID_REPORTS_GROUP_ID ||
         base.defaultGroupId,
+    };
+  }
+
+  private getLeadsBoardSchema(): BlockplannerLeadsBoardSchema {
+    const base = BLOCKPLANNER_LEADS_BOARD_SCHEMA;
+
+    return {
+      ...base,
+      columns: {
+        ...base.columns,
+        email: {
+          ...base.columns.email,
+          id: process.env.MONDAY_LEADS_EMAIL_COLUMN_ID || base.columns.email.id,
+        },
+        leadSource: {
+          ...base.columns.leadSource,
+          id:
+            process.env.MONDAY_LEADS_SOURCE_COLUMN_ID ||
+            base.columns.leadSource.id,
+        },
+      },
+      boardId: process.env.MONDAY_LEADS_BOARD_ID || base.boardId,
+      defaultGroupId: process.env.MONDAY_LEADS_GROUP_ID || base.defaultGroupId,
     };
   }
 

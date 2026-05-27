@@ -5,6 +5,7 @@ import {
   Get,
   Header,
   Headers,
+  HttpCode,
   Logger,
   Post,
   Query,
@@ -35,6 +36,18 @@ export class MondayController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   dashboardPreviewAll() {
     return this.dashboardReportService.renderAllSampleHtml();
+  }
+
+  @Post('free-assessment-leads')
+  @HttpCode(200)
+  async createFreeAssessmentLead(@Body() body: { email?: string }) {
+    const result = await this.mondayService.createFreeAssessmentLead(body || {});
+
+    return {
+      ok: true,
+      action: 'created',
+      itemId: result.itemId,
+    };
   }
 
   @Post('dashboard-trigger')

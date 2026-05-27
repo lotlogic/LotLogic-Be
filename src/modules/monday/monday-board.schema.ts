@@ -83,6 +83,22 @@ export interface BlockplannerPaidReportsBoardSchema {
   };
 }
 
+export interface BlockplannerLeadsBoardSchema {
+  boardId: string;
+  boardName: string;
+  defaultGroupId: string;
+  columns: {
+    name: MondayColumnDefinition;
+    email: MondayColumnDefinition;
+    leadSource: MondayColumnDefinition;
+  };
+  statusLabels: {
+    leadSource: {
+      freeAssessment: string;
+    };
+  };
+}
+
 export const BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA: BlockplannerPaidReportsBoardSchema =
   {
     boardId: '5028030238',
@@ -278,3 +294,23 @@ export const BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA: BlockplannerPaidReportsBoar
       },
     },
   };
+
+export const BLOCKPLANNER_LEADS_BOARD_SCHEMA: BlockplannerLeadsBoardSchema = {
+  boardId: '5028030146',
+  boardName: 'Leads',
+  defaultGroupId: 'topics',
+  columns: {
+    name: { id: 'name', title: 'Name', type: 'name' },
+    email: { id: 'lead_email', title: 'Email', type: 'email' },
+    leadSource: {
+      id: 'color_mkyb8krc',
+      title: 'Lead Source',
+      type: 'status',
+    },
+  },
+  statusLabels: {
+    leadSource: {
+      freeAssessment: 'BlockPlanner Free Assessment',
+    },
+  },
+};
