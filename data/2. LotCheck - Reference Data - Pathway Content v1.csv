@@ -1,220 +1,122 @@
-"Zone","Pathway key","Card title","Technical label","Possible copy","Review copy","Not available copy","Source","Notes"
-"RZ1","granny_flat","Add a secondary residence (granny flat)","Secondary residence / granny flat","The Territory Plan defines a secondary residence as ""a second dwelling on a block which is subordinate to the principal dwelling on the block."" A granny flat is the most common example - a self-contained home on the same block as your existing house with its own entrance, kitchen, bathroom, and living space. It stays on the same title and cannot be sold separately.
+﻿"Zone","Pathway key","Card title","Technical label","Possible copy","Review copy","Not available copy","Source","Notes"
+"RZ1","granny_flat","Add a secondary residence (granny flat)","Secondary residence / granny flat","A secondary residence is a self-contained home on the same block as your existing house - its own entrance, kitchen, bathroom and living space. It stays on the same title and cannot be sold separately.
+
+Your block qualifies. From 1 July 2026, there is no minimum block size for a secondary residence.
+
+You can build up to 90m² of floor area (garage excluded). What shapes whether it physically works is your site - where the house sits, how much usable rear yard you have, and whether trees or easements get in the way.
+
+---
+The rule behind this:
+E1 AR2 (MPA-04, eff. 1 July 2026) - Maximum dwelling size of a secondary residence is 90m² (excluding garage).
+E1 AR3 - Maximum of one secondary residence per block.
+E1 AR1 - A secondary residence is developed only in association with single dwelling housing.
+Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).","","","",""
+"RZ2","granny_flat","Add a secondary residence (granny flat)","Secondary residence / granny flat","A secondary residence is a self-contained home on the same block as your existing house - its own entrance, kitchen, bathroom and living space. It stays on the same title and cannot be sold separately.
+
+Your block qualifies. From 1 July 2026, there is no minimum block size for a secondary residence.
+
+You can build up to 90m² of floor area (garage excluded). What shapes whether it physically works is your site - where the house sits, how much usable rear yard you have, and whether trees or easements get in the way.
+
+---
+The rule behind this:
+E1 AR2 (MPA-04, eff. 1 July 2026) - Maximum dwelling size of a secondary residence is 90m² (excluding garage).
+E1 AR3 - Maximum of one secondary residence per block.
+E1 AR1 - A secondary residence is developed only in association with single dwelling housing.
+Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).","","","",""
+"RZ1","dual_occupancy","Build a second full home (Dual occupancy)","Dual occupancy","Dual occupancy means two dwellings on your block. Both can be lived in, rented, or sold as a package. To sell them separately you need unit titling - covered below.
+
+Your block qualifies. From 1 July 2026, there is no minimum block size for dual occupancy in RZ1 or RZ2.
+
+All buildings on the block combined cannot cover more than 45% of the total block area. That includes the existing house, the new dwelling, and any other roofed structures. Whether a second dwelling fits comfortably alongside what is already there depends on house position, rear yard depth, and what the 45% limit and setbacks leave to work with. A development application (DA) is required. Check your Crown lease before committing to a design.
+
+---
+The rule behind this:
+E1 AR8 (MPA-04, eff. 1 July 2026) - Site coverage for multi-unit housing in RZ1 and RZ2 is a maximum of 45% of the original block area.
+E1 AR6a - RZ1 maximum 2 storeys.
+Minimum block size removed under MPA-04 (previously 800m² in RZ1 under NI2023-540).","","","",""
+"RZ2","dual_occupancy","Build a second full home (Dual occupancy)","Dual occupancy","Dual occupancy means two dwellings on your block. Both can be lived in, rented, or sold as a package. To sell them separately you need unit titling - covered below.
+
+Your block qualifies. From 1 July 2026, there is no minimum block size for dual occupancy in RZ1 or RZ2.
+
+All buildings on the block combined cannot cover more than 45% of the total block area. That includes the existing house, the new dwelling, and any other roofed structures. Whether a second dwelling fits comfortably alongside what is already there depends on house position, rear yard depth, and what the 45% limit and setbacks leave to work with. A development application (DA) is required. Check your Crown lease before committing to a design.
+
+---
+The rule behind this:
+E1 AR8 (MPA-04, eff. 1 July 2026) - Site coverage for multi-unit housing in RZ1 and RZ2 is a maximum of 45% of the original block area.
+E1 AR6a - RZ1 maximum 2 storeys.
+Minimum block size removed under MPA-04 (previously 800m² in RZ1 under NI2023-540).","","","",""
+"RZ1","unit_titling","Sell one home separately (Unit titling)","Unit titling","Unit titling gives each dwelling on a dual occupancy its own separate title - the step that turns a construction project into two assets you can sell independently.
 
 Your block qualifies.
 
-You can build up to 90m² of floor area (garage excluded from that measurement). That is enough for a generous one-bedroom or a well-proportioned studio. What shapes whether it physically works is your site - where the house sits, how much usable rear yard you have, and whether trees or easements get in the way.
+Both dwellings must be built and have a Certificate for Occupancy and Use before the unit title can be registered. You cannot sell bare land - construction comes first. The previous 120m² size limit on one dwelling has been removed from 1 July 2026.
+
+A DA and lease variation are required. An LVC applies - from 1 July 2026, a 50% remission applies to eligible missing middle developments. Confirm current rates and eligibility with the ACT Revenue Office. The ACT Government also offers a stamp duty exemption on the first sale of a new unit titled property - confirm eligibility before factoring into any numbers.
 
 ---
 The rule behind this:
-NI2023-540 E01 AR4 - ""The minimum block size for a secondary residence is 500m².""
-NI2023-540 E01 AR3 - ""The maximum dwelling size of a secondary residence is 90m²."" (floor area to outside face of walls, excluding garage)
-NI2023-540 E01 AR5 - ""Maximum of one secondary residence per block.""
-NI2023-540 F01 AR5 - subdivision is not permitted to provide separate title to a secondary residence in all zones.
-NI2023-540 F02 AR4 - ""A variation to a lease to authorise a secondary residence is approved only where the block affected by the lease is 500m² or larger.""","","The Territory Plan defines a secondary residence as ""a second dwelling on a block which is subordinate to the principal dwelling on the block."" A granny flat is the most common example.
-
-Not available for this block.
-
-NI2023-540 E01 AR4 sets the minimum block size for a secondary residence at 500m². At [block_size]m², this block does not meet that threshold.","","CHANGED: Pathway renamed to 'Add a secondary residence (granny flat)'. Territory Plan definition added to YES and NO copy. F02 AR4 added as additional source. Per Ingrid: use TP definition, granny flat is an example of secondary residence."
-"RZ2","granny_flat","Add a secondary residence (granny flat)","Secondary residence / granny flat","The Territory Plan defines a secondary residence as ""a second dwelling on a block which is subordinate to the principal dwelling on the block."" A granny flat is the most common example - a self-contained home on the same block as your existing house with its own entrance, kitchen, bathroom, and living space. It stays on the same title and cannot be sold separately.
-
-Your block qualifies.
-
-You can build up to 90m² of floor area (garage excluded). RZ2 gives marginally more site flexibility than RZ1 but the practical constraints are the same - house position, usable rear yard, trees, and easements shape what actually works.
-
----
-The rule behind this:
-NI2023-540 E01 AR4 - ""The minimum block size for a secondary residence is 500m².""
-NI2023-540 E01 AR3 - ""The maximum dwelling size of a secondary residence is 90m²."" (excludes garage)
-NI2023-540 E01 AR5 - ""Maximum of one secondary residence per block.""
-NI2023-540 F01 AR5 - subdivision is not permitted to provide separate title to a secondary residence in all zones.
-NI2023-540 F02 AR4 - ""A variation to a lease to authorise a secondary residence is approved only where the block affected by the lease is 500m² or larger.""","","The Territory Plan defines a secondary residence as ""a second dwelling on a block which is subordinate to the principal dwelling on the block."" A granny flat is the most common example.
-
-Not available for this block.
-
-NI2023-540 E01 AR4 sets the minimum block size for a secondary residence at 500m². At [block_size]m², this block does not meet that threshold.","","CHANGED: Same as RZ1 - pathway renamed, TP definition added, F02 AR4 added as source."
-"RZ1","dual_occupancy","Build a second full home (Dual occupancy)","Dual occupancy","Under the Territory Plan, dual occupancy housing means ""the use of land that was originally used or leased for the purposes of single dwelling housing for two dwellings."" It is a form of multi-unit housing. Both homes can be lived in, rented, or sold as a package. To sell them separately you need to take an extra step - unit titling, covered below.
-
-Your block qualifies.
-
-All buildings on the block combined cannot cover more than 45% of the total block area. That includes the existing house, the new dwelling, garage, and any other roofed structures. Whether a second dwelling fits comfortably alongside what is already there depends on house position, rear yard depth, and what the 45% coverage limit and setback requirements leave to work with.
-
-Building a second dwelling and pursuing unit titling both require a development application (DA). The DA covers construction approval. Unit titling also requires a lease variation as part of that process. Check your Crown lease before committing to anything.
-
----
-The rule behind this:
-NI2023-540 E01 AR16 - ""For multi-unit housing in RZ1: a) Minimum block area for more than one dwelling: 800m². b) Maximum number of dwellings per standard block: 2.""
-NI2023-540 E01 AR14 - ""Site coverage for multi-unit housing in RZ1 and RZ2 is a maximum of 45% of the original block area.""
-NI2023-540 E01 AR10 - ""RZ1: Maximum 2 storeys.""
-NI2023-540 E01 AR17 - surrendered residential blocks (Mr Fluffy/asbestos buyback scheme): 700m² minimum.","","Dual occupancy housing means two dwellings on a block that was originally used for a single dwelling. Both homes can be lived in, rented, or sold as a package.
-
-Not available for this block.
-
-NI2023-540 E01 AR16(a) requires a minimum block area of 800m² for more than one dwelling in RZ1. At [block_size]m², this block does not meet that threshold.","","CHANGED: Removed 'no restriction on size of either' per Ingrid - size is constrained by site coverage, private open space, and setbacks. Added TP dictionary definition of dual occupancy housing. Added DA and lease variation note per Ingrid."
-"RZ2","dual_occupancy","Build a second full home (Dual occupancy)","Dual occupancy","Under the Territory Plan, dual occupancy housing means ""the use of land that was originally used or leased for the purposes of single dwelling housing for two dwellings."" It is a form of multi-unit housing. Both homes can be lived in, rented, or sold as a package. To sell them separately, see unit titling below.
-
-Your block qualifies.
-
-RZ2 allows more dwellings on larger blocks. The formula is one additional dwelling per 250m² or part thereof over the 700m² minimum. A 950m² block is 250m² over the minimum, giving at least two dwellings total. Site coverage across all buildings cannot exceed 45% of the block area. If street frontage is under 20m, the maximum is three dwellings regardless of block size.
-
-If your block is between 600 and 699m², a second pathway exists where all dwellings must be built to the AS4299 Class C accessible design standard - wider doorways, step-free entry, accessible bathrooms throughout. That is a real design and cost commitment.
-
-Building a second dwelling and pursuing unit titling both require a development application (DA). Check your Crown lease before committing to anything.
-
----
-The rule behind this:
-NI2023-540 E01 AR19 - ""For multi-unit housing on a standard block in RZ2: a) Minimum block area: 700m². b) Maximum dwellings: 1 additional for every 250m² (or part thereof) over the minimum.""
-NI2023-540 E01 AR20 - ""For multi-unit adaptable housing: a) Minimum block area: 600m². b) Same yield formula. All dwellings built to be adaptable.""
-NI2023-540 E01 AR21 - ""Frontage less than 20m: maximum 3 dwellings regardless of block size.""
-NI2023-540 E01 AR14 - ""Site coverage maximum: 45% of original block area.""","Under the Territory Plan, dual occupancy housing means ""the use of land that was originally used or leased for the purposes of single dwelling housing for two dwellings."" It is a form of multi-unit housing. Both homes can be lived in, rented, or sold as a package. To sell them separately, see unit titling below.
-
-Your block may qualify through the RZ2 adaptable housing pathway.
-
-For RZ2 blocks between 600 and 699m², a second pathway exists where all dwellings must be built to the AS4299 Class C accessible design standard - wider doorways, step-free entry, accessible bathrooms throughout. That is a real design and cost commitment.
-
-Site coverage across all buildings cannot exceed 45% of the block area. If street frontage is under 20m, the maximum is three dwellings regardless of block size. Building a second dwelling and pursuing unit titling both require a development application (DA). Check your Crown lease before committing to anything.
-
----
-The rule behind this:
-NI2023-540 E01 AR20 - ""For multi-unit adaptable housing: a) Minimum block area: 600m². b) Same yield formula. All dwellings built to be adaptable.""
-NI2023-540 E01 AR21 - ""Frontage less than 20m: maximum 3 dwellings regardless of block size.""
-NI2023-540 E01 AR14 - ""Site coverage maximum: 45% of original block area.""","Dual occupancy housing means two dwellings on a block that was originally used for a single dwelling.
-
-Not available for this block.
-
-NI2023-540 E01 AR19(a) requires 700m² for the standard pathway. NI2023-540 E01 AR20(a) sets 600m² for the adaptable pathway, where all dwellings must meet the AS4299 Class C accessible design standard. At [block_size]m², this block does not meet either threshold.","","CHANGED: Removed 'no restriction on size of either' per Ingrid. Added TP definition. Added DA and lease variation note per Ingrid."
-"RZ1","unit_titling","Sell one home separately (Unit titling)","Unit titling","Unit titling is the process that gives each dwelling on a dual occupancy its own separate title, making each independently sellable. It is the step that turns a construction project into two distinct assets.
-
-Your block qualifies.
-
-Both dwellings must be built and have a Certificate for Occupancy and Use before the unit title can be registered. You cannot sell bare land in RZ1 - construction comes first. One of the two dwellings must also be 120m² or less in floor area, excluding the garage. This is a condition of unit titling specifically, not a general design rule - the other dwelling can be larger.
-
-What the process involves: constructing the dwellings requires a development application (DA). The unit titling itself also requires a lease variation as part of that DA process. Together this constitutes a significant development application. Check your Crown lease before committing to a design direction.
-
-The ACT Government currently offers a stamp duty exemption on the first sale of a unit titled RZ1 property. Confirm current eligibility and expiry with the ACT Revenue Office before factoring this into any numbers.
-
----
-The rule behind this:
-NI2023-540 F01 AR12(a)(i) - ""Minimum block area: 800m². One dwelling must be no more than 120m² in floor area (excluding garage).""
-NI2023-540 F01 AR12(b) - unit title subdivision is also permitted for multi-unit housing on a non-standard block.
+MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
 NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
-DI2025-179 Sch 1 Item 1 - $46,000 per dwelling to specify number of dwellings (residential purposes lease).
-DI2025-179 Sch 2 - $52,500 to $343,750 to vary a single-dwelling lease (suburb-dependent, eff. 1 July 2025).","","Unit titling gives each dwelling on a dual occupancy its own separate title, making each independently sellable.
+DI2025-179 Sch 1 and Sch 2 - LVC applies; 50% remission available for eligible missing middle developments.","","Your block is below the 600m² minimum for unit titling in RZ1. You can still add a secondary residence or dual occupancy - they just cannot be separately titled and sold.
 
-Not available for this block.
-
-NI2023-540 F01 AR12(a)(i) requires a minimum block area of 800m² for a standard block. At [block_size]m², this block does not meet that threshold.
-
-Note: unit title subdivision is also permitted for multi-unit housing on a non-standard block (F01 AR12(b)). If this block is non-standard, different rules may apply.","","CHANGED: Added DA and lease variation requirement per Ingrid - 'constitutes a significant development application'. Added F01 AR12(b) non-standard block pathway (from F01 PDF). Added non-standard block note to NO copy."
-"RZ2","unit_titling","Sell one home separately (Unit titling)","Unit titling","Unit titling is the process that gives each dwelling on a dual occupancy its own separate title, making each independently sellable.
+---
+The rule behind this:
+MPA-04 eff. 1 July 2026 - 600m² minimum block area for unit titling in RZ1.","",""
+"RZ2","unit_titling","Sell one home separately (Unit titling)","Unit titling","Unit titling gives each dwelling on a dual occupancy its own separate title - the step that turns a construction project into two assets you can sell independently.
 
 Your block qualifies.
 
-In RZ2, unit titling follows the dual occupancy minimum - there is no separate threshold. Both dwellings must be built and certified before the unit title can be registered. The application process can begin before construction is complete, but registration requires a Certificate for Occupancy and Use.
+Both dwellings must be built and have a Certificate for Occupancy and Use before the unit title can be registered. You cannot sell bare land - construction comes first. The previous 120m² size limit on one dwelling has been removed from 1 July 2026.
 
-What the process involves: constructing the dwellings requires a development application (DA). The unit titling itself also requires a lease variation as part of that DA process. Together this constitutes a significant development application. Check your Crown lease before committing to a design direction.
-
----
-The rule behind this:
-NI2023-540 F01 AR13 - dwellings must be constructed and certified before unit title can be registered.
-Minimum block size follows dual occupancy rules: 700m² standard pathway (E01 AR19(a)) or 600m² adaptable pathway where all dwellings meet AS4299 Class C (E01 AR20(a)).
-Unit Titles Act 2001 - application can be lodged before construction is complete.","Unit titling is the process that gives each dwelling on a dual occupancy its own separate title, making each independently sellable.
-
-Your block may qualify through the RZ2 adaptable housing pathway.
-
-In RZ2, unit titling follows the dual occupancy minimum - there is no separate threshold. For blocks between 600 and 699m², that means the adaptable pathway, where all dwellings must meet the AS4299 Class C accessible design standard. Both dwellings must be built and certified before the unit title can be registered. The application process can begin before construction is complete, but registration requires a Certificate for Occupancy and Use.
-
-What the process involves: constructing the dwellings requires a development application (DA). The unit titling itself also requires a lease variation as part of that DA process. Together this constitutes a significant development application. Check your Crown lease before committing to a design direction.
+A DA and lease variation are required. An LVC applies - from 1 July 2026, a 50% remission applies to eligible missing middle developments. Confirm current rates and eligibility with the ACT Revenue Office. The ACT Government also offers a stamp duty exemption on the first sale of a new unit titled property - confirm eligibility before factoring into any numbers.
 
 ---
 The rule behind this:
-NI2023-540 F01 AR13 - dwellings must be constructed and certified before unit title can be registered.
-Minimum block size follows dual occupancy rules: 700m² standard pathway (E01 AR19(a)) or 600m² adaptable pathway where all dwellings meet AS4299 Class C (E01 AR20(a)).
-Unit Titles Act 2001 - application can be lodged before construction is complete.","Unit titling gives each dwelling on a dual occupancy its own separate title, making each independently sellable.
+MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
+NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
+DI2025-179 Sch 1 and Sch 2 - LVC applies; 50% remission available for eligible missing middle developments.","","","",""
+"RZ1","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","Block subdivision splits your block into two separate Crown leases under the Planning Act 2023 - your home stays on one, the new block becomes independently sellable as bare land.
 
-Not available for this block.
+From 1 July 2026, block subdivision is now permitted in RZ1 for the first time.
 
-Unit titling in RZ2 follows the dual occupancy minimum - 700m² standard pathway (E01 AR19(a)) or 600m² adaptable pathway (E01 AR20(a)). At [block_size]m², this block does not meet either threshold.","","CHANGED: Added DA and lease variation requirement per Ingrid - 'constitutes a significant development application'."
-"RZ1","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","","","Block subdivision means splitting your block into two separate Crown leases under the Planning Act 2023 - your home stays on one, the new block becomes independently sellable as bare land.
+A DA is required. The new block must demonstrate it can accommodate a compliant dwelling. Access, frontage and site dimensions all affect whether a layout is achievable - a registered town planner can confirm what your block can support.
 
-Not available in RZ1.
-
-If this block is 800m²+, unit titling after building a second dwelling achieves a comparable financial outcome through a different legal structure.
+Note: this is different from unit titling under the Unit Titles Act 2001, which is covered in the card above. Block subdivision creates separate Crown leases; unit titling creates separate titles over constructed dwellings. Different processes, different outcomes.
 
 ---
 The rule behind this:
-NI2023-540 F01 AR11 - ""In RZ1, subdivision under the Planning Act 2023 to create one or more additional blocks, is not permitted.""
+MPA-04 eff. 1 July 2026 - subdivision now listed as permitted (Y) in RZ1 in the land use table. Previously prohibited in RZ1 under NI2023-540 F01 AR11.
+NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.","","","",""
+"RZ2","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","Block subdivision splits your block into two separate Crown leases under the Planning Act 2023 - your home stays on one, the new block becomes independently sellable as bare land.
 
-Note: this refers to block subdivision under the Planning Act. Unit title subdivision under the Unit Titles Act 2001 is a separate process and is available on qualifying RZ1 blocks - see the unit titling card above. These are different legal mechanisms with different outcomes: block subdivision creates a separate Crown lease (bare land), unit titling creates separate titles over constructed dwellings.","","CHANGED: Added explicit Planning Act vs Unit Titles Act distinction per Ingrid's flag. Clarifies that F01 AR11 prohibits Planning Act block subdivision only - unit title subdivision is separate and covered by AR12. Prevents reader confusion between the two mechanisms."
-"RZ2","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","Block subdivision creates two separate Crown leases from one - your home stays on one, the new block becomes independently sellable. In RZ2 you can sell the new block as bare land without building first.
+From 1 July 2026, block subdivision is now permitted in RZ1 for the first time.
 
-Available in your zone.
+A DA is required. The new block must demonstrate it can accommodate a compliant dwelling. Access, frontage and site dimensions all affect whether a layout is achievable - a registered town planner can confirm what your block can support.
 
-The practical question is whether the block has the dimensions to produce a second usable lot - enough area for a dwelling, workable shape, and proper street access. A practical minimum of around 350m² is generally expected for the new lot, though this is guidance rather than a hard rule.
-
-This is a significant development application - two rounds of public notification and a 60 working day decision timeframe. A Lease Variation Charge of $7,500 may apply depending on your Crown lease.
-
----
-The rule behind this:
-NI2023-540 F01 AR7 - subdivision or consolidation of residential blocks (except RZ1) is only permitted where a new dwelling can be accommodated on the block.
-NI2023-540 F01 AR8 - subdivision is only permitted where each subdivided block has utilities infrastructure.
-NI2023-540 F01 AR14 - ""In all other residential zones, subdivision or consolidation is permitted where new blocks including any residual land can be appropriately developed in accordance with the relevant parts of the Territory Plan.""
-Planning Act 2023 s43 - subdivision design application.
-Planning Act 2023 s94 - significant development (2 rounds public notification, 60 working day timeframe).
-NI2024-538 SS1 Spec 2.2 - approx. 350m² practical minimum for new lot (guidance, not mandatory).
-DI2025-179 Sch 1 Item 6 - $7,500 LVC for subdivision where no dwelling count change required.","Block subdivision creates two separate Crown leases from one - your home stays on one, the new block becomes independently sellable. In RZ2 you can sell the new block as bare land without building first.
-
-Available in your zone.
-
-The practical question is whether the block has the dimensions to produce a second usable lot - enough area for a dwelling, workable shape, and proper street access. A practical minimum of around 350m² is generally expected for the new lot, though this is guidance rather than a hard rule.
-
-This is a significant development application - two rounds of public notification and a 60 working day decision timeframe. A Lease Variation Charge of $7,500 may apply depending on your Crown lease.
+Note: this is different from unit titling under the Unit Titles Act 2001, which is covered in the card above. Block subdivision creates separate Crown leases; unit titling creates separate titles over constructed dwellings. Different processes, different outcomes.
 
 ---
 The rule behind this:
-NI2023-540 F01 AR7 - subdivision or consolidation of residential blocks (except RZ1) is only permitted where a new dwelling can be accommodated on the block.
-NI2023-540 F01 AR8 - subdivision is only permitted where each subdivided block has utilities infrastructure.
-NI2023-540 F01 AR14 - ""In all other residential zones, subdivision or consolidation is permitted where new blocks including any residual land can be appropriately developed in accordance with the relevant parts of the Territory Plan.""
-Planning Act 2023 s43 - subdivision design application.
-Planning Act 2023 s94 - significant development (2 rounds public notification, 60 working day timeframe).
-NI2024-538 SS1 Spec 2.2 - approx. 350m² practical minimum for new lot (guidance, not mandatory).
-DI2025-179 Sch 1 Item 6 - $7,500 LVC for subdivision where no dwelling count change required.","","","UPDATED: AR references updated to match F01 PDF exactly (AR7, AR8, AR14 per subdivision policy). AR14 quoted verbatim from the document."
-"RZ1","multi_unit","Multi-unit housing (3 or more dwellings on a standard RZ1 block)","Multi-unit housing","","","Under the Territory Plan, ""multi-unit housing means the use of land for more than one dwelling."" This includes dual occupancy (two dwellings), which is covered in the card above.
+MPA-04 eff. 1 July 2026 - subdivision now listed as permitted (Y) in RZ1 in the land use table. Previously prohibited in RZ1 under NI2023-540 F01 AR11.
+NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.","","","",""
+"RZ1","multi_unit","Multi-unit housing (3 or more dwellings)","Multi-unit housing","Three or more dwellings - triplexes, townhouses, terraces and low-rise apartments - are now permitted in RZ1 from 1 July 2026. There is no minimum block size and no fixed dwelling cap.
 
-For three or more dwellings on a standard RZ1 block - not available under current rules.
+What limits you is design, not a number. All buildings combined cannot exceed 45% site coverage. Maximum building height is 2 storeys. The number of dwellings that can fit on your block depends on those constraints, your block's shape, setbacks, trees, and the Missing Middle Housing Design Guide.
+
+A paid site assessment or registered town planner can tell you what your block can realistically achieve. The paid report looks at this in detail.
 
 ---
 The rule behind this:
-NI2023-540 E01 AR16(b) - ""Maximum number of dwellings per standard block: 2."" Three or more dwellings on a standard RZ1 block is not permitted.
+MPA-04 eff. 1 July 2026 - multi-unit housing now permitted in RZ1 (Y in land use table). Previous cap of 2 dwellings per standard block removed.
+E1 AR8 - site coverage maximum 45% of original block area for RZ1 and RZ2.
+E1 AR6a - maximum 2 storeys in RZ1.
+Missing Middle Housing Design Guide (eff. 1 July 2026) - dwelling numbers guided by design outcomes.","","","",""
+"RZ2","multi_unit","Multi-unit housing (3 or more dwellings)","Multi-unit housing","Three or more dwellings are permitted in RZ2, with expanded opportunities from 1 July 2026. Multi-unit housing can now be up to 3 storeys - a step up from RZ1. There is no minimum block size and no fixed dwelling cap.
 
-Note: non-standard blocks and blocks where the Crown lease explicitly permits more than two dwellings may have different rules (E01 AR16 note). If your block falls into that category, a registered town planner can advise what applies.","","CHANGED: Pathway renamed to 'Multi-unit housing (3 or more dwellings on a standard RZ1 block)'. Definition corrected to TP definition - 'more than one dwelling' not 'three or more'. Clarified that dual occupancy IS multi-unit housing but is covered separately. Added note on non-standard blocks per E01 AR16 note."
-"RZ2","multi_unit","Multi-unit housing (3 or more dwellings)","Multi-unit housing","Under the Territory Plan, ""multi-unit housing means the use of land for more than one dwelling."" For RZ2, this card covers developments of three or more dwellings. Two-dwelling outcomes (dual occupancy) are covered in the card above.
-
-Your block qualifies.
-
-The yield formula is one additional dwelling per 250m² or part thereof over the 700m² minimum - any remainder above the base counts toward an extra dwelling. A block between 600 and 699m² can also qualify through the adaptable pathway, where all dwellings must meet the AS4299 Class C accessible design standard.
-
-Site coverage across all buildings cannot exceed 45% of the block area. Maximum height is two storeys. If street frontage is under 20m the total is capped at three dwellings regardless of block size.
+What limits you is design - 45% site coverage, setbacks, and the Missing Middle Housing Design Guide determine how many dwellings can fit.
 
 ---
 The rule behind this:
-NI2023-540 E01 AR19 - ""Minimum block area: 700m². Maximum dwellings: 1 additional for every 250m² (or part thereof) over the minimum.""
-NI2023-540 E01 AR20 - ""Adaptable pathway: minimum 600m². Same yield formula. All dwellings built to be adaptable.""
-NI2023-540 E01 AR21 - ""Frontage less than 20m: maximum 3 dwellings regardless of block size.""
-NI2023-540 E01 AR14 - ""Site coverage maximum: 45% of original block area.""","Under the Territory Plan, ""multi-unit housing means the use of land for more than one dwelling."" For RZ2, this card covers developments of three or more dwellings. Two-dwelling outcomes (dual occupancy) are covered in the card above.
-
-Your block may qualify through the RZ2 adaptable housing pathway.
-
-A block between 600 and 699m² can qualify only where all dwellings meet the AS4299 Class C accessible design standard. It is more conditional than the standard 700m² pathway, and the practical outcome still depends on frontage, site coverage, parking, and what your block can physically accommodate.
-
-Site coverage across all buildings cannot exceed 45% of the block area. Maximum height is two storeys. If street frontage is under 20m the total is capped at three dwellings regardless of block size.
-
----
-The rule behind this:
-NI2023-540 E01 AR20 - ""Adaptable pathway: minimum 600m². Same yield formula. All dwellings built to be adaptable.""
-NI2023-540 E01 AR21 - ""Frontage less than 20m: maximum 3 dwellings regardless of block size.""
-NI2023-540 E01 AR14 - ""Site coverage maximum: 45% of original block area.""","Under the Territory Plan, multi-unit housing means the use of land for more than one dwelling.
-
-Not available for this block at three or more dwellings.
-
-NI2023-540 E01 AR20(a) sets the minimum at 600m² even under the most flexible pathway. At [block_size]m², this block does not meet that threshold. Two-dwelling options (dual occupancy) have a higher minimum - see that card.","","CHANGED: Pathway renamed. Definition corrected to TP definition per Ingrid. Clarified this card covers 3+ dwellings; dual occupancy covered separately."
+MPA-04 eff. 1 July 2026 - multi-unit housing in RZ2 uplifted to 3 storeys; no minimum block size or dwelling cap.
+E1 AR8 - site coverage maximum 45%.
+E1 AR6b(ii) - maximum 3 storeys for multi-unit in RZ2.","","","",""
