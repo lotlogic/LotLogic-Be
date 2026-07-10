@@ -1,0 +1,107 @@
+{
+    "data": {
+        "boards": [
+            {
+                "id": "5028030146",
+                "name": "Leads",
+                "board_kind": "public",
+                "state": "active",
+                "groups": [
+                    {
+                        "id": "topics",
+                        "title": "New Leads"
+                    }
+                ],
+                "columns": [
+                    {
+                        "id": "name",
+                        "title": "Name",
+                        "type": "name",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "lead_status",
+                        "title": "Status",
+                        "type": "status",
+                        "settings_str": "{\"done_colors\":[1],\"color_mapping\":{\"1\":6,\"3\":7,\"6\":1,\"7\":3,\"14\":19,\"15\":103,\"19\":14,\"103\":15},\"labels\":{\"0\":\"New Lead\",\"5\":\"\",\"11\":\"Unqualified\",\"14\":\"Contacted\",\"15\":\"Attempted to contact\",\"103\":\"Qualified\"},\"labels_positions_v2\":{\"0\":1,\"5\":0,\"11\":5,\"14\":3,\"15\":2,\"103\":4},\"labels_colors\":{\"0\":{\"color\":\"#fdab3d\",\"border\":\"#e99729\",\"var_name\":\"orange\"},\"5\":{\"color\":\"#c4c4c4\",\"border\":\"#b0b0b0\",\"var_name\":\"grey\"},\"11\":{\"color\":\"#bb3354\",\"border\":\"#a42d4a\",\"var_name\":\"dark-red\"},\"14\":{\"color\":\"#ff6d3b\",\"border\":\"#e05828\",\"var_name\":\"dark-orange\"},\"15\":{\"color\":\"#ffadad\",\"border\":\"#ffadad\",\"var_name\":\"peach\"},\"103\":{\"color\":\"#9cd326\",\"border\":\"#89b921\",\"var_name\":\"lime-green\"}}}"
+                    },
+                    {
+                        "id": "custom_mkrma55y",
+                        "title": "Activities timeline",
+                        "type": "unsupported",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "button",
+                        "title": "Create a contact",
+                        "type": "button",
+                        "settings_str": "{\"color\":\"#037f4c\",\"buttonText\":\"Move to Contacts\"}"
+                    },
+                    {
+                        "id": "lead_company",
+                        "title": "Company",
+                        "type": "text",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "text",
+                        "title": "Title",
+                        "type": "text",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "lead_email",
+                        "title": "Email",
+                        "type": "email",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "lead_phone",
+                        "title": "Phone",
+                        "type": "phone",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "color_mkyb8krc",
+                        "title": "Lead Source",
+                        "type": "status",
+                        "settings_str": "{\"done_colors\":[],\"color_mapping\":{\"1\":6,\"3\":12,\"6\":1,\"12\":3,\"106\":156,\"156\":106},\"labels\":{\"0\":\"Email\",\"1\":\"LinkedIn\",\"2\":\"BlockPlanner Survey\",\"3\":\"Facebook ads\",\"4\":\"BlockPlanner Free Assessment\",\"105\":\"monday Form\",\"156\":\"Google ads\"},\"labels_positions_v2\":{\"0\":4,\"1\":5,\"3\":2,\"4\":6,\"5\":0,\"105\":1,\"156\":3},\"labels_colors\":{\"0\":{\"color\":\"#fdab3d\",\"border\":\"#e99729\",\"var_name\":\"orange\"},\"1\":{\"color\":\"#037f4c\",\"border\":\"#006b38\",\"var_name\":\"grass-green\"},\"2\":{\"color\":\"#df2f4a\",\"border\":\"#ce3048\",\"var_name\":\"red-shadow\"},\"3\":{\"color\":\"#ff007f\",\"border\":\"#e01279\",\"var_name\":\"dark-pink\"},\"4\":{\"color\":\"#9d50dd\",\"border\":\"#9238af\",\"var_name\":\"purple\"},\"105\":{\"color\":\"#9aadbd\",\"border\":\"#9aadbd\",\"var_name\":\"winter\"},\"156\":{\"color\":\"#74afcc\",\"border\":\"#74afcc\",\"var_name\":\"river\"}}}"
+                    },
+                    {
+                        "id": "date__1",
+                        "title": "Last interaction",
+                        "type": "date",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "enrolled_sequences_mkn3bg52",
+                        "title": "Active sequences",
+                        "type": "unsupported",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "text_mm3knhhc",
+                        "title": "Message for Agent",
+                        "type": "text",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "multiple_person_mm3kg57a",
+                        "title": "Agent",
+                        "type": "people",
+                        "settings_str": "{}"
+                    },
+                    {
+                        "id": "color_mm3k88sf",
+                        "title": "Send to Agent",
+                        "type": "status",
+                        "settings_str": "{\"done_colors\":[1],\"labels\":{\"1\":\"Send\"},\"labels_colors\":{\"1\":{\"color\":\"#00c875\",\"border\":\"#00b461\",\"var_name\":\"green-shadow\"}}}"
+                    }
+                ]
+            }
+        ]
+    },
+    "extensions": {
+        "request_id": "358823e9-96e1-98fd-a035-0df20d59de3a"
+    }
+}

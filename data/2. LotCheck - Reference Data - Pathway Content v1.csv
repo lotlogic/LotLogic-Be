@@ -10,7 +10,8 @@ The rule behind this:
 E1 AR2 (MPA-04, eff. 1 July 2026) - Maximum dwelling size of a secondary residence is 90m² (excluding garage).
 E1 AR3 - Maximum of one secondary residence per block.
 E1 AR1 - A secondary residence is developed only in association with single dwelling housing.
-Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).","","","",""
+Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).
+F01 AR5 - Subdivision not permitted - secondary residence.","","","",""
 "RZ2","granny_flat","Add a secondary residence (granny flat)","Secondary residence / granny flat","A secondary residence is a self-contained home on the same block as your existing house - its own entrance, kitchen, bathroom and living space. It stays on the same title and cannot be sold separately.
 
 Your block qualifies. From 1 July 2026, there is no minimum block size for a secondary residence.
@@ -22,7 +23,8 @@ The rule behind this:
 E1 AR2 (MPA-04, eff. 1 July 2026) - Maximum dwelling size of a secondary residence is 90m² (excluding garage).
 E1 AR3 - Maximum of one secondary residence per block.
 E1 AR1 - A secondary residence is developed only in association with single dwelling housing.
-Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).","","","",""
+Minimum block size removed under MPA-04 (previously 500m² under NI2023-540).
+F01 AR5 - Subdivision not permitted - secondary residence.","","","",""
 "RZ1","dual_occupancy","Build a second full home (Dual occupancy)","Dual occupancy","Dual occupancy means two dwellings on your block. Both can be lived in, rented, or sold as a package. To sell them separately you need unit titling - covered below.
 
 Your block qualifies. From 1 July 2026, there is no minimum block size for dual occupancy in RZ1 or RZ2.
@@ -55,13 +57,13 @@ A DA and lease variation are required. An LVC applies - from 1 July 2026, a 50% 
 
 ---
 The rule behind this:
-MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
-NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
+F01 AR12 MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
+F01 AR12 NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
 DI2025-179 Sch 1 and Sch 2 - LVC applies; 50% remission available for eligible missing middle developments.","","Your block is below the 600m² minimum for unit titling in RZ1. You can still add a secondary residence or dual occupancy - they just cannot be separately titled and sold.
 
 ---
 The rule behind this:
-MPA-04 eff. 1 July 2026 - 600m² minimum block area for unit titling in RZ1.","",""
+F01 AR12 MPA-04 eff. 1 July 2026 - 600m² minimum block area for unit titling in RZ1.","",""
 "RZ2","unit_titling","Sell one home separately (Unit titling)","Unit titling","Unit titling gives each dwelling on a dual occupancy its own separate title - the step that turns a construction project into two assets you can sell independently.
 
 Your block qualifies.
@@ -72,13 +74,14 @@ A DA and lease variation are required. An LVC applies - from 1 July 2026, a 50% 
 
 ---
 The rule behind this:
-MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
-NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
+F01 AR12 MPA-04 eff. 1 July 2026 - minimum block area for unit titling in RZ1 reduced to 600m²; 120m² dwelling size limit removed.
+F01 AR12 NI2023-540 F01 AR13 - dwellings must be constructed and have a Certificate for Occupancy and Use before unit title can be registered.
 DI2025-179 Sch 1 and Sch 2 - LVC applies; 50% remission available for eligible missing middle developments.","","","",""
 "RZ1","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","Block subdivision splits your block into two separate Crown leases under the Planning Act 2023 - your home stays on one, the new block becomes independently sellable as bare land.
 
 From 1 July 2026, block subdivision is now permitted in RZ1 for the first time.
 
+In RZ1 the minimum resulting block size is 350sqm if no dwelling is constructed.
 A DA is required. The new block must demonstrate it can accommodate a compliant dwelling. Access, frontage and site dimensions all affect whether a layout is achievable - a registered town planner can confirm what your block can support.
 
 Note: this is different from unit titling under the Unit Titles Act 2001, which is covered in the card above. Block subdivision creates separate Crown leases; unit titling creates separate titles over constructed dwellings. Different processes, different outcomes.
@@ -86,11 +89,13 @@ Note: this is different from unit titling under the Unit Titles Act 2001, which 
 ---
 The rule behind this:
 MPA-04 eff. 1 July 2026 - subdivision now listed as permitted (Y) in RZ1 in the land use table. Previously prohibited in RZ1 under NI2023-540 F01 AR11.
-NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.","","","",""
+NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.
+F01 AR11 - requires either dwellings to be constructed, or minimum block size of 350m2.","","","",""
 "RZ2","subdivision","Sell off part of your land (Block subdivision)","Block subdivision","Block subdivision splits your block into two separate Crown leases under the Planning Act 2023 - your home stays on one, the new block becomes independently sellable as bare land.
 
 From 1 July 2026, block subdivision is now permitted in RZ1 for the first time.
 
+In RZ1 the minimum resulting block size is 350sqm if no dwelling is constructed.
 A DA is required. The new block must demonstrate it can accommodate a compliant dwelling. Access, frontage and site dimensions all affect whether a layout is achievable - a registered town planner can confirm what your block can support.
 
 Note: this is different from unit titling under the Unit Titles Act 2001, which is covered in the card above. Block subdivision creates separate Crown leases; unit titling creates separate titles over constructed dwellings. Different processes, different outcomes.
@@ -98,7 +103,8 @@ Note: this is different from unit titling under the Unit Titles Act 2001, which 
 ---
 The rule behind this:
 MPA-04 eff. 1 July 2026 - subdivision now listed as permitted (Y) in RZ1 in the land use table. Previously prohibited in RZ1 under NI2023-540 F01 AR11.
-NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.","","","",""
+NI2023-540 F01 (as amended) - subdivision policy updated to enable RZ1 subdivision.
+F01 AR11 - requires either dwellings to be constructed, or minimum block size of 350m2.","","","",""
 "RZ1","multi_unit","Multi-unit housing (3 or more dwellings)","Multi-unit housing","Three or more dwellings - triplexes, townhouses, terraces and low-rise apartments - are now permitted in RZ1 from 1 July 2026. There is no minimum block size and no fixed dwelling cap.
 
 What limits you is design, not a number. All buildings combined cannot exceed 45% site coverage. Maximum building height is 2 storeys. The number of dwellings that can fit on your block depends on those constraints, your block's shape, setbacks, trees, and the Missing Middle Housing Design Guide.
@@ -109,7 +115,7 @@ A paid site assessment or registered town planner can tell you what your block c
 The rule behind this:
 MPA-04 eff. 1 July 2026 - multi-unit housing now permitted in RZ1 (Y in land use table). Previous cap of 2 dwellings per standard block removed.
 E1 AR8 - site coverage maximum 45% of original block area for RZ1 and RZ2.
-E1 AR6a - maximum 2 storeys in RZ1.
+E1 AR6a - maximum 2 storeys in RZ1 (plus Attic if you want a bit more space).
 Missing Middle Housing Design Guide (eff. 1 July 2026) - dwelling numbers guided by design outcomes.","","","",""
 "RZ2","multi_unit","Multi-unit housing (3 or more dwellings)","Multi-unit housing","Three or more dwellings are permitted in RZ2, with expanded opportunities from 1 July 2026. Multi-unit housing can now be up to 3 storeys - a step up from RZ1. There is no minimum block size and no fixed dwelling cap.
 
@@ -117,6 +123,6 @@ What limits you is design - 45% site coverage, setbacks, and the Missing Middle 
 
 ---
 The rule behind this:
-MPA-04 eff. 1 July 2026 - multi-unit housing in RZ2 uplifted to 3 storeys; no minimum block size or dwelling cap.
+E1 AR6b MPA-04 eff. 1 July 2026 - multi-unit housing in RZ2 uplifted to 3 storeys; no minimum block size or dwelling cap.
 E1 AR8 - site coverage maximum 45%.
 E1 AR6b(ii) - maximum 3 storeys for multi-unit in RZ2.","","","",""
