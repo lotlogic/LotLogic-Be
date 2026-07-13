@@ -245,6 +245,25 @@ The application provides RESTful APIs for:
 
 ### Key Endpoints
 
+#### Stripe live and sandbox checkout
+
+`POST /api/stripe/create-checkout-session` remains live by default. Callers can
+send `checkoutMode: "sandbox"` to use Stripe test mode without affecting the
+existing live configuration.
+
+Sandbox mode requires these additional backend environment variables:
+
+```env
+STRIPE_SANDBOX_API_KEY="sk_test_..."
+STRIPE_SANDBOX_CHECKOUT_PRICE_ID="price_..."
+STRIPE_SANDBOX_WEBHOOK_SECRET="whsec_..."
+```
+
+Configure the Stripe test-mode webhook to use the existing
+`POST /api/stripe/webhook` endpoint. The endpoint verifies both live and test
+signatures. Successful sandbox payments still exercise the monday.com workflow;
+their item names are prefixed with `[SANDBOX]`.
+
 #### Design-on-Lot Compatibility
 ```http
 GET /design-on-lot/calculate?lotId={lotId}

@@ -25,6 +25,18 @@ export class StripeModule {
             configService.get('STRIPE_CHECKOUT_PRICE_ID'),
           inject: [ConfigService],
         },
+        {
+          provide: 'STRIPE_SANDBOX_API_KEY',
+          useFactory: async (configService: ConfigService) =>
+            configService.get('STRIPE_SANDBOX_API_KEY'),
+          inject: [ConfigService],
+        },
+        {
+          provide: 'STRIPE_SANDBOX_CHECKOUT_PRICE_ID',
+          useFactory: async (configService: ConfigService) =>
+            configService.get('STRIPE_SANDBOX_CHECKOUT_PRICE_ID'),
+          inject: [ConfigService],
+        },
       ],
     };
   }

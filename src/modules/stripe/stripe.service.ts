@@ -4,6 +4,8 @@ import Stripe from 'stripe';
 
 const ACT_TIME_ZONE = 'Australia/Sydney';
 
+export type StripeCheckoutMode = 'live' | 'sandbox';
+
 export const PAID_REPORT_STRIPE_METADATA_KEYS = [
   'reportId',
   'clientName',
@@ -14,6 +16,7 @@ export const PAID_REPORT_STRIPE_METADATA_KEYS = [
   'blockSizeM2',
   'zone',
   'intention',
+  'checkoutMode',
   'stripePaymentId',
 ] as const;
 
@@ -27,6 +30,7 @@ export type PaidReportStripeMetadata = Partial<
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
+  private sandboxStripe: Stripe | null;
   private readonly logger = new Logger(StripeService.name);
 
   constructor(
@@ -34,8 +38,16 @@ export class StripeService {
     private readonly apiKey: string,
     @Inject('STRIPE_CHECKOUT_PRICE_ID')
     private readonly checkoutPriceId: string,
+    @Inject('STRIPE_SANDBOX_API_KEY')
+    private readonly sandboxApiKey: string,
+    @Inject('STRIPE_SANDBOX_CHECKOUT_PRICE_ID')
+    private readonly sandboxCheckoutPriceId: string,
   ) {
     this.stripe = new Stripe(this.apiKey, {});
+    const normalizedSandboxApiKey = String(this.sandboxApiKey || '').trim();
+    this.sandboxStripe = normalizedSandboxApiKey
+      ? new Stripe(normalizedSandboxApiKey, {})
+      : null;
   }
 
   // Stripe-Hosted Checkout Session
@@ -43,22 +55,22 @@ export class StripeService {
     customerEmail: string;
     site: string;
     cancelUrl?: string;
+    checkoutMode?: StripeCheckoutMode;
     metadata?: PaidReportStripeMetadata;
     intention?: string;
   }): Promise<string | null> {
     try {
-      const checkoutPriceId = this.checkoutPriceId?.trim();
-      if (!checkoutPriceId) {
-        throw new Error('Missing env var STRIPE_CHECKOUT_PRICE_ID');
-      }
+      const checkoutMode = params.checkoutMode || 'live';
+      const { stripe, checkoutPriceId } = this.getCheckoutConfig(checkoutMode);
 
       const reportMetadata = this.normalizePaidReportMetadata(params.metadata);
       const metadata: Record<string, string> = {
         ...reportMetadata,
         intention: this.normalizeToMetadataValue(params.intention),
+        checkoutMode,
       };
 
-      const session = await this.stripe.checkout.sessions.create({
+      const session = await stripe.checkout.sessions.create({
         customer_email: params.customerEmail,
         client_reference_id: reportMetadata.reportId || undefined,
         line_items: [
@@ -79,7 +91,9 @@ export class StripeService {
           params.site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
       });
 
-      this.logger.log('Checkout session created successfully');
+      this.logger.log(
+        `Checkout session created successfully (mode=${checkoutMode})`,
+      );
       return session.url;
     } catch (error) {
       this.logger.error('Failed to create checkout session', error.stack);
@@ -132,10 +146,12 @@ export class StripeService {
           ? session.payment_intent
           : session.payment_intent?.id;
 
-      if (paymentIntentId) {
+      const stripe = event.livemode ? this.stripe : this.sandboxStripe;
+
+      if (paymentIntentId && stripe) {
         try {
           const paymentIntent =
-            await this.stripe.paymentIntents.retrieve(paymentIntentId);
+            await stripe.paymentIntents.retrieve(paymentIntentId);
 
           combinedMetadata = {
             ...(paymentIntent.metadata || {}),
@@ -146,6 +162,10 @@ export class StripeService {
             `Failed to retrieve payment_intent metadata for session ${session.id}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
+      } else if (paymentIntentId) {
+        this.logger.warn(
+          `Skipped sandbox payment_intent lookup for session ${session.id}: Missing env var STRIPE_SANDBOX_API_KEY`,
+        );
       }
 
       const payload = this.buildPaidReportPayload(combinedMetadata, fallbackEmail);
@@ -169,6 +189,31 @@ export class StripeService {
     }
 
     return null;
+  }
+
+  private getCheckoutConfig(mode: StripeCheckoutMode): {
+    stripe: Stripe;
+    checkoutPriceId: string;
+  } {
+    if (mode === 'sandbox') {
+      if (!this.sandboxStripe) {
+        throw new Error('Missing env var STRIPE_SANDBOX_API_KEY');
+      }
+
+      const checkoutPriceId = String(this.sandboxCheckoutPriceId || '').trim();
+      if (!checkoutPriceId) {
+        throw new Error('Missing env var STRIPE_SANDBOX_CHECKOUT_PRICE_ID');
+      }
+
+      return { stripe: this.sandboxStripe, checkoutPriceId };
+    }
+
+    const checkoutPriceId = String(this.checkoutPriceId || '').trim();
+    if (!checkoutPriceId) {
+      throw new Error('Missing env var STRIPE_CHECKOUT_PRICE_ID');
+    }
+
+    return { stripe: this.stripe, checkoutPriceId };
   }
 
   private normalizePaidReportMetadata(

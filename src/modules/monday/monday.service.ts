@@ -28,6 +28,7 @@ type ReportRequestPayload = {
   blockSizeM2: string;
   zone: string;
   intention: string;
+  checkoutMode: string;
   stripePaymentId: string;
 };
 
@@ -478,11 +479,14 @@ export class MondayService {
   }
 
   private buildItemName(payload: ReportRequestPayload): string {
+    const prefix = payload.checkoutMode === 'sandbox' ? '[SANDBOX] ' : '';
+
     return (
-      payload.clientName ||
-      payload.clientEmail ||
-      payload.address ||
-      payload.reportId
+      prefix +
+      (payload.clientName ||
+        payload.clientEmail ||
+        payload.address ||
+        payload.reportId)
     );
   }
 
@@ -523,6 +527,7 @@ export class MondayService {
       blockSizeM2: this.normalizeToString(payload.blockSizeM2),
       zone: this.normalizeToString(payload.zone),
       intention: this.normalizeToString(payload.intention),
+      checkoutMode: this.normalizeToString(payload.checkoutMode),
       stripePaymentId: this.normalizeToString(payload.stripePaymentId),
     };
   }

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
 import { MondayService } from '@modules/monday/monday.service';
-import { StripeService } from './stripe.service';
+import { StripeService, type StripeCheckoutMode } from './stripe.service';
 
 @Controller('stripe')
 export class StripeController {
@@ -165,6 +165,7 @@ export class StripeController {
     body: {
       site: string;
       cancelUrl?: string;
+      checkoutMode?: string;
       intention?: string;
 
       // Backwards-compatible alias
@@ -195,6 +196,7 @@ export class StripeController {
     }
 
     const cancelUrl = this.resolveCheckoutCancelUrl(site, body.cancelUrl);
+    const checkoutMode = this.parseCheckoutMode(body.checkoutMode);
 
     const reportId = this.stripeService.generateReportId();
 
@@ -202,6 +204,7 @@ export class StripeController {
       customerEmail: clientEmail,
       site,
       cancelUrl,
+      checkoutMode,
       intention: String(body.intention || '').trim(),
       metadata: {
         reportId,
@@ -216,6 +219,17 @@ export class StripeController {
     });
 
     return { url: sessionUrl };
+  }
+
+  private parseCheckoutMode(value: unknown): StripeCheckoutMode {
+    const mode = String(value || 'live')
+      .trim()
+      .toLowerCase();
+
+    if (mode === 'live' || mode === 'sandbox') return mode;
+    throw new BadRequestException(
+      'checkoutMode must be either live or sandbox',
+    );
   }
 
   private resolveCheckoutCancelUrl(
@@ -268,15 +282,26 @@ export class StripeController {
       ? this.summarizeStripeSignatureHeader(signatureHeader)
       : null;
 
-    const webhookSecret = String(
-      process.env.STRIPE_WEBHOOK_SECRET || '',
-    ).trim();
-    if (!webhookSecret) {
+    const webhookSecrets: Array<{
+      mode: StripeCheckoutMode;
+      secret: string;
+    }> = [
+      {
+        mode: 'live' as StripeCheckoutMode,
+        secret: String(process.env.STRIPE_WEBHOOK_SECRET || '').trim(),
+      },
+      {
+        mode: 'sandbox' as StripeCheckoutMode,
+        secret: String(process.env.STRIPE_SANDBOX_WEBHOOK_SECRET || '').trim(),
+      },
+    ].filter((entry) => Boolean(entry.secret));
+
+    if (!webhookSecrets.length) {
       this.logger.error(
-        `Stripe webhook rejected (requestId=${requestId}): Missing env var STRIPE_WEBHOOK_SECRET`,
+        `Stripe webhook rejected (requestId=${requestId}): No Stripe webhook secret configured`,
       );
       throw new InternalServerErrorException(
-        'Missing env var STRIPE_WEBHOOK_SECRET',
+        'No Stripe webhook secret configured',
       );
     }
 
@@ -307,20 +332,42 @@ export class StripeController {
     );
 
     let event;
+    let webhookMode: StripeCheckoutMode | undefined;
+    let verificationError: unknown;
     const verifyStartedAt = Date.now();
-    try {
-      event = this.stripeService.constructWebhookEvent(
-        rawBody,
-        signatureHeader,
-        webhookSecret,
-      );
-    } catch (error) {
+    for (const webhookConfig of webhookSecrets) {
+      try {
+        const candidate = this.stripeService.constructWebhookEvent(
+          rawBody,
+          signatureHeader,
+          webhookConfig.secret,
+        );
+        const candidateMode: StripeCheckoutMode = candidate.livemode
+          ? 'live'
+          : 'sandbox';
+
+        if (candidateMode !== webhookConfig.mode) {
+          verificationError = new Error(
+            `Webhook secret mode mismatch: expected ${webhookConfig.mode}, received ${candidateMode}`,
+          );
+          continue;
+        }
+
+        event = candidate;
+        webhookMode = candidateMode;
+        break;
+      } catch (error) {
+        verificationError = error;
+      }
+    }
+
+    if (!event) {
       this.logger.warn(
         `Stripe webhook signature verification failed (requestId=${requestId} verifyMs=${
           Date.now() - verifyStartedAt
         } rawBytes=${rawBodyBytes} sha256=${rawBodySha256}${
           signatureSummary ? ` sig=${JSON.stringify(signatureSummary)}` : ''
-        }): ${error instanceof Error ? error.message : String(error)}`,
+        }): ${verificationError instanceof Error ? verificationError.message : String(verificationError)}`,
       );
       throw new BadRequestException('Invalid Stripe webhook signature');
     }
@@ -328,7 +375,7 @@ export class StripeController {
     this.logger.log(
       `Stripe webhook verified (requestId=${requestId} verifyMs=${
         Date.now() - verifyStartedAt
-      } type=${event.type} id=${event.id} livemode=${event.livemode})`,
+      } type=${event.type} id=${event.id} livemode=${event.livemode} mode=${webhookMode})`,
     );
 
     if (debugEnabled) {
