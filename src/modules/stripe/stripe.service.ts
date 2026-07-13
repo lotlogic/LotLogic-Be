@@ -42,6 +42,7 @@ export class StripeService {
   async createCheckoutSession(params: {
     customerEmail: string;
     site: string;
+    cancelUrl?: string;
     metadata?: PaidReportStripeMetadata;
     intention?: string;
   }): Promise<string | null> {
@@ -73,7 +74,9 @@ export class StripeService {
         metadata,
         mode: 'payment',
         success_url: params.site + `/checkout?success={CHECKOUT_SESSION_ID}`,
-        cancel_url: params.site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
+        cancel_url:
+          params.cancelUrl ||
+          params.site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
       });
 
       this.logger.log('Checkout session created successfully');

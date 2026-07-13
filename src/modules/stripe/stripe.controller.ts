@@ -164,6 +164,7 @@ export class StripeController {
     @Body()
     body: {
       site: string;
+      cancelUrl?: string;
       intention?: string;
 
       // Backwards-compatible alias
@@ -193,11 +194,14 @@ export class StripeController {
       throw new BadRequestException('Missing address');
     }
 
+    const cancelUrl = this.resolveCheckoutCancelUrl(site, body.cancelUrl);
+
     const reportId = this.stripeService.generateReportId();
 
     const sessionUrl = await this.stripeService.createCheckoutSession({
       customerEmail: clientEmail,
       site,
+      cancelUrl,
       intention: String(body.intention || '').trim(),
       metadata: {
         reportId,
@@ -212,6 +216,35 @@ export class StripeController {
     });
 
     return { url: sessionUrl };
+  }
+
+  private resolveCheckoutCancelUrl(
+    site: string,
+    cancelUrlValue: unknown,
+  ): string | undefined {
+    const rawCancelUrl = String(cancelUrlValue || '').trim();
+    if (!rawCancelUrl) return undefined;
+
+    try {
+      const siteUrl = new URL(site);
+      const cancelUrl = new URL(rawCancelUrl, siteUrl);
+      const allowedProtocols = new Set(['http:', 'https:']);
+
+      if (
+        !allowedProtocols.has(siteUrl.protocol) ||
+        !allowedProtocols.has(cancelUrl.protocol) ||
+        cancelUrl.origin !== siteUrl.origin
+      ) {
+        throw new BadRequestException(
+          'cancelUrl must use the same HTTP origin as site',
+        );
+      }
+
+      return cancelUrl.toString();
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException('Invalid site or cancelUrl');
+    }
   }
 
   @Post('webhook')
