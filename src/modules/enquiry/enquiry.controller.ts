@@ -2,6 +2,7 @@ import { BuilderService } from '@modules/builder/builder.service';
 import { EnquiryService } from '@modules/enquiry/enquiry.service';
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
 import { MailService } from '@modules/mail/mail.service';
+import { MondayService } from '@modules/monday/monday.service';
 import {
   BadRequestException,
   Body,
@@ -85,6 +86,7 @@ export class EnquiryController {
     private readonly builderService: BuilderService,
     private readonly floorPlanService: FloorPlanService,
     private readonly mailService: MailService,
+    private readonly mondayService: MondayService,
   ) {}
 
   @Post()
@@ -194,7 +196,8 @@ export class EnquiryController {
           selectedFacade,
           finishesLevel,
           comments: normalizeText(created.enquiry.comments) || 'Not provided',
-          blockSecuredLabel: 'No. Pricing enquiry only - block not yet secured.',
+          blockSecuredLabel:
+            'No. Pricing enquiry only - block not yet secured.',
           imageUrl,
         };
 
@@ -292,6 +295,25 @@ export class EnquiryController {
       emailsList: recipientEmail,
       senderProfile: 'blockplanner',
     });
+
+    try {
+      if (this.mondayService.isProductLeadConfigured('contact_request')) {
+        await this.mondayService.createProductLead('contact_request', {
+          name,
+          email,
+          phone,
+          address,
+          intent_reason: intent,
+          message,
+          sourceApp: 'discover',
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Contact enquiry email sent but monday forwarding failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
 
     return { message: 'Enquiry submitted' };
   }

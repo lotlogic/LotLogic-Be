@@ -8,6 +8,10 @@
       {
         "include": "templates/**/*",
         "outDir": "dist/src"
+      },
+      {
+        "include": "config/*.json",
+        "outDir": "dist/src"
       }
     ]
   }

@@ -6,15 +6,16 @@ import { BuilderService } from '@modules/builder/builder.service';
 import { LotService } from '@modules/lot/lot.service';
 import { FloorPlanService } from '@modules/floor-plan/floor-plan.service';
 import { PrismaModule } from '@/prisma/prisma.module';
+import { MondayModule } from '@modules/monday/monday.module';
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MondayModule],
   controllers: [EnquiryController],
   providers: [
     EnquiryService,
     MailService,
     BuilderService,
     LotService,
-    FloorPlanService
+    FloorPlanService,
   ],
 })
 export class EnquiryModule {}

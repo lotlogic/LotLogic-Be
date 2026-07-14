@@ -4,19 +4,107 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import {
-  BLOCKPLANNER_LEADS_BOARD_SCHEMA,
-  BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA,
+import type {
   BlockplannerLeadsBoardSchema,
   BlockplannerPaidReportsBoardSchema,
+  MondayColumnDefinition,
 } from '@modules/monday/monday-board.schema';
 import {
   MondayApiClient,
   MondayItemSummary,
 } from '@modules/monday/monday-api.client';
+import {
+  BLOCKPLANNER_LEAD_TYPES,
+  type BlockplannerLeadType,
+  type BlockplannerPaidProductCode,
+} from '@modules/blockplanner/blockplanner-product';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { randomInt } from 'crypto';
 
 const ACT_TIME_ZONE = 'Australia/Sydney';
+const MONDAY_WORKFLOW_MAPPINGS_FILE = join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'blockplanner-monday-workflows.json',
+);
+const CONFIGURED_PAID_PRODUCT_CODES = [
+  'crown_lease',
+  'feasibility_report',
+] as const;
+type ConfiguredPaidProductCode =
+  (typeof CONFIGURED_PAID_PRODUCT_CODES)[number];
+const PAID_REPORT_COLUMN_KEYS = [
+  'name',
+  'date',
+  'email',
+  'phone',
+  'reportId',
+  'address',
+  'suburb',
+  'blockSizeM2',
+  'zone',
+  'frontageM',
+  'housePosition',
+  'houseFootprintM2',
+  'rearYardDepthM',
+  'largeTreesVisible',
+  'treeLocation',
+  'registeredTrees',
+  'heritageOverlay',
+  'sewerLocation',
+  'easementImpact',
+  'shedInRear',
+  'secondDrivewayFeasible',
+  'mapImageUrl',
+  'maxBuildingAllowedM2',
+  'remainingSiteCoverageM2',
+  'rearYardCategory',
+  'grannyFlatKeepHouse',
+  'dualOccRemoveHouse',
+  'subdivisionPotential',
+  'analystAssigned',
+  'sendForQa',
+  'qaCompleted',
+  'finalPdfLink',
+  'deliveryStatus',
+  'deliveryDate',
+  'escalation',
+  'internalNotes',
+  'intention',
+  'stripePaymentId',
+] as const;
+const TREE_LOCATION_STATUS_KEYS = [
+  'north',
+  'south',
+  'east',
+  'west',
+  'multiple',
+  'middleOfBlock',
+  'notApplicable',
+] as const;
+const REGISTERED_TREE_STATUS_KEYS = [
+  'none',
+  'oneTree',
+  'multipleTrees',
+  'protected',
+  'unknown',
+  'yes',
+  'no',
+] as const;
+const DELIVERY_STATUS_KEYS = [
+  'sent',
+  'notStarted',
+  'readyToSend',
+] as const;
+const INTENTION_STATUS_KEYS = [
+  'openToOptions',
+  'jointVenture',
+  'sell',
+  'developMyself',
+] as const;
 
 type ReportRequestPayload = {
   reportId: string;
@@ -30,7 +118,60 @@ type ReportRequestPayload = {
   intention: string;
   checkoutMode: string;
   stripePaymentId: string;
+  productCode: string;
+  sourceApp: string;
 };
+
+type ConfiguredPaidProductBoard = {
+  boardId: string;
+  defaultGroupId: string;
+  columns: {
+    email?: string;
+    phone?: string;
+    reportId: string;
+    stripePaymentId: string;
+    address?: string;
+    suburb?: string;
+    intention?: string;
+    sourceApp?: string;
+    checkoutMode?: string;
+    paymentDate?: string;
+  };
+};
+
+type ConfiguredLeadBoard = {
+  boardId: string;
+  defaultGroupId: string;
+  columns: {
+    email: string;
+    phone?: string;
+    address?: string;
+    suburb?: string;
+    intentUse?: string;
+    intentReason?: string;
+    contactOptIn?: string;
+    propertyType?: string;
+    buildEra?: string;
+    bedrooms?: string;
+    bathrooms?: string;
+    floorArea?: string;
+    upgrades?: string;
+    totalLow?: string;
+    totalExpected?: string;
+    totalHigh?: string;
+    sourceApp?: string;
+    details?: string;
+    createdDate?: string;
+  };
+};
+
+type ConfiguredLeadBoardMap = Partial<
+  Record<BlockplannerLeadType, ConfiguredLeadBoard>
+>;
+
+type ConfiguredPaidProductBoardMap = Partial<
+  Record<ConfiguredPaidProductCode, ConfiguredPaidProductBoard>
+>;
 
 type FreeAssessmentLeadPayload = {
   email: string;
@@ -40,11 +181,44 @@ type FreeAssessmentLeadPayload = {
 export class MondayService {
   private readonly logger = new Logger(MondayService.name);
   private client: MondayApiClient | null = null;
+  private workflowMappings: Record<string, unknown> | null = null;
+  private paidReportsBoardSchema: BlockplannerPaidReportsBoardSchema | null =
+    null;
+  private leadsBoardSchema: BlockplannerLeadsBoardSchema | null = null;
+  private configuredPaidProductBoards: ConfiguredPaidProductBoardMap | null =
+    null;
+  private configuredLeadBoards: ConfiguredLeadBoardMap | null = null;
 
   generateReportId(now = new Date()): string {
     const { year, month, day } = this.getActDateTimeParts(now);
     const suffix = String(randomInt(1000, 10000));
     return `BP-${year}${month}${day}-${suffix}`;
+  }
+
+  async upsertPaidProductRequest(
+    productCode: BlockplannerPaidProductCode,
+    rawPayload: Record<string, unknown>,
+  ): Promise<{
+    action: 'created' | 'updated';
+    itemId: string;
+    reportId: string;
+  }> {
+    if (productCode === 'site_report') {
+      return this.upsertPaidReportRequest(rawPayload);
+    }
+
+    return this.upsertConfiguredPaidProductRequest(productCode, rawPayload);
+  }
+
+  isPaidProductConfigured(
+    productCode: BlockplannerPaidProductCode,
+  ): boolean {
+    if (productCode === 'site_report') {
+      this.getBoardSchema();
+      return true;
+    }
+
+    return Boolean(this.getConfiguredPaidProductBoardMap()[productCode]);
   }
 
   async createFreeAssessmentLead(rawPayload: Record<string, unknown>): Promise<{
@@ -85,9 +259,52 @@ export class MondayService {
     };
   }
 
-  async upsertPaidReportRequest(
+  async createProductLead(
+    leadType: BlockplannerLeadType,
     rawPayload: Record<string, unknown>,
-  ): Promise<{
+  ): Promise<{ itemId: string }> {
+    const email = this.normalizeToString(rawPayload.email);
+    const name = this.normalizeToString(rawPayload.name);
+    if (!this.isValidEmail(email)) {
+      throw new BadRequestException('Missing or invalid email');
+    }
+
+    const board = this.getConfiguredLeadBoard(leadType);
+    const client = this.getClient();
+    const columnValues = this.buildConfiguredLeadColumnValues(
+      rawPayload,
+      board,
+      email,
+    );
+    const itemName =
+      name ||
+      email ||
+      this.normalizeToString(rawPayload.address) ||
+      `${leadType} lead`;
+    const created = await client.createItem(
+      board.boardId,
+      board.defaultGroupId,
+      itemName,
+    );
+
+    await client.changeMultipleColumnValues(
+      board.boardId,
+      created.id,
+      columnValues,
+    );
+
+    this.logger.log(
+      `Monday ${leadType} lead created (itemId=${created.id} email=${this.maskEmail(email)})`,
+    );
+
+    return { itemId: created.id };
+  }
+
+  isProductLeadConfigured(leadType: BlockplannerLeadType): boolean {
+    return Boolean(this.getConfiguredLeadBoardMap()[leadType]);
+  }
+
+  async upsertPaidReportRequest(rawPayload: Record<string, unknown>): Promise<{
     action: 'created' | 'updated';
     itemId: string;
     reportId: string;
@@ -114,7 +331,11 @@ export class MondayService {
       action = 'created';
     }
 
-    await client.changeMultipleColumnValues(board.boardId, itemId, columnValues);
+    await client.changeMultipleColumnValues(
+      board.boardId,
+      itemId,
+      columnValues,
+    );
 
     this.logger.log(
       `Monday paid report item ${action} (itemId=${itemId} reportId=${payload.reportId}${
@@ -129,6 +350,53 @@ export class MondayService {
       itemId,
       reportId: payload.reportId,
     };
+  }
+
+  private async upsertConfiguredPaidProductRequest(
+    productCode: Exclude<BlockplannerPaidProductCode, 'site_report'>,
+    rawPayload: Record<string, unknown>,
+  ): Promise<{
+    action: 'created' | 'updated';
+    itemId: string;
+    reportId: string;
+  }> {
+    const payload = this.normalizeReportRequestPayload(rawPayload);
+    const board = this.getConfiguredPaidProductBoard(productCode);
+    const client = this.getClient();
+    const existingItem = await this.findExistingConfiguredPaidProductItem(
+      payload,
+      board,
+    );
+    const itemName = this.buildItemName(payload);
+    const columnValues = this.buildConfiguredPaidProductColumnValues(
+      payload,
+      board,
+    );
+
+    let itemId = existingItem?.id || '';
+    let action: 'created' | 'updated' = 'updated';
+
+    if (!itemId) {
+      const created = await client.createItem(
+        board.boardId,
+        board.defaultGroupId,
+        itemName,
+      );
+      itemId = created.id;
+      action = 'created';
+    }
+
+    await client.changeMultipleColumnValues(
+      board.boardId,
+      itemId,
+      columnValues,
+    );
+
+    this.logger.log(
+      `Monday ${productCode} item ${action} (itemId=${itemId} reportId=${payload.reportId} stripePaymentId=${payload.stripePaymentId})`,
+    );
+
+    return { action, itemId, reportId: payload.reportId };
   }
 
   async getNormalizedPaidReportPayload(
@@ -168,7 +436,8 @@ export class MondayService {
     }
 
     if (params.internalNotes !== undefined) {
-      columnValues[board.columns.internalNotes.id] = params.internalNotes.trim();
+      columnValues[board.columns.internalNotes.id] =
+        params.internalNotes.trim();
     }
 
     if (params.escalation !== undefined) {
@@ -176,7 +445,9 @@ export class MondayService {
     }
 
     if (params.qaCompleted !== undefined) {
-      columnValues[board.columns.qaCompleted.id] = { label: params.qaCompleted };
+      columnValues[board.columns.qaCompleted.id] = {
+        label: params.qaCompleted,
+      };
     }
 
     return this.getClient().changeMultipleColumnValues(
@@ -210,14 +481,17 @@ export class MondayService {
 
   shouldProcessDashboardTrigger(payload: Record<string, unknown>): boolean {
     return (
-      this.normalizeStatusLabel(this.readPayloadValue(payload, 'send for QA?')) ===
-      this.normalizeStatusLabel(this.getBoardSchema().statusLabels.yes)
+      this.normalizeStatusLabel(
+        this.readPayloadValue(payload, 'send for QA?'),
+      ) === this.normalizeStatusLabel(this.getBoardSchema().statusLabels.yes)
     );
   }
 
   shouldProcessDashboardDelivery(payload: Record<string, unknown>): boolean {
     return (
-      this.normalizeStatusLabel(this.readPayloadValue(payload, 'Delivery status')) ===
+      this.normalizeStatusLabel(
+        this.readPayloadValue(payload, 'Delivery status'),
+      ) ===
       this.normalizeStatusLabel(
         this.getBoardSchema().statusLabels.deliveryStatus.readyToSend,
       )
@@ -272,6 +546,41 @@ export class MondayService {
     return byReportId[0];
   }
 
+  private async findExistingConfiguredPaidProductItem(
+    payload: ReportRequestPayload,
+    board: ConfiguredPaidProductBoard,
+  ): Promise<MondayItemSummary | undefined> {
+    const client = this.getClient();
+    const lookupColumnIds = [
+      board.columns.reportId,
+      board.columns.stripePaymentId,
+    ];
+
+    if (payload.stripePaymentId) {
+      const byStripePaymentId = await client.listItemsByColumnValues(
+        board.boardId,
+        {
+          columnId: board.columns.stripePaymentId,
+          columnValues: [payload.stripePaymentId],
+          limit: 2,
+          columnIds: lookupColumnIds,
+        },
+      );
+      if (byStripePaymentId[0]) return byStripePaymentId[0];
+    }
+
+    if (!payload.reportId) return undefined;
+
+    const byReportId = await client.listItemsByColumnValues(board.boardId, {
+      columnId: board.columns.reportId,
+      columnValues: [payload.reportId],
+      limit: 2,
+      columnIds: lookupColumnIds,
+    });
+
+    return byReportId[0];
+  }
+
   private async getPaidReportItem(itemId: string): Promise<MondayItemSummary> {
     const columnIds = Object.values(this.getBoardSchema().columns).map(
       (column) => column.id,
@@ -295,8 +604,13 @@ export class MondayService {
     item: MondayItemSummary,
   ): Record<string, unknown> {
     const board = this.getBoardSchema();
-    const columnMap = new Map(item.columnValues.map((column) => [column.id, column]));
-    const requestDate = this.readMondayDateValue(columnMap, board.columns.date.id);
+    const columnMap = new Map(
+      item.columnValues.map((column) => [column.id, column]),
+    );
+    const requestDate = this.readMondayDateValue(
+      columnMap,
+      board.columns.date.id,
+    );
     const deliveryDate = this.readMondayDateValue(
       columnMap,
       board.columns.deliveryDate.id,
@@ -327,7 +641,10 @@ export class MondayService {
       blockSizeM2: this.readMondayText(columnMap, board.columns.blockSizeM2.id),
       Zone: this.readMondayText(columnMap, board.columns.zone.id),
       zone: this.readMondayText(columnMap, board.columns.zone.id),
-      'Frontage (m)': this.readMondayText(columnMap, board.columns.frontageM.id),
+      'Frontage (m)': this.readMondayText(
+        columnMap,
+        board.columns.frontageM.id,
+      ),
       'House position': this.readMondayText(
         columnMap,
         board.columns.housePosition.id,
@@ -404,13 +721,22 @@ export class MondayService {
         columnMap,
         board.columns.analystAssigned.id,
       ),
-      'send for QA?': this.readMondayText(columnMap, board.columns.sendForQa.id),
-      'QA completed': this.readMondayText(columnMap, board.columns.qaCompleted.id),
+      'send for QA?': this.readMondayText(
+        columnMap,
+        board.columns.sendForQa.id,
+      ),
+      'QA completed': this.readMondayText(
+        columnMap,
+        board.columns.qaCompleted.id,
+      ),
       'Final PDF link': this.readMondayText(
         columnMap,
         board.columns.finalPdfLink.id,
       ),
-      finalPdfLink: this.readMondayText(columnMap, board.columns.finalPdfLink.id),
+      finalPdfLink: this.readMondayText(
+        columnMap,
+        board.columns.finalPdfLink.id,
+      ),
       'Delivery status': this.readMondayText(
         columnMap,
         board.columns.deliveryStatus.id,
@@ -419,10 +745,9 @@ export class MondayService {
         columnMap,
         board.columns.deliveryStatus.id,
       ),
-      'Delivery date': this.readMondayText(
-        columnMap,
-        board.columns.deliveryDate.id,
-      ) || deliveryDate,
+      'Delivery date':
+        this.readMondayText(columnMap, board.columns.deliveryDate.id) ||
+        deliveryDate,
       deliveryDate: deliveryDate,
       Escalation: this.readMondayText(columnMap, board.columns.escalation.id),
       escalation: this.readMondayText(columnMap, board.columns.escalation.id),
@@ -469,11 +794,48 @@ export class MondayService {
     };
 
     if (options?.setInitialWorkflowFields) {
-      columnValues[board.columns.date.id] = this.buildDateValue(new Date().toISOString());
+      columnValues[board.columns.date.id] = this.buildDateValue(
+        new Date().toISOString(),
+      );
       columnValues[board.columns.deliveryStatus.id] = {
         label: board.statusLabels.deliveryStatus.notStarted,
       };
     }
+
+    return columnValues;
+  }
+
+  private buildConfiguredPaidProductColumnValues(
+    payload: ReportRequestPayload,
+    board: ConfiguredPaidProductBoard,
+  ): Record<string, unknown> {
+    const columnValues: Record<string, unknown> = {
+      [board.columns.reportId]: payload.reportId,
+      [board.columns.stripePaymentId]: payload.stripePaymentId,
+    };
+
+    const setColumn = (columnId: string | undefined, value: unknown) => {
+      if (columnId && value !== '' && value !== null && value !== undefined) {
+        columnValues[columnId] = value;
+      }
+    };
+
+    setColumn(
+      board.columns.email,
+      payload.clientEmail
+        ? { email: payload.clientEmail, text: payload.clientEmail }
+        : undefined,
+    );
+    setColumn(board.columns.phone, this.buildPhoneValue(payload.clientPhone));
+    setColumn(board.columns.address, payload.address);
+    setColumn(board.columns.suburb, payload.suburb);
+    setColumn(board.columns.intention, payload.intention);
+    setColumn(board.columns.sourceApp, payload.sourceApp);
+    setColumn(board.columns.checkoutMode, payload.checkoutMode);
+    setColumn(
+      board.columns.paymentDate,
+      this.buildDateValue(new Date().toISOString()),
+    );
 
     return columnValues;
   }
@@ -505,6 +867,51 @@ export class MondayService {
     };
   }
 
+  private buildConfiguredLeadColumnValues(
+    payload: Record<string, unknown>,
+    board: ConfiguredLeadBoard,
+    email: string,
+  ): Record<string, unknown> {
+    const columnValues: Record<string, unknown> = {
+      [board.columns.email]: { email, text: email },
+    };
+    const setColumn = (columnId: string | undefined, value: unknown) => {
+      const normalized = this.normalizeToString(value);
+      if (columnId && normalized) columnValues[columnId] = normalized;
+    };
+
+    if (board.columns.phone) {
+      const phone = this.normalizeToString(payload.phone);
+      if (phone)
+        columnValues[board.columns.phone] = this.buildPhoneValue(phone);
+    }
+
+    setColumn(board.columns.address, payload.address);
+    setColumn(board.columns.suburb, payload.suburb);
+    setColumn(board.columns.intentUse, payload.intent_use);
+    setColumn(board.columns.intentReason, payload.intent_reason);
+    setColumn(board.columns.contactOptIn, payload.presale_contact_opt_in);
+    setColumn(board.columns.propertyType, payload.property_type);
+    setColumn(board.columns.buildEra, payload.build_era);
+    setColumn(board.columns.bedrooms, payload.bedrooms);
+    setColumn(board.columns.bathrooms, payload.bathrooms);
+    setColumn(board.columns.floorArea, payload.floor_area);
+    setColumn(board.columns.upgrades, payload.upgrades_selected);
+    setColumn(board.columns.totalLow, payload.total_low);
+    setColumn(board.columns.totalExpected, payload.total_expected);
+    setColumn(board.columns.totalHigh, payload.total_high);
+    setColumn(board.columns.sourceApp, payload.sourceApp);
+    setColumn(board.columns.details, JSON.stringify(payload));
+
+    if (board.columns.createdDate) {
+      columnValues[board.columns.createdDate] = this.buildDateValue(
+        this.normalizeToString(payload.timestamp) || new Date().toISOString(),
+      );
+    }
+
+    return columnValues;
+  }
+
   private normalizeFreeAssessmentLeadPayload(
     payload: Record<string, unknown>,
   ): FreeAssessmentLeadPayload {
@@ -529,6 +936,8 @@ export class MondayService {
       intention: this.normalizeToString(payload.intention),
       checkoutMode: this.normalizeToString(payload.checkoutMode),
       stripePaymentId: this.normalizeToString(payload.stripePaymentId),
+      productCode: this.normalizeToString(payload.productCode),
+      sourceApp: this.normalizeToString(payload.sourceApp),
     };
   }
 
@@ -661,7 +1070,9 @@ export class MondayService {
     return column.text?.trim() || '';
   }
 
-  private parseMondayColumnJson(value: string | null): Record<string, unknown> | null {
+  private parseMondayColumnJson(
+    value: string | null,
+  ): Record<string, unknown> | null {
     if (!value) {
       return null;
     }
@@ -786,7 +1197,9 @@ export class MondayService {
       words[0].toLowerCase() +
       words
         .slice(1)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+        )
         .join('')
     );
   }
@@ -829,55 +1242,481 @@ export class MondayService {
   }
 
   private getBoardSchema(): BlockplannerPaidReportsBoardSchema {
-    const base = BLOCKPLANNER_PAID_REPORTS_BOARD_SCHEMA;
+    if (this.paidReportsBoardSchema) return this.paidReportsBoardSchema;
+
+    const value = this.getWorkflowMappings().site_report;
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        'Missing site_report mapping in blockplanner-monday-workflows.json',
+      );
+    }
+
+    const statusLabels = this.getRequiredMappingRecord(
+      value,
+      'statusLabels',
+      'site_report',
+    );
+    const schema: BlockplannerPaidReportsBoardSchema = {
+      boardId: this.getRequiredMappingString(value, 'boardId', 'site_report'),
+      boardName: this.getRequiredMappingString(
+        value,
+        'boardName',
+        'site_report',
+      ),
+      defaultGroupId: this.getRequiredMappingString(
+        value,
+        'groupId',
+        'site_report',
+      ),
+      columns: this.parseColumnDefinitions(
+        value.columns,
+        PAID_REPORT_COLUMN_KEYS,
+        'site_report.columns',
+      ),
+      statusLabels: {
+        yes: this.getRequiredMappingString(
+          statusLabels,
+          'yes',
+          'site_report.statusLabels',
+        ),
+        no: this.getRequiredMappingString(
+          statusLabels,
+          'no',
+          'site_report.statusLabels',
+        ),
+        treeLocation: this.parseStringMap(
+          statusLabels.treeLocation,
+          TREE_LOCATION_STATUS_KEYS,
+          'site_report.statusLabels.treeLocation',
+        ),
+        registeredTrees: this.parseStringMap(
+          statusLabels.registeredTrees,
+          REGISTERED_TREE_STATUS_KEYS,
+          'site_report.statusLabels.registeredTrees',
+        ),
+        deliveryStatus: this.parseStringMap(
+          statusLabels.deliveryStatus,
+          DELIVERY_STATUS_KEYS,
+          'site_report.statusLabels.deliveryStatus',
+        ),
+        intention: this.parseStringMap(
+          statusLabels.intention,
+          INTENTION_STATUS_KEYS,
+          'site_report.statusLabels.intention',
+        ),
+      },
+    };
+
+    this.paidReportsBoardSchema = schema;
+    return schema;
+  }
+
+  private getConfiguredPaidProductBoard(
+    productCode: ConfiguredPaidProductCode,
+  ): ConfiguredPaidProductBoard {
+    const board = this.getConfiguredPaidProductBoardMap()[productCode];
+    if (!board) {
+      throw new InternalServerErrorException(
+        `Missing ${productCode} mapping in blockplanner-monday-workflows.json`,
+      );
+    }
+    return board;
+  }
+
+  private getConfiguredPaidProductBoardMap(): ConfiguredPaidProductBoardMap {
+    if (this.configuredPaidProductBoards) {
+      return this.configuredPaidProductBoards;
+    }
+
+    const mappingsFile = this.getWorkflowMappings();
+    const mappings: ConfiguredPaidProductBoardMap = {};
+    for (const productCode of CONFIGURED_PAID_PRODUCT_CODES) {
+      const value = mappingsFile[productCode];
+      if (this.isEmptyWorkflowMapping(value)) continue;
+      mappings[productCode] = this.parseConfiguredPaidProductBoard(
+        productCode,
+        value,
+      );
+    }
+
+    this.configuredPaidProductBoards = mappings;
+    return mappings;
+  }
+
+  private parseConfiguredPaidProductBoard(
+    productCode: ConfiguredPaidProductCode,
+    value: unknown,
+  ): ConfiguredPaidProductBoard {
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        `${productCode} in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const columns = value.columns;
+    if (!this.isRecord(columns)) {
+      throw new InternalServerErrorException(
+        `${productCode}.columns in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const optionalColumnKeys: Array<
+      Exclude<
+        keyof ConfiguredPaidProductBoard['columns'],
+        'reportId' | 'stripePaymentId'
+      >
+    > = [
+      'email',
+      'phone',
+      'address',
+      'suburb',
+      'intention',
+      'sourceApp',
+      'checkoutMode',
+      'paymentDate',
+    ];
+    const parsedColumns: ConfiguredPaidProductBoard['columns'] = {
+      reportId: this.getRequiredMappingString(
+        columns,
+        'reportId',
+        `${productCode}.columns`,
+      ),
+      stripePaymentId: this.getRequiredMappingString(
+        columns,
+        'stripePaymentId',
+        `${productCode}.columns`,
+      ),
+    };
+
+    for (const key of optionalColumnKeys) {
+      const columnId = this.getOptionalMappingString(
+        columns,
+        key,
+        `${productCode}.columns`,
+      );
+      if (columnId) parsedColumns[key] = columnId;
+    }
 
     return {
-      ...base,
-      columns: {
-        ...base.columns,
-        treeLocation: {
-          ...base.columns.treeLocation,
-          id:
-            process.env.MONDAY_TREE_LOCATION_COLUMN_ID ||
-            base.columns.treeLocation.id,
-        },
-        registeredTrees: {
-          ...base.columns.registeredTrees,
-          id:
-            process.env.MONDAY_REGISTERED_TREES_COLUMN_ID ||
-            base.columns.registeredTrees.id,
-        },
-      },
-      boardId:
-        process.env.MONDAY_PAID_REPORTS_BOARD_ID ||
-        base.boardId,
-      defaultGroupId:
-        process.env.MONDAY_PAID_REPORTS_GROUP_ID ||
-        base.defaultGroupId,
+      boardId: this.getRequiredMappingString(value, 'boardId', productCode),
+      defaultGroupId: this.getRequiredMappingString(
+        value,
+        'groupId',
+        productCode,
+      ),
+      columns: parsedColumns,
     };
   }
 
   private getLeadsBoardSchema(): BlockplannerLeadsBoardSchema {
-    const base = BLOCKPLANNER_LEADS_BOARD_SCHEMA;
+    if (this.leadsBoardSchema) return this.leadsBoardSchema;
+
+    const value = this.getWorkflowMappings().free_assessment;
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        'Missing free_assessment mapping in blockplanner-monday-workflows.json',
+      );
+    }
+
+    const statusLabels = this.getRequiredMappingRecord(
+      value,
+      'statusLabels',
+      'free_assessment',
+    );
+    const schema: BlockplannerLeadsBoardSchema = {
+      boardId: this.getRequiredMappingString(
+        value,
+        'boardId',
+        'free_assessment',
+      ),
+      boardName: this.getRequiredMappingString(
+        value,
+        'boardName',
+        'free_assessment',
+      ),
+      defaultGroupId: this.getRequiredMappingString(
+        value,
+        'groupId',
+        'free_assessment',
+      ),
+      columns: this.parseColumnDefinitions(
+        value.columns,
+        ['name', 'email', 'leadSource'] as const,
+        'free_assessment.columns',
+      ),
+      statusLabels: {
+        leadSource: this.parseStringMap(
+          statusLabels.leadSource,
+          ['freeAssessment'] as const,
+          'free_assessment.statusLabels.leadSource',
+        ),
+      },
+    };
+
+    this.leadsBoardSchema = schema;
+    return schema;
+  }
+
+  private getConfiguredLeadBoard(
+    leadType: BlockplannerLeadType,
+  ): ConfiguredLeadBoard {
+    const board = this.getConfiguredLeadBoardMap()[leadType];
+    if (!board) {
+      throw new InternalServerErrorException(
+        `Missing ${leadType} mapping in blockplanner-monday-workflows.json`,
+      );
+    }
+    return board;
+  }
+
+  private getConfiguredLeadBoardMap(): ConfiguredLeadBoardMap {
+    if (this.configuredLeadBoards) return this.configuredLeadBoards;
+
+    const mappingsFile = this.getWorkflowMappings();
+    const mappings: ConfiguredLeadBoardMap = {};
+    for (const leadType of BLOCKPLANNER_LEAD_TYPES) {
+      const value = mappingsFile[leadType];
+      if (this.isEmptyWorkflowMapping(value)) continue;
+      mappings[leadType] = this.parseConfiguredLeadBoard(leadType, value);
+    }
+
+    this.configuredLeadBoards = mappings;
+    return mappings;
+  }
+
+  private parseConfiguredLeadBoard(
+    leadType: BlockplannerLeadType,
+    value: unknown,
+  ): ConfiguredLeadBoard {
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        `${leadType} in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const columns = value.columns;
+    if (!this.isRecord(columns)) {
+      throw new InternalServerErrorException(
+        `${leadType}.columns in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const optionalColumnKeys: Array<
+      Exclude<keyof ConfiguredLeadBoard['columns'], 'email'>
+    > = [
+      'phone',
+      'address',
+      'suburb',
+      'intentUse',
+      'intentReason',
+      'contactOptIn',
+      'propertyType',
+      'buildEra',
+      'bedrooms',
+      'bathrooms',
+      'floorArea',
+      'upgrades',
+      'totalLow',
+      'totalExpected',
+      'totalHigh',
+      'sourceApp',
+      'details',
+      'createdDate',
+    ];
+    const parsedColumns: ConfiguredLeadBoard['columns'] = {
+      email: this.getRequiredMappingString(
+        columns,
+        'email',
+        `${leadType}.columns`,
+      ),
+    };
+
+    for (const key of optionalColumnKeys) {
+      const columnId = this.getOptionalMappingString(
+        columns,
+        key,
+        `${leadType}.columns`,
+      );
+      if (columnId) parsedColumns[key] = columnId;
+    }
 
     return {
-      ...base,
-      columns: {
-        ...base.columns,
-        email: {
-          ...base.columns.email,
-          id: process.env.MONDAY_LEADS_EMAIL_COLUMN_ID || base.columns.email.id,
-        },
-        leadSource: {
-          ...base.columns.leadSource,
-          id:
-            process.env.MONDAY_LEADS_SOURCE_COLUMN_ID ||
-            base.columns.leadSource.id,
-        },
-      },
-      boardId: process.env.MONDAY_LEADS_BOARD_ID || base.boardId,
-      defaultGroupId: process.env.MONDAY_LEADS_GROUP_ID || base.defaultGroupId,
+      boardId: this.getRequiredMappingString(value, 'boardId', leadType),
+      defaultGroupId: this.getRequiredMappingString(
+        value,
+        'groupId',
+        leadType,
+      ),
+      columns: parsedColumns,
     };
+  }
+
+  private getRequiredMappingString(
+    record: Record<string, unknown>,
+    key: string,
+    path: string,
+  ): string {
+    const value = this.getOptionalMappingString(record, key, path);
+    if (!value) {
+      throw new InternalServerErrorException(
+        `Missing ${path}.${key} in blockplanner-monday-workflows.json`,
+      );
+    }
+    return value;
+  }
+
+  private getRequiredMappingRecord(
+    record: Record<string, unknown>,
+    key: string,
+    path: string,
+  ): Record<string, unknown> {
+    const value = record[key];
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        `${path}.${key} in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+    return value;
+  }
+
+  private parseColumnDefinitions<const T extends readonly string[]>(
+    value: unknown,
+    keys: T,
+    path: string,
+  ): Record<T[number], MondayColumnDefinition> {
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        `${path} in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const result = {} as Record<T[number], MondayColumnDefinition>;
+    for (const key of keys) {
+      const column = value[key];
+      if (!this.isRecord(column)) {
+        throw new InternalServerErrorException(
+          `${path}.${key} in blockplanner-monday-workflows.json must be an object`,
+        );
+      }
+      result[key as T[number]] = {
+        id: this.getRequiredMappingString(column, 'id', `${path}.${key}`),
+        title: this.getRequiredMappingString(
+          column,
+          'title',
+          `${path}.${key}`,
+        ),
+        type: this.getRequiredMappingString(
+          column,
+          'type',
+          `${path}.${key}`,
+        ),
+      };
+    }
+    return result;
+  }
+
+  private parseStringMap<const T extends readonly string[]>(
+    value: unknown,
+    keys: T,
+    path: string,
+  ): Record<T[number], string> {
+    if (!this.isRecord(value)) {
+      throw new InternalServerErrorException(
+        `${path} in blockplanner-monday-workflows.json must be an object`,
+      );
+    }
+
+    const result = {} as Record<T[number], string>;
+    for (const key of keys) {
+      result[key as T[number]] = this.getRequiredMappingString(
+        value,
+        key,
+        path,
+      );
+    }
+    return result;
+  }
+
+  private getOptionalMappingString(
+    record: Record<string, unknown>,
+    key: string,
+    path: string,
+  ): string | undefined {
+    const value = record[key];
+    if (value === undefined || value === null || value === '') return undefined;
+    if (typeof value !== 'string') {
+      throw new InternalServerErrorException(
+        `${path}.${key} in blockplanner-monday-workflows.json must be a string`,
+      );
+    }
+    return value.trim() || undefined;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  private getWorkflowMappings(): Record<string, unknown> {
+    if (this.workflowMappings) return this.workflowMappings;
+
+    let raw: string;
+    try {
+      raw = readFileSync(MONDAY_WORKFLOW_MAPPINGS_FILE, 'utf8');
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Unable to read blockplanner-monday-workflows.json: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Invalid blockplanner-monday-workflows.json: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
+    if (!this.isRecord(parsed)) {
+      throw new InternalServerErrorException(
+        'blockplanner-monday-workflows.json must contain a JSON object',
+      );
+    }
+
+    const supportedKeys = new Set<string>([
+      'site_report',
+      ...CONFIGURED_PAID_PRODUCT_CODES,
+      ...BLOCKPLANNER_LEAD_TYPES,
+      'free_assessment',
+    ]);
+    const unsupportedKeys = Object.keys(parsed).filter(
+      (key) => !supportedKeys.has(key),
+    );
+    if (unsupportedKeys.length) {
+      throw new InternalServerErrorException(
+        `Unsupported mapping(s) in blockplanner-monday-workflows.json: ${unsupportedKeys.join(', ')}`,
+      );
+    }
+
+    this.workflowMappings = parsed;
+    return parsed;
+  }
+
+  private isEmptyWorkflowMapping(value: unknown): boolean {
+    if (value === undefined || value === null) return true;
+    if (!this.isRecord(value)) return false;
+
+    const hasConfiguredValue = (candidate: unknown): boolean => {
+      if (typeof candidate === 'string') return Boolean(candidate.trim());
+      if (!this.isRecord(candidate)) return false;
+      return Object.values(candidate).some(hasConfiguredValue);
+    };
+
+    return !hasConfiguredValue(value);
   }
 
   private getTargetGroupId(board: BlockplannerPaidReportsBoardSchema): string {

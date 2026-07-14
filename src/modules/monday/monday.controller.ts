@@ -16,6 +16,7 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { DashboardReportService } from '@modules/monday/dashboard-report.service';
 import { MondayService } from '@modules/monday/monday.service';
 import { randomUUID } from 'crypto';
+import { isBlockplannerLeadType } from '@modules/blockplanner/blockplanner-product';
 
 @Controller('monday')
 export class MondayController {
@@ -41,8 +42,28 @@ export class MondayController {
   @Post('free-assessment-leads')
   @HttpCode(200)
   async createFreeAssessmentLead(@Body() body: { email?: string }) {
-    const result = await this.mondayService.createFreeAssessmentLead(body || {});
+    const result = await this.mondayService.createFreeAssessmentLead(
+      body || {},
+    );
 
+    return {
+      ok: true,
+      action: 'created',
+      itemId: result.itemId,
+    };
+  }
+
+  @Post('product-leads')
+  @HttpCode(200)
+  async createProductLead(@Body() body: Record<string, unknown>) {
+    const leadType = String(body?.leadType || '')
+      .trim()
+      .toLowerCase();
+    if (!isBlockplannerLeadType(leadType)) {
+      throw new BadRequestException('Unsupported leadType');
+    }
+
+    const result = await this.mondayService.createProductLead(leadType, body);
     return {
       ok: true,
       action: 'created',
@@ -69,9 +90,8 @@ export class MondayController {
       throw new BadRequestException('Missing monday item id');
     }
 
-    const payload = await this.mondayService.getNormalizedPaidReportPayload(
-      itemId,
-    );
+    const payload =
+      await this.mondayService.getNormalizedPaidReportPayload(itemId);
 
     if (!this.mondayService.shouldProcessDashboardTrigger(payload)) {
       this.logger.log(
@@ -108,9 +128,8 @@ export class MondayController {
       throw new BadRequestException('Missing monday item id');
     }
 
-    const payload = await this.mondayService.getNormalizedPaidReportPayload(
-      itemId,
-    );
+    const payload =
+      await this.mondayService.getNormalizedPaidReportPayload(itemId);
 
     if (!this.mondayService.shouldProcessDashboardDelivery(payload)) {
       this.logger.log(
@@ -150,7 +169,9 @@ export class MondayController {
     webhookSecret?: string,
     querySecret?: string,
   ) {
-    const expectedSecret = String(process.env.MONDAY_WEBHOOK_SECRET || '').trim();
+    const expectedSecret = String(
+      process.env.MONDAY_WEBHOOK_SECRET || '',
+    ).trim();
     if (!expectedSecret) {
       return;
     }

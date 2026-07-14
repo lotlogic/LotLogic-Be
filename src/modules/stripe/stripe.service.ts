@@ -1,6 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import Stripe from 'stripe';
+import {
+  BLOCKPLANNER_PAID_PRODUCTS,
+  type BlockplannerPaidProductCode,
+  type BlockplannerSourceApp,
+} from '@modules/blockplanner/blockplanner-product';
 
 const ACT_TIME_ZONE = 'Australia/Sydney';
 
@@ -18,6 +23,8 @@ export const PAID_REPORT_STRIPE_METADATA_KEYS = [
   'intention',
   'checkoutMode',
   'stripePaymentId',
+  'productCode',
+  'sourceApp',
 ] as const;
 
 export type PaidReportStripeMetadataKey =
@@ -56,18 +63,25 @@ export class StripeService {
     site: string;
     cancelUrl?: string;
     checkoutMode?: StripeCheckoutMode;
+    productCode: BlockplannerPaidProductCode;
+    sourceApp: BlockplannerSourceApp;
     metadata?: PaidReportStripeMetadata;
     intention?: string;
   }): Promise<string | null> {
     try {
       const checkoutMode = params.checkoutMode || 'live';
-      const { stripe, checkoutPriceId } = this.getCheckoutConfig(checkoutMode);
+      const { stripe, checkoutPriceId } = this.getCheckoutConfig(
+        checkoutMode,
+        params.productCode,
+      );
 
       const reportMetadata = this.normalizePaidReportMetadata(params.metadata);
       const metadata: Record<string, string> = {
         ...reportMetadata,
         intention: this.normalizeToMetadataValue(params.intention),
         checkoutMode,
+        productCode: params.productCode,
+        sourceApp: params.sourceApp,
       };
 
       const session = await stripe.checkout.sessions.create({
@@ -85,14 +99,17 @@ export class StripeService {
         },
         metadata,
         mode: 'payment',
-        success_url: params.site + `/checkout?success={CHECKOUT_SESSION_ID}`,
+        success_url:
+          params.site +
+          `/checkout?success={CHECKOUT_SESSION_ID}&product=${params.productCode}`,
         cancel_url:
           params.cancelUrl ||
-          params.site + `/checkout?cancel={CHECKOUT_SESSION_ID}`,
+          params.site +
+            `/checkout?cancel={CHECKOUT_SESSION_ID}&product=${params.productCode}`,
       });
 
       this.logger.log(
-        `Checkout session created successfully (mode=${checkoutMode})`,
+        `Checkout session created successfully (product=${params.productCode} source=${params.sourceApp} mode=${checkoutMode})`,
       );
       return session.url;
     } catch (error) {
@@ -133,8 +150,18 @@ export class StripeService {
   async extractPaidReportPayloadFromEvent(
     event: Stripe.Event,
   ): Promise<Record<PaidReportStripeMetadataKey, string> | null> {
-    if (event.type === 'checkout.session.completed') {
+    if (
+      event.type === 'checkout.session.completed' ||
+      event.type === 'checkout.session.async_payment_succeeded'
+    ) {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      if (session.payment_status !== 'paid') {
+        this.logger.log(
+          `Ignoring unpaid Checkout Session ${session.id} (status=${session.payment_status})`,
+        );
+        return null;
+      }
       const fallbackEmail =
         session.customer_email || session.customer_details?.email || '';
 
@@ -168,7 +195,10 @@ export class StripeService {
         );
       }
 
-      const payload = this.buildPaidReportPayload(combinedMetadata, fallbackEmail);
+      const payload = this.buildPaidReportPayload(
+        combinedMetadata,
+        fallbackEmail,
+      );
 
       if (paymentIntentId) {
         payload.stripePaymentId = paymentIntentId;
@@ -191,26 +221,37 @@ export class StripeService {
     return null;
   }
 
-  private getCheckoutConfig(mode: StripeCheckoutMode): {
+  private getCheckoutConfig(
+    mode: StripeCheckoutMode,
+    productCode: BlockplannerPaidProductCode,
+  ): {
     stripe: Stripe;
     checkoutPriceId: string;
   } {
+    const product = BLOCKPLANNER_PAID_PRODUCTS[productCode];
+
     if (mode === 'sandbox') {
       if (!this.sandboxStripe) {
         throw new Error('Missing env var STRIPE_SANDBOX_API_KEY');
       }
 
-      const checkoutPriceId = String(this.sandboxCheckoutPriceId || '').trim();
+      const checkoutPriceId = String(
+        process.env[product.sandboxPriceEnv] ||
+          (productCode === 'site_report' ? this.sandboxCheckoutPriceId : ''),
+      ).trim();
       if (!checkoutPriceId) {
-        throw new Error('Missing env var STRIPE_SANDBOX_CHECKOUT_PRICE_ID');
+        throw new Error(`Missing env var ${product.sandboxPriceEnv}`);
       }
 
       return { stripe: this.sandboxStripe, checkoutPriceId };
     }
 
-    const checkoutPriceId = String(this.checkoutPriceId || '').trim();
+    const checkoutPriceId = String(
+      process.env[product.livePriceEnv] ||
+        (productCode === 'site_report' ? this.checkoutPriceId : ''),
+    ).trim();
     if (!checkoutPriceId) {
-      throw new Error('Missing env var STRIPE_CHECKOUT_PRICE_ID');
+      throw new Error(`Missing env var ${product.livePriceEnv}`);
     }
 
     return { stripe: this.stripe, checkoutPriceId };

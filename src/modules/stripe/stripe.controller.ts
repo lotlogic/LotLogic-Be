@@ -12,6 +12,12 @@ import {
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
 import { MondayService } from '@modules/monday/monday.service';
+import {
+  isBlockplannerPaidProductCode,
+  isBlockplannerSourceApp,
+  type BlockplannerPaidProductCode,
+  type BlockplannerSourceApp,
+} from '@modules/blockplanner/blockplanner-product';
 import { StripeService, type StripeCheckoutMode } from './stripe.service';
 
 @Controller('stripe')
@@ -166,6 +172,8 @@ export class StripeController {
       site: string;
       cancelUrl?: string;
       checkoutMode?: string;
+      productCode?: string;
+      sourceApp?: string;
       intention?: string;
 
       // Backwards-compatible alias
@@ -185,6 +193,15 @@ export class StripeController {
       throw new BadRequestException('Missing site');
     }
 
+    const sourceApp = this.parseSourceApp(body.sourceApp, site);
+    const productCode = this.parseProductCode(body.productCode);
+    const checkoutSite = this.resolveCheckoutSite(sourceApp, site);
+    if (!this.mondayService.isPaidProductConfigured(productCode)) {
+      throw new InternalServerErrorException(
+        `Fulfillment is not configured for product ${productCode}`,
+      );
+    }
+
     const clientEmail = String(body.clientEmail || body.email || '').trim();
     if (!clientEmail) {
       throw new BadRequestException('Missing clientEmail');
@@ -195,16 +212,21 @@ export class StripeController {
       throw new BadRequestException('Missing address');
     }
 
-    const cancelUrl = this.resolveCheckoutCancelUrl(site, body.cancelUrl);
-    const checkoutMode = this.parseCheckoutMode(body.checkoutMode);
+    const cancelUrl = this.resolveCheckoutCancelUrl(
+      checkoutSite,
+      body.cancelUrl,
+    );
+    const checkoutMode = this.resolveCheckoutMode(sourceApp, body.checkoutMode);
 
     const reportId = this.stripeService.generateReportId();
 
     const sessionUrl = await this.stripeService.createCheckoutSession({
       customerEmail: clientEmail,
-      site,
+      site: checkoutSite,
       cancelUrl,
       checkoutMode,
+      productCode,
+      sourceApp,
       intention: String(body.intention || '').trim(),
       metadata: {
         reportId,
@@ -230,6 +252,109 @@ export class StripeController {
     throw new BadRequestException(
       'checkoutMode must be either live or sandbox',
     );
+  }
+
+  private parseProductCode(value: unknown): BlockplannerPaidProductCode {
+    const productCode = String(value || 'site_report')
+      .trim()
+      .toLowerCase();
+
+    if (isBlockplannerPaidProductCode(productCode)) return productCode;
+    throw new BadRequestException('Unsupported productCode');
+  }
+
+  private parseSourceApp(value: unknown, site: string): BlockplannerSourceApp {
+    const sourceApp = String(value || '')
+      .trim()
+      .toLowerCase();
+
+    if (sourceApp) {
+      if (isBlockplannerSourceApp(sourceApp)) return sourceApp;
+      throw new BadRequestException('Unsupported sourceApp');
+    }
+
+    let hostname = '';
+    try {
+      hostname = new URL(site).hostname.toLowerCase();
+    } catch {
+      throw new BadRequestException('Invalid site');
+    }
+    if (hostname.includes('upgrade')) return 'upgrade_estimator';
+    if (hostname.includes('lvc')) return 'lvc_estimator';
+    if (hostname.includes('discover')) return 'discover';
+    return 'legacy';
+  }
+
+  private resolveCheckoutMode(
+    sourceApp: BlockplannerSourceApp,
+    requestedMode: unknown,
+  ): StripeCheckoutMode {
+    const sourceModeEnv: Record<BlockplannerSourceApp, string | undefined> = {
+      discover: process.env.STRIPE_DISCOVER_CHECKOUT_MODE,
+      lvc_estimator: process.env.STRIPE_LVC_CHECKOUT_MODE,
+      upgrade_estimator: process.env.STRIPE_UPGRADE_CHECKOUT_MODE,
+      legacy: undefined,
+    };
+
+    return this.parseCheckoutMode(sourceModeEnv[sourceApp] || requestedMode);
+  }
+
+  private resolveCheckoutSite(
+    sourceApp: BlockplannerSourceApp,
+    requestedSite: string,
+  ): string {
+    const sourceSiteEnv: Record<BlockplannerSourceApp, string | undefined> = {
+      discover: process.env.BLOCKPLANNER_DISCOVER_SITE_URL,
+      lvc_estimator: process.env.BLOCKPLANNER_LVC_SITE_URL,
+      upgrade_estimator: process.env.BLOCKPLANNER_UPGRADE_SITE_URL,
+      legacy: undefined,
+    };
+
+    try {
+      const requestedUrl = new URL(requestedSite);
+      if (!['http:', 'https:'].includes(requestedUrl.protocol)) {
+        throw new Error('Unsupported protocol');
+      }
+
+      const configuredSite = String(sourceSiteEnv[sourceApp] || '').trim();
+      const isLocalRequest = ['localhost', '127.0.0.1'].includes(
+        requestedUrl.hostname,
+      );
+
+      if (!configuredSite) {
+        if (isLocalRequest || sourceApp === 'legacy') {
+          return requestedUrl.origin;
+        }
+        throw new InternalServerErrorException(
+          `Missing trusted site URL for sourceApp ${sourceApp}`,
+        );
+      }
+
+      let configuredUrl: URL;
+      try {
+        configuredUrl = new URL(configuredSite);
+      } catch {
+        throw new InternalServerErrorException(
+          `Invalid trusted site URL for sourceApp ${sourceApp}`,
+        );
+      }
+      if (!['http:', 'https:'].includes(configuredUrl.protocol)) {
+        throw new InternalServerErrorException(
+          `Trusted site URL for sourceApp ${sourceApp} must use HTTP or HTTPS`,
+        );
+      }
+
+      if (!isLocalRequest && requestedUrl.origin !== configuredUrl.origin) {
+        throw new BadRequestException(
+          `site is not allowed for sourceApp ${sourceApp}`,
+        );
+      }
+
+      return isLocalRequest ? requestedUrl.origin : configuredUrl.origin;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new BadRequestException('Invalid site');
+    }
   }
 
   private resolveCheckoutCancelUrl(
@@ -435,8 +560,11 @@ export class StripeController {
 
     const forwardStartedAt = Date.now();
     try {
-      const forwardResult =
-        await this.mondayService.upsertPaidReportRequest(payload);
+      const productCode = this.parseProductCode(payload.productCode);
+      const forwardResult = await this.mondayService.upsertPaidProductRequest(
+        productCode,
+        payload,
+      );
 
       this.logger.log(
         `Stripe webhook forwarded to monday OK (requestId=${requestId} type=${event.type} id=${event.id} forwardMs=${
