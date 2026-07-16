@@ -274,6 +274,21 @@ export class EnquiryController {
 
     await this.verifyRecaptchaIfConfigured(recaptchaToken, req.ip);
 
+    if (this.mondayService.isProductLeadConfigured('contact_request')) {
+      await this.mondayService.createProductLead('contact_request', {
+        name,
+        email,
+        phone,
+        address,
+        intent_reason: intent,
+        message,
+        sourceApp: 'discover',
+        timestamp: new Date().toISOString(),
+      });
+
+      return { message: 'Enquiry submitted' };
+    }
+
     const recipientEmail =
       normalizeText(process.env.GET_IN_TOUCH_RECIPIENT_EMAIL) ||
       'mitch@blockplanner.com.au';
@@ -295,25 +310,6 @@ export class EnquiryController {
       emailsList: recipientEmail,
       senderProfile: 'blockplanner',
     });
-
-    try {
-      if (this.mondayService.isProductLeadConfigured('contact_request')) {
-        await this.mondayService.createProductLead('contact_request', {
-          name,
-          email,
-          phone,
-          address,
-          intent_reason: intent,
-          message,
-          sourceApp: 'discover',
-          timestamp: new Date().toISOString(),
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        `Contact enquiry email sent but monday forwarding failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
 
     return { message: 'Enquiry submitted' };
   }
