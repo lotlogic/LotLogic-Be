@@ -255,9 +255,12 @@ Sandbox mode requires these additional backend environment variables:
 
 ```env
 STRIPE_SANDBOX_API_KEY="sk_test_..."
-STRIPE_SANDBOX_CHECKOUT_PRICE_ID="price_..."
 STRIPE_SANDBOX_WEBHOOK_SECRET="whsec_..."
 ```
+
+Supported BlockPlanner products and their live/sandbox Stripe Price IDs are
+maintained in `src/config/blockplanner-products.json`. Stripe API keys and
+webhook signing secrets remain environment variables.
 
 Configure the Stripe test-mode webhook to use the existing
 `POST /api/stripe/webhook` endpoint. The endpoint verifies both live and test

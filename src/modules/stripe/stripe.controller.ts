@@ -304,7 +304,9 @@ export class StripeController {
     requestedSite: string,
   ): string {
     const sourceSiteEnv: Record<BlockplannerSourceApp, string | undefined> = {
-      discover: process.env.BLOCKPLANNER_DISCOVER_SITE_URL,
+      discover:
+        process.env.BLOCKPLANNER_DISCOVER_SITE_URL ||
+        'https://discover.blockplanner.com.au',
       lvc_estimator: process.env.BLOCKPLANNER_LVC_SITE_URL,
       upgrade_estimator: process.env.BLOCKPLANNER_UPGRADE_SITE_URL,
       legacy: undefined,

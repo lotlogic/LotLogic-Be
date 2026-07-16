@@ -1,0 +1,26 @@
+{
+  "site_report": {
+    "displayName": "BlockPlanner Site Assessment Report",
+    "amountAud": 299,
+    "prices": {
+      "live": "price_1TZkjXL0WBX6DtDJJWATpx75",
+      "sandbox": "price_1Sr7jTL0WBX6DtDJZlje3U91"
+    }
+  },
+  "crown_lease": {
+    "displayName": "Crown Lease Service",
+    "amountAud": 149,
+    "prices": {
+      "live": "price_1Ttfa9L0WBX6DtDJEoLpV3Lo",
+      "sandbox": "price_1TtfXVL0WBX6DtDJCSAUG5oe"
+    }
+  },
+  "feasibility_report": {
+    "displayName": "Financial Feasibility Report",
+    "amountAud": 1200,
+    "prices": {
+      "live": "price_1TouTwL0WBX6DtDJxwbzUKTA",
+      "sandbox": "price_1TtfY4L0WBX6DtDJhyv3nwsc"
+    }
+  }
+}

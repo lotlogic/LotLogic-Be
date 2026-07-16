@@ -109,6 +109,16 @@
       "paymentDate": ""
     }
   },
+  "lvc_estimator": {
+    "boardId": "",
+    "groupId": "",
+    "columns": {
+      "email": "",
+      "address": "",
+      "suburb": "",
+      "sourceApp": ""
+    }
+  },
   "upgrade_report": {
     "boardId": "",
     "groupId": "",

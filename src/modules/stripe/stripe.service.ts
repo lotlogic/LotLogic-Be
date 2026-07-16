@@ -2,7 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import Stripe from 'stripe';
 import {
-  BLOCKPLANNER_PAID_PRODUCTS,
+  BLOCKPLANNER_PAID_PRODUCT_CODES,
+  getBlockplannerPaidProduct,
   type BlockplannerPaidProductCode,
   type BlockplannerSourceApp,
 } from '@modules/blockplanner/blockplanner-product';
@@ -43,18 +44,18 @@ export class StripeService {
   constructor(
     @Inject('STRIPE_API_KEY')
     private readonly apiKey: string,
-    @Inject('STRIPE_CHECKOUT_PRICE_ID')
-    private readonly checkoutPriceId: string,
     @Inject('STRIPE_SANDBOX_API_KEY')
     private readonly sandboxApiKey: string,
-    @Inject('STRIPE_SANDBOX_CHECKOUT_PRICE_ID')
-    private readonly sandboxCheckoutPriceId: string,
   ) {
     this.stripe = new Stripe(this.apiKey, {});
     const normalizedSandboxApiKey = String(this.sandboxApiKey || '').trim();
     this.sandboxStripe = normalizedSandboxApiKey
       ? new Stripe(normalizedSandboxApiKey, {})
       : null;
+
+    for (const productCode of BLOCKPLANNER_PAID_PRODUCT_CODES) {
+      getBlockplannerPaidProduct(productCode);
+    }
   }
 
   // Stripe-Hosted Checkout Session
@@ -228,33 +229,20 @@ export class StripeService {
     stripe: Stripe;
     checkoutPriceId: string;
   } {
-    const product = BLOCKPLANNER_PAID_PRODUCTS[productCode];
+    const product = getBlockplannerPaidProduct(productCode);
 
     if (mode === 'sandbox') {
       if (!this.sandboxStripe) {
         throw new Error('Missing env var STRIPE_SANDBOX_API_KEY');
       }
 
-      const checkoutPriceId = String(
-        process.env[product.sandboxPriceEnv] ||
-          (productCode === 'site_report' ? this.sandboxCheckoutPriceId : ''),
-      ).trim();
-      if (!checkoutPriceId) {
-        throw new Error(`Missing env var ${product.sandboxPriceEnv}`);
-      }
-
-      return { stripe: this.sandboxStripe, checkoutPriceId };
+      return {
+        stripe: this.sandboxStripe,
+        checkoutPriceId: product.prices.sandbox,
+      };
     }
 
-    const checkoutPriceId = String(
-      process.env[product.livePriceEnv] ||
-        (productCode === 'site_report' ? this.checkoutPriceId : ''),
-    ).trim();
-    if (!checkoutPriceId) {
-      throw new Error(`Missing env var ${product.livePriceEnv}`);
-    }
-
-    return { stripe: this.stripe, checkoutPriceId };
+    return { stripe: this.stripe, checkoutPriceId: product.prices.live };
   }
 
   private normalizePaidReportMetadata(
