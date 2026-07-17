@@ -41,7 +41,7 @@ export class MondayController {
 
   @Post('free-assessment-leads')
   @HttpCode(200)
-  async createFreeAssessmentLead(@Body() body: { email?: string }) {
+  async createFreeAssessmentLead(@Body() body: Record<string, unknown>) {
     const result = await this.mondayService.createFreeAssessmentLead(
       body || {},
     );

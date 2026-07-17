@@ -34,6 +34,9 @@ interface GetInTouchBody {
   phone?: string;
   intent?: string;
   message?: string;
+  requestType?: string;
+  ownsBlock?: string;
+  jointDevelopment?: string;
   company?: string;
   recaptchaToken?: string;
 }
@@ -252,6 +255,9 @@ export class EnquiryController {
     const phone = normalizeText(body.phone);
     const intent = normalizeText(body.intent);
     const message = normalizeText(body.message);
+    const requestType = normalizeText(body.requestType);
+    const ownsBlock = normalizeText(body.ownsBlock);
+    const jointDevelopment = normalizeText(body.jointDevelopment);
     const company = normalizeText(body.company);
     const recaptchaToken = normalizeText(body.recaptchaToken);
 
@@ -276,14 +282,16 @@ export class EnquiryController {
 
     if (this.mondayService.isProductLeadConfigured('contact_request')) {
       await this.mondayService.createProductLead('contact_request', {
-        name,
+        fullName: name,
         email,
         phone,
         address,
-        intent_reason: intent,
+        requestType,
+        intention: intent,
+        ownsBlock,
+        jointDevelopment,
         message,
         sourceApp: 'discover',
-        timestamp: new Date().toISOString(),
       });
 
       return { message: 'Enquiry submitted' };

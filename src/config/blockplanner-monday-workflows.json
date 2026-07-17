@@ -8,40 +8,164 @@
       "date": { "id": "date4", "title": "Date", "type": "date" },
       "email": { "id": "email_mm2qyev6", "title": "Email", "type": "email" },
       "phone": { "id": "phone_mm2qj30e", "title": "Phone", "type": "phone" },
-      "reportId": { "id": "text_mm2qdpk3", "title": "Report ID", "type": "text" },
+      "reportId": {
+        "id": "text_mm2qdpk3",
+        "title": "Report ID",
+        "type": "text"
+      },
       "address": { "id": "text_mm2q5m86", "title": "Address", "type": "text" },
       "suburb": { "id": "text_mm2qdnv", "title": "Suburb", "type": "text" },
-      "blockSizeM2": { "id": "text_mm2qq969", "title": "Block size (m\u00b2)", "type": "text" },
+      "blockSizeM2": {
+        "id": "text_mm2qq969",
+        "title": "Block size (m\u00b2)",
+        "type": "text"
+      },
       "zone": { "id": "text_mm2qt7de", "title": "Zone", "type": "text" },
-      "frontageM": { "id": "text_mm2q4sjh", "title": "Frontage (m)", "type": "text" },
-      "housePosition": { "id": "color_mm2q3shy", "title": "House position", "type": "status" },
-      "houseFootprintM2": { "id": "text_mm2q5p1t", "title": "House footprint (m\u00b2)", "type": "text" },
-      "rearYardDepthM": { "id": "text_mm2q2f36", "title": "Rear yard depth (m)", "type": "text" },
-      "largeTreesVisible": { "id": "text_mm2qj6ag", "title": "Large trees visible", "type": "text" },
-      "treeLocation": { "id": "dropdown_mm35539t", "title": "Tree location", "type": "dropdown" },
-      "registeredTrees": { "id": "dropdown_mm35eqsb", "title": "Registered trees", "type": "dropdown" },
-      "heritageOverlay": { "id": "color_mm2qkyrj", "title": "Heritage overlay", "type": "status" },
-      "sewerLocation": { "id": "color_mm2q6rf7", "title": "Sewer location", "type": "status" },
-      "easementImpact": { "id": "color_mm2q318b", "title": "Easement impact", "type": "status" },
-      "shedInRear": { "id": "color_mm2qvqyz", "title": "Shed in rear", "type": "status" },
-      "secondDrivewayFeasible": { "id": "color_mm2qvw3d", "title": "Second driveway feasible", "type": "status" },
-      "mapImageUrl": { "id": "text_mm2q52wb", "title": "Map image URL", "type": "text" },
-      "maxBuildingAllowedM2": { "id": "numeric_mm2qqs6r", "title": "Max building allowed (m\u00b2)", "type": "numbers" },
-      "remainingSiteCoverageM2": { "id": "numeric_mm2q79hj", "title": "Remaining site coverage (m\u00b2)", "type": "numbers" },
-      "rearYardCategory": { "id": "color_mm2qg5j7", "title": "Rear yard category", "type": "status" },
-      "grannyFlatKeepHouse": { "id": "color_mm2qjpg", "title": "Granny flat (keep house)", "type": "status" },
-      "dualOccRemoveHouse": { "id": "color_mm2qykxa", "title": "Dual occ (remove house)", "type": "status" },
-      "subdivisionPotential": { "id": "color_mm2qb7x2", "title": "Subdivision potential", "type": "status" },
-      "analystAssigned": { "id": "text_mm2q9z3a", "title": "Analyst assigned", "type": "text" },
-      "sendForQa": { "id": "color_mm2qzcdq", "title": "send for QA?", "type": "status" },
-      "qaCompleted": { "id": "color_mm2q6kew", "title": "QA completed", "type": "status" },
-      "finalPdfLink": { "id": "text_mm2q9pd4", "title": "Final PDF link", "type": "text" },
-      "deliveryStatus": { "id": "color_mm2qeye7", "title": "Delivery status", "type": "status" },
-      "deliveryDate": { "id": "date_mm2qqqss", "title": "Delivery date", "type": "date" },
-      "escalation": { "id": "color_mm2qccgd", "title": "Escalation", "type": "status" },
-      "internalNotes": { "id": "text_mm2qqyyx", "title": "Internal notes", "type": "text" },
-      "intention": { "id": "color_mm2qfth", "title": "Intention", "type": "status" },
-      "stripePaymentId": { "id": "text_mm2qmdth", "title": "Stripe payment id", "type": "text" }
+      "frontageM": {
+        "id": "text_mm2q4sjh",
+        "title": "Frontage (m)",
+        "type": "text"
+      },
+      "housePosition": {
+        "id": "color_mm2q3shy",
+        "title": "House position",
+        "type": "status"
+      },
+      "houseFootprintM2": {
+        "id": "text_mm2q5p1t",
+        "title": "House footprint (m\u00b2)",
+        "type": "text"
+      },
+      "rearYardDepthM": {
+        "id": "text_mm2q2f36",
+        "title": "Rear yard depth (m)",
+        "type": "text"
+      },
+      "largeTreesVisible": {
+        "id": "text_mm2qj6ag",
+        "title": "Large trees visible",
+        "type": "text"
+      },
+      "treeLocation": {
+        "id": "dropdown_mm35539t",
+        "title": "Tree location",
+        "type": "dropdown"
+      },
+      "registeredTrees": {
+        "id": "dropdown_mm35eqsb",
+        "title": "Registered trees",
+        "type": "dropdown"
+      },
+      "heritageOverlay": {
+        "id": "color_mm2qkyrj",
+        "title": "Heritage overlay",
+        "type": "status"
+      },
+      "sewerLocation": {
+        "id": "color_mm2q6rf7",
+        "title": "Sewer location",
+        "type": "status"
+      },
+      "easementImpact": {
+        "id": "color_mm2q318b",
+        "title": "Easement impact",
+        "type": "status"
+      },
+      "shedInRear": {
+        "id": "color_mm2qvqyz",
+        "title": "Shed in rear",
+        "type": "status"
+      },
+      "secondDrivewayFeasible": {
+        "id": "color_mm2qvw3d",
+        "title": "Second driveway feasible",
+        "type": "status"
+      },
+      "mapImageUrl": {
+        "id": "text_mm2q52wb",
+        "title": "Map image URL",
+        "type": "text"
+      },
+      "maxBuildingAllowedM2": {
+        "id": "numeric_mm2qqs6r",
+        "title": "Max building allowed (m\u00b2)",
+        "type": "numbers"
+      },
+      "remainingSiteCoverageM2": {
+        "id": "numeric_mm2q79hj",
+        "title": "Remaining site coverage (m\u00b2)",
+        "type": "numbers"
+      },
+      "rearYardCategory": {
+        "id": "color_mm2qg5j7",
+        "title": "Rear yard category",
+        "type": "status"
+      },
+      "grannyFlatKeepHouse": {
+        "id": "color_mm2qjpg",
+        "title": "Granny flat (keep house)",
+        "type": "status"
+      },
+      "dualOccRemoveHouse": {
+        "id": "color_mm2qykxa",
+        "title": "Dual occ (remove house)",
+        "type": "status"
+      },
+      "subdivisionPotential": {
+        "id": "color_mm2qb7x2",
+        "title": "Subdivision potential",
+        "type": "status"
+      },
+      "analystAssigned": {
+        "id": "text_mm2q9z3a",
+        "title": "Analyst assigned",
+        "type": "text"
+      },
+      "sendForQa": {
+        "id": "color_mm2qzcdq",
+        "title": "send for QA?",
+        "type": "status"
+      },
+      "qaCompleted": {
+        "id": "color_mm2q6kew",
+        "title": "QA completed",
+        "type": "status"
+      },
+      "finalPdfLink": {
+        "id": "text_mm2q9pd4",
+        "title": "Final PDF link",
+        "type": "text"
+      },
+      "deliveryStatus": {
+        "id": "color_mm2qeye7",
+        "title": "Delivery status",
+        "type": "status"
+      },
+      "deliveryDate": {
+        "id": "date_mm2qqqss",
+        "title": "Delivery date",
+        "type": "date"
+      },
+      "escalation": {
+        "id": "color_mm2qccgd",
+        "title": "Escalation",
+        "type": "status"
+      },
+      "internalNotes": {
+        "id": "text_mm2qqyyx",
+        "title": "Internal notes",
+        "type": "text"
+      },
+      "intention": {
+        "id": "color_mm2qfth",
+        "title": "Intention",
+        "type": "status"
+      },
+      "stripePaymentId": {
+        "id": "text_mm2qmdth",
+        "title": "Stripe payment id",
+        "type": "text"
+      }
     },
     "statusLabels": {
       "yes": "Yes",
@@ -78,82 +202,148 @@
     }
   },
   "crown_lease": {
-    "boardId": "",
-    "groupId": "",
+    "boardId": "5029984719",
+    "groupId": "topics",
     "columns": {
-      "email": "",
-      "phone": "",
-      "reportId": "",
-      "stripePaymentId": "",
-      "address": "",
-      "suburb": "",
-      "intention": "",
-      "sourceApp": "",
-      "checkoutMode": "",
-      "paymentDate": ""
+      "fullName": "text_mm5arfne",
+      "email": "email_mm5am2gw",
+      "reportId": "text_mm5a2cr7",
+      "stripePaymentId": "text_mm5aazjv",
+      "address": "text_mm5aqv6d",
+      "suburb": "text_mm5a3kyt",
+      "intention": "color_mm5amtc2",
+      "sourceApp": "text_mm5af9hr",
+      "checkoutMode": "color_mm5amt1a",
+      "paymentDate": "date_mm5afwqy"
+    },
+    "statusLabels": {
+      "intention": {
+        "openToOptions": "Open to options",
+        "jointVenture": "Joint Venture",
+        "sell": "Sell",
+        "developMyself": "Develop Myself"
+      },
+      "checkoutMode": {
+        "live": "live",
+        "sandbox": "sandbox"
+      }
     }
   },
   "feasibility_report": {
-    "boardId": "",
-    "groupId": "",
+    "boardId": "5029984722",
+    "groupId": "topics",
     "columns": {
-      "email": "",
-      "phone": "",
-      "reportId": "",
-      "stripePaymentId": "",
-      "address": "",
-      "suburb": "",
-      "intention": "",
-      "sourceApp": "",
-      "checkoutMode": "",
-      "paymentDate": ""
+      "fullName": "text_mm5acnvx",
+      "email": "email_mm5az5wy",
+      "phone": "phone_mm5a7d5r",
+      "reportId": "text_mm5a8q1k",
+      "stripePaymentId": "text_mm5aj1e4",
+      "address": "text_mm5ajwxe",
+      "suburb": "text_mm5a4cmj",
+      "intention": "color_mm5a38xj",
+      "sourceApp": "text_mm5ap6d2",
+      "checkoutMode": "color_mm5awgt0",
+      "paymentDate": "date_mm5akz7m"
+    },
+    "statusLabels": {
+      "intention": {
+        "openToOptions": "Open to options",
+        "jointVenture": "Joint Venture",
+        "sell": "Sell",
+        "developMyself": "Develop Myself"
+      },
+      "checkoutMode": {
+        "live": "live",
+        "sandbox": "sandbox"
+      }
     }
   },
   "lvc_estimator": {
-    "boardId": "",
-    "groupId": "",
+    "boardId": "5029984716",
+    "groupId": "topics",
     "columns": {
-      "email": "",
-      "address": "",
-      "suburb": "",
-      "sourceApp": ""
+      "email": "email_mm5apmx",
+      "address": "text_mm5as3zw"
     }
   },
   "upgrade_report": {
-    "boardId": "",
-    "groupId": "",
+    "boardId": "5029984717",
+    "groupId": "topics",
     "columns": {
-      "email": "",
-      "phone": "",
-      "address": "",
-      "suburb": "",
-      "intentUse": "",
-      "intentReason": "",
-      "contactOptIn": "",
-      "propertyType": "",
-      "buildEra": "",
-      "bedrooms": "",
-      "bathrooms": "",
-      "floorArea": "",
-      "upgrades": "",
-      "totalLow": "",
-      "totalExpected": "",
-      "totalHigh": "",
-      "sourceApp": "",
-      "details": "",
-      "createdDate": ""
+      "fullName": "text_mm5az9rk",
+      "email": "email_mm5ap9sk",
+      "phone": "phone_mm5anebw",
+      "address": "text_mm5a7tes",
+      "suburb": "text_mm5ak17m",
+      "intentUse": "color_mm5a18ap",
+      "intentReason": "color_mm5a6fay",
+      "contactOptIn": "boolean_mm5aek0f",
+      "propertyType": "color_mm5a8q7a",
+      "buildEra": "color_mm5aknmr",
+      "bedrooms": "numeric_mm5amqap",
+      "bathrooms": "numeric_mm5a68x4",
+      "floorArea": "numeric_mm5amq61",
+      "upgrades": "long_text_mm5aqgpq",
+      "totalLow": "numeric_mm5abzpe",
+      "totalExpected": "numeric_mm5a515s",
+      "totalHigh": "numeric_mm5awgsd",
+      "sourceApp": "text_mm5a6sn1"
+    },
+    "statusLabels": {
+      "intentUse": {
+        "home": "My home",
+        "investment": "An investment"
+      },
+      "intentReason": {
+        "stay": "Improving to stay",
+        "presale": "Getting it ready to sell",
+        "exploring": "Just exploring"
+      },
+      "propertyType": {
+        "house": "House",
+        "townhouse": "Townhouse",
+        "apartment": "Apartment"
+      },
+      "buildEra": {
+        "pre1970": "Pre 1970",
+        "1970_1990": "1970 to 1990",
+        "1990_2010": "1990 to 2010",
+        "post2010": "Post 2010"
+      }
     }
   },
   "contact_request": {
-    "boardId": "",
-    "groupId": "",
+    "boardId": "5029984736",
+    "groupId": "topics",
     "columns": {
-      "email": "",
-      "phone": "",
-      "address": "",
-      "sourceApp": "",
-      "details": "",
-      "createdDate": ""
+      "fullName": "text_mm5ap7gp",
+      "email": "email_mm5a9g2p",
+      "phone": "phone_mm5ag2nf",
+      "address": "text_mm5aw1kg",
+      "requestType": "text_mm5ayp37",
+      "intention": "color_mm5ax11j",
+      "ownsBlock": "color_mm5a16cj",
+      "jointDevelopment": "color_mm5a6440",
+      "message": "long_text_mm5a97ka",
+      "sourceApp": "text_mm5a44"
+    },
+    "statusLabels": {
+      "intention": {
+        "openToOptions": "Open to options",
+        "jointVenture": "Joint Venture",
+        "sell": "Sell",
+        "developMyself": "Develop Myself"
+      },
+      "ownsBlock": {
+        "yes": "Yes",
+        "ownerRepresentative": "I act for the owner",
+        "no": "No"
+      },
+      "jointDevelopment": {
+        "yes": "Yes",
+        "maybe": "Maybe",
+        "no": "No"
+      }
     }
   },
   "free_assessment": {
@@ -163,7 +353,22 @@
     "columns": {
       "name": { "id": "name", "title": "Name", "type": "name" },
       "email": { "id": "lead_email", "title": "Email", "type": "email" },
-      "leadSource": { "id": "color_mkyb8krc", "title": "Lead Source", "type": "status" }
+      "leadSource": {
+        "id": "color_mkyb8krc",
+        "title": "Lead Source",
+        "type": "status"
+      },
+      "address": {
+        "id": "text_mm5a416q",
+        "title": "Property Address",
+        "type": "text"
+      },
+      "zone": { "id": "text_mm5a5k9p", "title": "Zone", "type": "text" },
+      "blockSizeM2": {
+        "id": "numeric_mm5ap49x",
+        "title": "Block Size (m2)",
+        "type": "numbers"
+      }
     },
     "statusLabels": {
       "leadSource": {

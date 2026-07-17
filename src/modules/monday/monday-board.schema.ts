@@ -91,6 +91,9 @@ export interface BlockplannerLeadsBoardSchema {
     name: MondayColumnDefinition;
     email: MondayColumnDefinition;
     leadSource: MondayColumnDefinition;
+    address: MondayColumnDefinition;
+    zone: MondayColumnDefinition;
+    blockSizeM2: MondayColumnDefinition;
   };
   statusLabels: {
     leadSource: {

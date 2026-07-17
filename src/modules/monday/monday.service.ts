@@ -34,8 +34,7 @@ const CONFIGURED_PAID_PRODUCT_CODES = [
   'crown_lease',
   'feasibility_report',
 ] as const;
-type ConfiguredPaidProductCode =
-  (typeof CONFIGURED_PAID_PRODUCT_CODES)[number];
+type ConfiguredPaidProductCode = (typeof CONFIGURED_PAID_PRODUCT_CODES)[number];
 const PAID_REPORT_COLUMN_KEYS = [
   'name',
   'date',
@@ -94,17 +93,42 @@ const REGISTERED_TREE_STATUS_KEYS = [
   'yes',
   'no',
 ] as const;
-const DELIVERY_STATUS_KEYS = [
-  'sent',
-  'notStarted',
-  'readyToSend',
-] as const;
+const DELIVERY_STATUS_KEYS = ['sent', 'notStarted', 'readyToSend'] as const;
 const INTENTION_STATUS_KEYS = [
   'openToOptions',
   'jointVenture',
   'sell',
   'developMyself',
 ] as const;
+const CHECKOUT_MODE_STATUS_KEYS = ['live', 'sandbox'] as const;
+const UPGRADE_INTENT_USE_STATUS_KEYS = ['home', 'investment'] as const;
+const UPGRADE_INTENT_REASON_STATUS_KEYS = [
+  'stay',
+  'presale',
+  'exploring',
+] as const;
+const UPGRADE_PROPERTY_TYPE_STATUS_KEYS = [
+  'house',
+  'townhouse',
+  'apartment',
+] as const;
+const UPGRADE_BUILD_ERA_STATUS_KEYS = [
+  'pre1970',
+  '1970_1990',
+  '1990_2010',
+  'post2010',
+] as const;
+const CONTACT_OWNS_BLOCK_STATUS_KEYS = [
+  'yes',
+  'ownerRepresentative',
+  'no',
+] as const;
+const CONTACT_JOINT_DEVELOPMENT_STATUS_KEYS = ['yes', 'maybe', 'no'] as const;
+
+type IntentionStatusLabels = Record<
+  (typeof INTENTION_STATUS_KEYS)[number],
+  string
+>;
 
 type ReportRequestPayload = {
   reportId: string;
@@ -126,6 +150,7 @@ type ConfiguredPaidProductBoard = {
   boardId: string;
   defaultGroupId: string;
   columns: {
+    fullName?: string;
     email?: string;
     phone?: string;
     reportId: string;
@@ -137,12 +162,17 @@ type ConfiguredPaidProductBoard = {
     checkoutMode?: string;
     paymentDate?: string;
   };
+  statusLabels: {
+    intention: IntentionStatusLabels;
+    checkoutMode: Record<(typeof CHECKOUT_MODE_STATUS_KEYS)[number], string>;
+  };
 };
 
 type ConfiguredLeadBoard = {
   boardId: string;
   defaultGroupId: string;
   columns: {
+    fullName?: string;
     email: string;
     phone?: string;
     address?: string;
@@ -160,8 +190,31 @@ type ConfiguredLeadBoard = {
     totalExpected?: string;
     totalHigh?: string;
     sourceApp?: string;
+    requestType?: string;
+    intention?: string;
+    ownsBlock?: string;
+    jointDevelopment?: string;
+    message?: string;
     details?: string;
     createdDate?: string;
+  };
+  statusLabels: {
+    intentUse?: Record<(typeof UPGRADE_INTENT_USE_STATUS_KEYS)[number], string>;
+    intentReason?: Record<
+      (typeof UPGRADE_INTENT_REASON_STATUS_KEYS)[number],
+      string
+    >;
+    propertyType?: Record<
+      (typeof UPGRADE_PROPERTY_TYPE_STATUS_KEYS)[number],
+      string
+    >;
+    buildEra?: Record<(typeof UPGRADE_BUILD_ERA_STATUS_KEYS)[number], string>;
+    intention?: IntentionStatusLabels;
+    ownsBlock?: Record<(typeof CONTACT_OWNS_BLOCK_STATUS_KEYS)[number], string>;
+    jointDevelopment?: Record<
+      (typeof CONTACT_JOINT_DEVELOPMENT_STATUS_KEYS)[number],
+      string
+    >;
   };
 };
 
@@ -175,6 +228,9 @@ type ConfiguredPaidProductBoardMap = Partial<
 
 type FreeAssessmentLeadPayload = {
   email: string;
+  address: string;
+  zone: string;
+  blockSizeM2: string;
 };
 
 @Injectable()
@@ -210,9 +266,7 @@ export class MondayService {
     return this.upsertConfiguredPaidProductRequest(productCode, rawPayload);
   }
 
-  isPaidProductConfigured(
-    productCode: BlockplannerPaidProductCode,
-  ): boolean {
+  isPaidProductConfigured(productCode: BlockplannerPaidProductCode): boolean {
     if (productCode === 'site_report') {
       this.getBoardSchema();
       return true;
@@ -264,7 +318,7 @@ export class MondayService {
     rawPayload: Record<string, unknown>,
   ): Promise<{ itemId: string }> {
     const email = this.normalizeToString(rawPayload.email);
-    const name = this.normalizeToString(rawPayload.name);
+    const name = this.normalizeToString(rawPayload.fullName ?? rawPayload.name);
     if (!this.isValidEmail(email)) {
       throw new BadRequestException('Missing or invalid email');
     }
@@ -820,6 +874,7 @@ export class MondayService {
       }
     };
 
+    setColumn(board.columns.fullName, payload.clientName);
     setColumn(
       board.columns.email,
       payload.clientEmail
@@ -829,9 +884,29 @@ export class MondayService {
     setColumn(board.columns.phone, this.buildPhoneValue(payload.clientPhone));
     setColumn(board.columns.address, payload.address);
     setColumn(board.columns.suburb, payload.suburb);
-    setColumn(board.columns.intention, payload.intention);
+    setColumn(
+      board.columns.intention,
+      payload.intention
+        ? {
+            label: this.normalizeMondayIntentionLabel(
+              payload.intention,
+              board.statusLabels.intention,
+            ),
+          }
+        : undefined,
+    );
     setColumn(board.columns.sourceApp, payload.sourceApp);
-    setColumn(board.columns.checkoutMode, payload.checkoutMode);
+    setColumn(
+      board.columns.checkoutMode,
+      payload.checkoutMode
+        ? {
+            label:
+              payload.checkoutMode === 'sandbox'
+                ? board.statusLabels.checkoutMode.sandbox
+                : board.statusLabels.checkoutMode.live,
+          }
+        : undefined,
+    );
     setColumn(
       board.columns.paymentDate,
       this.buildDateValue(new Date().toISOString()),
@@ -856,7 +931,7 @@ export class MondayService {
     payload: FreeAssessmentLeadPayload,
     board: BlockplannerLeadsBoardSchema,
   ): Record<string, unknown> {
-    return {
+    const columnValues: Record<string, unknown> = {
       [board.columns.email.id]: {
         email: payload.email,
         text: payload.email,
@@ -865,6 +940,18 @@ export class MondayService {
         label: board.statusLabels.leadSource.freeAssessment,
       },
     };
+
+    if (payload.address) {
+      columnValues[board.columns.address.id] = payload.address;
+    }
+    if (payload.zone) {
+      columnValues[board.columns.zone.id] = payload.zone;
+    }
+    if (payload.blockSizeM2) {
+      columnValues[board.columns.blockSizeM2.id] = payload.blockSizeM2;
+    }
+
+    return columnValues;
   }
 
   private buildConfiguredLeadColumnValues(
@@ -879,7 +966,14 @@ export class MondayService {
       const normalized = this.normalizeToString(value);
       if (columnId && normalized) columnValues[columnId] = normalized;
     };
+    const setStatusColumn = (
+      columnId: string | undefined,
+      label: string | undefined,
+    ) => {
+      if (columnId && label) columnValues[columnId] = { label };
+    };
 
+    setColumn(board.columns.fullName, payload.fullName ?? payload.name);
     if (board.columns.phone) {
       const phone = this.normalizeToString(payload.phone);
       if (phone)
@@ -888,11 +982,44 @@ export class MondayService {
 
     setColumn(board.columns.address, payload.address);
     setColumn(board.columns.suburb, payload.suburb);
-    setColumn(board.columns.intentUse, payload.intent_use);
-    setColumn(board.columns.intentReason, payload.intent_reason);
-    setColumn(board.columns.contactOptIn, payload.presale_contact_opt_in);
-    setColumn(board.columns.propertyType, payload.property_type);
-    setColumn(board.columns.buildEra, payload.build_era);
+    setStatusColumn(
+      board.columns.intentUse,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.intentUse,
+        payload.intent_use,
+      ),
+    );
+    setStatusColumn(
+      board.columns.intentReason,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.intentReason,
+        payload.intent_reason,
+      ),
+    );
+    if (
+      board.columns.contactOptIn &&
+      payload.presale_contact_opt_in !== undefined
+    ) {
+      columnValues[board.columns.contactOptIn] = {
+        checked: this.normalizeBoolean(payload.presale_contact_opt_in)
+          ? 'true'
+          : 'false',
+      };
+    }
+    setStatusColumn(
+      board.columns.propertyType,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.propertyType,
+        payload.property_type,
+      ),
+    );
+    setStatusColumn(
+      board.columns.buildEra,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.buildEra,
+        payload.build_era,
+      ),
+    );
     setColumn(board.columns.bedrooms, payload.bedrooms);
     setColumn(board.columns.bathrooms, payload.bathrooms);
     setColumn(board.columns.floorArea, payload.floor_area);
@@ -901,6 +1028,32 @@ export class MondayService {
     setColumn(board.columns.totalExpected, payload.total_expected);
     setColumn(board.columns.totalHigh, payload.total_high);
     setColumn(board.columns.sourceApp, payload.sourceApp);
+    setColumn(board.columns.requestType, payload.requestType);
+    const contactIntention = this.normalizeToString(payload.intention);
+    setStatusColumn(
+      board.columns.intention,
+      contactIntention
+        ? this.normalizeMondayIntentionLabel(
+            contactIntention,
+            board.statusLabels.intention,
+          )
+        : undefined,
+    );
+    setStatusColumn(
+      board.columns.ownsBlock,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.ownsBlock,
+        this.normalizeContactOwnsBlock(payload.ownsBlock),
+      ),
+    );
+    setStatusColumn(
+      board.columns.jointDevelopment,
+      this.readConfiguredStatusLabel(
+        board.statusLabels.jointDevelopment,
+        this.normalizeContactJointDevelopment(payload.jointDevelopment),
+      ),
+    );
+    setColumn(board.columns.message, payload.message);
     setColumn(board.columns.details, JSON.stringify(payload));
 
     if (board.columns.createdDate) {
@@ -917,6 +1070,9 @@ export class MondayService {
   ): FreeAssessmentLeadPayload {
     return {
       email: this.normalizeToString(payload.email),
+      address: this.normalizeToString(payload.address),
+      zone: this.normalizeToString(payload.zone),
+      blockSizeM2: this.normalizeToString(payload.blockSizeM2),
     };
   }
 
@@ -941,11 +1097,14 @@ export class MondayService {
     };
   }
 
-  private normalizeMondayIntentionLabel(value: string): string {
+  private normalizeMondayIntentionLabel(
+    value: string,
+    intention: IntentionStatusLabels = this.getBoardSchema().statusLabels
+      .intention,
+  ): string {
     const normalized = String(value || '')
       .trim()
       .toLowerCase();
-    const intention = this.getBoardSchema().statusLabels.intention;
 
     if (normalized.includes('sell')) {
       return intention.sell;
@@ -962,6 +1121,35 @@ export class MondayService {
       return intention.developMyself;
     }
     return intention.openToOptions;
+  }
+
+  private readConfiguredStatusLabel(
+    labels: Record<string, string> | undefined,
+    value: unknown,
+  ): string | undefined {
+    const key = this.normalizeToString(value);
+    return key && labels ? labels[key] : undefined;
+  }
+
+  private normalizeBoolean(value: unknown): boolean {
+    if (typeof value === 'boolean') return value;
+    return ['1', 'true', 'yes', 'on'].includes(
+      this.normalizeToString(value).toLowerCase(),
+    );
+  }
+
+  private normalizeContactOwnsBlock(value: unknown): string {
+    const normalized = this.normalizeToString(value).toLowerCase();
+    if (!normalized) return '';
+    if (normalized.includes('act for') || normalized.includes('represent')) {
+      return 'ownerRepresentative';
+    }
+    return normalized === 'yes' ? 'yes' : normalized === 'no' ? 'no' : '';
+  }
+
+  private normalizeContactJointDevelopment(value: unknown): string {
+    const normalized = this.normalizeToString(value).toLowerCase();
+    return ['yes', 'maybe', 'no'].includes(normalized) ? normalized : '';
   }
 
   private buildDateValue(input: string): { date: string } | null {
@@ -1366,6 +1554,7 @@ export class MondayService {
         'reportId' | 'stripePaymentId'
       >
     > = [
+      'fullName',
       'email',
       'phone',
       'address',
@@ -1397,6 +1586,11 @@ export class MondayService {
       if (columnId) parsedColumns[key] = columnId;
     }
 
+    const statusLabels = this.getRequiredMappingRecord(
+      value,
+      'statusLabels',
+      productCode,
+    );
     return {
       boardId: this.getRequiredMappingString(value, 'boardId', productCode),
       defaultGroupId: this.getRequiredMappingString(
@@ -1405,6 +1599,18 @@ export class MondayService {
         productCode,
       ),
       columns: parsedColumns,
+      statusLabels: {
+        intention: this.parseStringMap(
+          statusLabels.intention,
+          INTENTION_STATUS_KEYS,
+          `${productCode}.statusLabels.intention`,
+        ),
+        checkoutMode: this.parseStringMap(
+          statusLabels.checkoutMode,
+          CHECKOUT_MODE_STATUS_KEYS,
+          `${productCode}.statusLabels.checkoutMode`,
+        ),
+      },
     };
   }
 
@@ -1441,7 +1647,14 @@ export class MondayService {
       ),
       columns: this.parseColumnDefinitions(
         value.columns,
-        ['name', 'email', 'leadSource'] as const,
+        [
+          'name',
+          'email',
+          'leadSource',
+          'address',
+          'zone',
+          'blockSizeM2',
+        ] as const,
         'free_assessment.columns',
       ),
       statusLabels: {
@@ -1504,6 +1717,7 @@ export class MondayService {
     const optionalColumnKeys: Array<
       Exclude<keyof ConfiguredLeadBoard['columns'], 'email'>
     > = [
+      'fullName',
       'phone',
       'address',
       'suburb',
@@ -1520,6 +1734,11 @@ export class MondayService {
       'totalExpected',
       'totalHigh',
       'sourceApp',
+      'requestType',
+      'intention',
+      'ownsBlock',
+      'jointDevelopment',
+      'message',
       'details',
       'createdDate',
     ];
@@ -1540,14 +1759,62 @@ export class MondayService {
       if (columnId) parsedColumns[key] = columnId;
     }
 
+    const parsedStatusLabels: ConfiguredLeadBoard['statusLabels'] = {};
+    if (leadType === 'upgrade_report') {
+      const statusLabels = this.getRequiredMappingRecord(
+        value,
+        'statusLabels',
+        leadType,
+      );
+      parsedStatusLabels.intentUse = this.parseStringMap(
+        statusLabels.intentUse,
+        UPGRADE_INTENT_USE_STATUS_KEYS,
+        `${leadType}.statusLabels.intentUse`,
+      );
+      parsedStatusLabels.intentReason = this.parseStringMap(
+        statusLabels.intentReason,
+        UPGRADE_INTENT_REASON_STATUS_KEYS,
+        `${leadType}.statusLabels.intentReason`,
+      );
+      parsedStatusLabels.propertyType = this.parseStringMap(
+        statusLabels.propertyType,
+        UPGRADE_PROPERTY_TYPE_STATUS_KEYS,
+        `${leadType}.statusLabels.propertyType`,
+      );
+      parsedStatusLabels.buildEra = this.parseStringMap(
+        statusLabels.buildEra,
+        UPGRADE_BUILD_ERA_STATUS_KEYS,
+        `${leadType}.statusLabels.buildEra`,
+      );
+    }
+    if (leadType === 'contact_request') {
+      const statusLabels = this.getRequiredMappingRecord(
+        value,
+        'statusLabels',
+        leadType,
+      );
+      parsedStatusLabels.intention = this.parseStringMap(
+        statusLabels.intention,
+        INTENTION_STATUS_KEYS,
+        `${leadType}.statusLabels.intention`,
+      );
+      parsedStatusLabels.ownsBlock = this.parseStringMap(
+        statusLabels.ownsBlock,
+        CONTACT_OWNS_BLOCK_STATUS_KEYS,
+        `${leadType}.statusLabels.ownsBlock`,
+      );
+      parsedStatusLabels.jointDevelopment = this.parseStringMap(
+        statusLabels.jointDevelopment,
+        CONTACT_JOINT_DEVELOPMENT_STATUS_KEYS,
+        `${leadType}.statusLabels.jointDevelopment`,
+      );
+    }
+
     return {
       boardId: this.getRequiredMappingString(value, 'boardId', leadType),
-      defaultGroupId: this.getRequiredMappingString(
-        value,
-        'groupId',
-        leadType,
-      ),
+      defaultGroupId: this.getRequiredMappingString(value, 'groupId', leadType),
       columns: parsedColumns,
+      statusLabels: parsedStatusLabels,
     };
   }
 
@@ -1600,16 +1867,8 @@ export class MondayService {
       }
       result[key as T[number]] = {
         id: this.getRequiredMappingString(column, 'id', `${path}.${key}`),
-        title: this.getRequiredMappingString(
-          column,
-          'title',
-          `${path}.${key}`,
-        ),
-        type: this.getRequiredMappingString(
-          column,
-          'type',
-          `${path}.${key}`,
-        ),
+        title: this.getRequiredMappingString(column, 'title', `${path}.${key}`),
+        type: this.getRequiredMappingString(column, 'type', `${path}.${key}`),
       };
     }
     return result;
