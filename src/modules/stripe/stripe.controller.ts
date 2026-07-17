@@ -307,8 +307,12 @@ export class StripeController {
       discover:
         process.env.BLOCKPLANNER_DISCOVER_SITE_URL ||
         'https://discover.blockplanner.com.au',
-      lvc_estimator: process.env.BLOCKPLANNER_LVC_SITE_URL,
-      upgrade_estimator: process.env.BLOCKPLANNER_UPGRADE_SITE_URL,
+      lvc_estimator:
+        process.env.BLOCKPLANNER_LVC_SITE_URL ||
+        'https://lvc-estimator.blockplanner.com.au',
+      upgrade_estimator:
+        process.env.BLOCKPLANNER_UPGRADE_SITE_URL ||
+        'https://upgrade.blockplanner.com.au',
       legacy: undefined,
     };
 
