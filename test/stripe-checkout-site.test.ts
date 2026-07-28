@@ -38,7 +38,7 @@ describe('Stripe checkout site handling', () => {
       >
     )[method](...args) as T;
 
-  it('infers source apps from both legacy subdomains and canonical paths', () => {
+  it('infers source apps from legacy subdomains and both canonical hosts', () => {
     assert.equal(
       callPrivate(
         'parseSourceApp',
@@ -51,9 +51,25 @@ describe('Stripe checkout site handling', () => {
       callPrivate(
         'parseSourceApp',
         undefined,
+        'https://www.blockplanner.com.au/tools/discover/',
+      ),
+      'discover',
+    );
+    assert.equal(
+      callPrivate(
+        'parseSourceApp',
+        undefined,
         'https://blockplanner.com.au/tools/discover/',
       ),
       'discover',
+    );
+    assert.equal(
+      callPrivate(
+        'parseSourceApp',
+        undefined,
+        'https://www.blockplanner.com.au/tools/lvc-estimator',
+      ),
+      'lvc_estimator',
     );
     assert.equal(
       callPrivate(
@@ -67,13 +83,21 @@ describe('Stripe checkout site handling', () => {
       callPrivate(
         'parseSourceApp',
         undefined,
+        'https://www.blockplanner.com.au/tools/upgrade',
+      ),
+      'upgrade_estimator',
+    );
+    assert.equal(
+      callPrivate(
+        'parseSourceApp',
+        undefined,
         'https://blockplanner.com.au/tools/upgrade',
       ),
       'upgrade_estimator',
     );
   });
 
-  it('allows the legacy subdomains and canonical app roots', () => {
+  it('allows legacy subdomains and app roots on both canonical hosts', () => {
     assert.equal(
       callPrivate(
         'resolveCheckoutSite',
@@ -81,6 +105,30 @@ describe('Stripe checkout site handling', () => {
         'https://discover.blockplanner.com.au/',
       ),
       'https://discover.blockplanner.com.au',
+    );
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutSite',
+        'lvc_estimator',
+        'https://lvc-estimator.blockplanner.com.au/',
+      ),
+      'https://lvc-estimator.blockplanner.com.au',
+    );
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutSite',
+        'upgrade_estimator',
+        'https://upgrade.blockplanner.com.au/',
+      ),
+      'https://upgrade.blockplanner.com.au',
+    );
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutSite',
+        'discover',
+        'https://www.blockplanner.com.au/tools/discover/',
+      ),
+      'https://www.blockplanner.com.au/tools/discover',
     );
     assert.equal(
       callPrivate(
@@ -94,9 +142,25 @@ describe('Stripe checkout site handling', () => {
       callPrivate(
         'resolveCheckoutSite',
         'lvc_estimator',
+        'https://www.blockplanner.com.au/tools/lvc-estimator',
+      ),
+      'https://www.blockplanner.com.au/tools/lvc-estimator',
+    );
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutSite',
+        'lvc_estimator',
         'https://blockplanner.com.au/tools/lvc-estimator',
       ),
       'https://blockplanner.com.au/tools/lvc-estimator',
+    );
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutSite',
+        'upgrade_estimator',
+        'https://www.blockplanner.com.au/tools/upgrade',
+      ),
+      'https://www.blockplanner.com.au/tools/upgrade',
     );
     assert.equal(
       callPrivate(
@@ -139,33 +203,51 @@ describe('Stripe checkout site handling', () => {
   });
 
   it('keeps canonical cancellation URLs inside the approved app path', () => {
-    const site = 'https://blockplanner.com.au/tools/discover';
+    const site = 'https://www.blockplanner.com.au/tools/discover';
 
     assert.equal(
       callPrivate(
         'resolveCheckoutCancelUrl',
         site,
+        'https://www.blockplanner.com.au/tools/discover/assessment?step=results',
+      ),
+      'https://www.blockplanner.com.au/tools/discover/assessment?step=results',
+    );
+    assert.throws(
+      () =>
+        callPrivate(
+          'resolveCheckoutCancelUrl',
+          site,
+          'https://www.blockplanner.com.au/',
+        ),
+      BadRequestException,
+    );
+    assert.throws(
+      () =>
+        callPrivate(
+          'resolveCheckoutCancelUrl',
+          site,
+          'https://www.blockplanner.com.au/tools/upgrade',
+        ),
+      BadRequestException,
+    );
+    assert.throws(
+      () =>
+        callPrivate(
+          'resolveCheckoutCancelUrl',
+          site,
+          'https://blockplanner.com.au/tools/discover/assessment',
+        ),
+      BadRequestException,
+    );
+
+    assert.equal(
+      callPrivate(
+        'resolveCheckoutCancelUrl',
+        'https://blockplanner.com.au/tools/discover',
         'https://blockplanner.com.au/tools/discover/assessment?step=results',
       ),
       'https://blockplanner.com.au/tools/discover/assessment?step=results',
-    );
-    assert.throws(
-      () =>
-        callPrivate(
-          'resolveCheckoutCancelUrl',
-          site,
-          'https://blockplanner.com.au/',
-        ),
-      BadRequestException,
-    );
-    assert.throws(
-      () =>
-        callPrivate(
-          'resolveCheckoutCancelUrl',
-          site,
-          'https://blockplanner.com.au/tools/upgrade',
-        ),
-      BadRequestException,
     );
   });
 

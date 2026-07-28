@@ -284,7 +284,10 @@ export class StripeController {
     if (hostname.includes('lvc')) return 'lvc_estimator';
     if (hostname.includes('discover')) return 'discover';
 
-    if (hostname === 'blockplanner.com.au') {
+    if (
+      hostname === 'blockplanner.com.au' ||
+      hostname === 'www.blockplanner.com.au'
+    ) {
       const pathname = siteUrl.pathname.replace(/\/+$/, '');
       if (pathname === '/tools/upgrade') return 'upgrade_estimator';
       if (pathname === '/tools/lvc-estimator') return 'lvc_estimator';
@@ -321,14 +324,17 @@ export class StripeController {
     const defaultSites: Record<BlockplannerSourceApp, string[]> = {
       discover: [
         'https://discover.blockplanner.com.au',
+        'https://www.blockplanner.com.au/tools/discover',
         'https://blockplanner.com.au/tools/discover',
       ],
       lvc_estimator: [
         'https://lvc-estimator.blockplanner.com.au',
+        'https://www.blockplanner.com.au/tools/lvc-estimator',
         'https://blockplanner.com.au/tools/lvc-estimator',
       ],
       upgrade_estimator: [
         'https://upgrade.blockplanner.com.au',
+        'https://www.blockplanner.com.au/tools/upgrade',
         'https://blockplanner.com.au/tools/upgrade',
       ],
       legacy: [],
