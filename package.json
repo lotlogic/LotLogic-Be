@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test:stripe-checkout": "tsx --test test/stripe-checkout-site.test.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -60,4 +61,3 @@
     "typescript": "^5.7.3"
   }
 }
-

@@ -273,15 +273,24 @@ export class StripeController {
       throw new BadRequestException('Unsupported sourceApp');
     }
 
-    let hostname = '';
+    let siteUrl: URL;
     try {
-      hostname = new URL(site).hostname.toLowerCase();
+      siteUrl = new URL(site);
     } catch {
       throw new BadRequestException('Invalid site');
     }
+    const hostname = siteUrl.hostname.toLowerCase();
     if (hostname.includes('upgrade')) return 'upgrade_estimator';
     if (hostname.includes('lvc')) return 'lvc_estimator';
     if (hostname.includes('discover')) return 'discover';
+
+    if (hostname === 'blockplanner.com.au') {
+      const pathname = siteUrl.pathname.replace(/\/+$/, '');
+      if (pathname === '/tools/upgrade') return 'upgrade_estimator';
+      if (pathname === '/tools/lvc-estimator') return 'lvc_estimator';
+      if (pathname === '/tools/discover') return 'discover';
+    }
+
     return 'legacy';
   }
 
@@ -303,17 +312,26 @@ export class StripeController {
     sourceApp: BlockplannerSourceApp,
     requestedSite: string,
   ): string {
-    const sourceSiteEnv: Record<BlockplannerSourceApp, string | undefined> = {
-      discover:
-        process.env.BLOCKPLANNER_DISCOVER_SITE_URL ||
-        'https://discover.blockplanner.com.au',
-      lvc_estimator:
-        process.env.BLOCKPLANNER_LVC_SITE_URL ||
-        'https://lvc-estimator.blockplanner.com.au',
-      upgrade_estimator:
-        process.env.BLOCKPLANNER_UPGRADE_SITE_URL ||
-        'https://upgrade.blockplanner.com.au',
+    const configuredSites: Record<BlockplannerSourceApp, string | undefined> = {
+      discover: process.env.BLOCKPLANNER_DISCOVER_SITE_URL,
+      lvc_estimator: process.env.BLOCKPLANNER_LVC_SITE_URL,
+      upgrade_estimator: process.env.BLOCKPLANNER_UPGRADE_SITE_URL,
       legacy: undefined,
+    };
+    const defaultSites: Record<BlockplannerSourceApp, string[]> = {
+      discover: [
+        'https://discover.blockplanner.com.au',
+        'https://blockplanner.com.au/tools/discover',
+      ],
+      lvc_estimator: [
+        'https://lvc-estimator.blockplanner.com.au',
+        'https://blockplanner.com.au/tools/lvc-estimator',
+      ],
+      upgrade_estimator: [
+        'https://upgrade.blockplanner.com.au',
+        'https://blockplanner.com.au/tools/upgrade',
+      ],
+      legacy: [],
     };
 
     try {
@@ -322,45 +340,68 @@ export class StripeController {
         throw new Error('Unsupported protocol');
       }
 
-      const configuredSite = String(sourceSiteEnv[sourceApp] || '').trim();
       const isLocalRequest = ['localhost', '127.0.0.1'].includes(
         requestedUrl.hostname,
       );
 
-      if (!configuredSite) {
-        if (isLocalRequest || sourceApp === 'legacy') {
-          return requestedUrl.origin;
+      if (isLocalRequest || sourceApp === 'legacy') {
+        return requestedUrl.origin;
+      }
+      if (requestedUrl.search || requestedUrl.hash) {
+        throw new Error('Site URL must not include query parameters or a hash');
+      }
+
+      const configuredSite = String(configuredSites[sourceApp] || '').trim();
+      const allowedSiteValues = [
+        ...defaultSites[sourceApp],
+        ...(configuredSite ? [configuredSite] : []),
+      ];
+      const normalizedRequestedSite =
+        this.normalizeCheckoutSiteUrl(requestedUrl);
+
+      const isAllowed = allowedSiteValues.some((allowedSite) => {
+        let allowedUrl: URL;
+        try {
+          allowedUrl = new URL(allowedSite);
+        } catch {
+          if (allowedSite === configuredSite) {
+            throw new InternalServerErrorException(
+              `Invalid trusted site URL for sourceApp ${sourceApp}`,
+            );
+          }
+          return false;
         }
-        throw new InternalServerErrorException(
-          `Missing trusted site URL for sourceApp ${sourceApp}`,
-        );
-      }
 
-      let configuredUrl: URL;
-      try {
-        configuredUrl = new URL(configuredSite);
-      } catch {
-        throw new InternalServerErrorException(
-          `Invalid trusted site URL for sourceApp ${sourceApp}`,
-        );
-      }
-      if (!['http:', 'https:'].includes(configuredUrl.protocol)) {
-        throw new InternalServerErrorException(
-          `Trusted site URL for sourceApp ${sourceApp} must use HTTP or HTTPS`,
-        );
-      }
+        if (!['http:', 'https:'].includes(allowedUrl.protocol)) {
+          if (allowedSite === configuredSite) {
+            throw new InternalServerErrorException(
+              `Trusted site URL for sourceApp ${sourceApp} must use HTTP or HTTPS`,
+            );
+          }
+          return false;
+        }
 
-      if (!isLocalRequest && requestedUrl.origin !== configuredUrl.origin) {
+        return (
+          this.normalizeCheckoutSiteUrl(allowedUrl) === normalizedRequestedSite
+        );
+      });
+
+      if (!isAllowed) {
         throw new BadRequestException(
           `site is not allowed for sourceApp ${sourceApp}`,
         );
       }
 
-      return isLocalRequest ? requestedUrl.origin : configuredUrl.origin;
+      return normalizedRequestedSite;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new BadRequestException('Invalid site');
     }
+  }
+
+  private normalizeCheckoutSiteUrl(url: URL): string {
+    const pathname = url.pathname.replace(/\/+$/, '');
+    return `${url.origin}${pathname === '/' ? '' : pathname}`;
   }
 
   private resolveCheckoutCancelUrl(
@@ -382,6 +423,19 @@ export class StripeController {
       ) {
         throw new BadRequestException(
           'cancelUrl must use the same HTTP origin as site',
+        );
+      }
+
+      const siteBasePath = siteUrl.pathname.replace(/\/+$/, '');
+      const cancelPath = cancelUrl.pathname.replace(/\/+$/, '');
+      if (
+        siteBasePath &&
+        siteBasePath !== '/' &&
+        cancelPath !== siteBasePath &&
+        !cancelPath.startsWith(`${siteBasePath}/`)
+      ) {
+        throw new BadRequestException(
+          'cancelUrl must stay within the site path',
         );
       }
 
