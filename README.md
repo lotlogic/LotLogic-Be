@@ -1,334 +1,404 @@
 # LotLogic Backend
 
-A NestJS-based backend service for managing land lots, estates, and zoning information with geospatial capabilities and house design compatibility analysis.
+Shared NestJS backend for the LotCheck platform and BlockPlanner tools. The
+service retains the original LotLogic APIs for estates, lots, builders, plans,
+enquiries, zoning and administration while also providing shared Stripe,
+monday.com, geocoding and report-delivery services for BlockPlanner.
 
-## 🏗️ Project Overview
+The production API is hosted in Azure Container Apps:
 
-LotLogic Backend is a comprehensive land management system that handles:
-- **Lot Management**: Land parcels with geospatial data and zoning information
-- **Estate Management**: Property development projects and their associated lots
-- **Zoning Analysis**: Land use regulations and overlay information
-- **House Design Compatibility**: Automated analysis of house designs on lots
-- **Geospatial Operations**: PostGIS-powered spatial queries and analysis
-- **Enquiry System**: User inquiries and property assessments
-- **Planning Integration**: Development plan management
-- **Facade Management**: Building facade and design information
+`https://lotcheck-be.wittysky-d6d60dbd.australiasoutheast.azurecontainerapps.io/api`
 
-## 🚀 Tech Stack
+## Architecture
 
-- **Framework**: [NestJS](https://nestjs.com/) - Progressive Node.js framework
-- **Database**: PostgreSQL with PostGIS extension for geospatial data
-- **ORM**: Prisma with custom PostgreSQL extensions
-- **Language**: TypeScript
-- **Package Manager**: npm
-- **Testing**: Jest for unit and e2e tests
-- **Containerization**: Docker & Docker Compose
-- **Database Management**: pgAdmin
+- Node.js 20 and NestJS 11
+- PostgreSQL with PostGIS
+- Prisma ORM and migrations
+- Stripe Checkout in live and sandbox modes
+- monday.com boards for paid fulfillment and submitted leads
+- Azure Blob Storage and Chromium for generated PDF reports
+- Google Geocoding and imported ACT spatial data for address and zone lookup
+- Docker for local development and production images
 
-## 📁 Project Structure
+All application routes use the `/api` prefix. `GET /api/health` can be used for
+a basic health check.
 
-```
-src/
-├── modules/
-│   ├── lot/              # Lot management and geospatial operations
-│   ├── estate/           # Estate and property development management
-│   ├── zoning/           # Zoning regulations and land use analysis
-│   ├── enquiry/          # User inquiry handling
-│   ├── facade/           # Building facade management
-│   ├── plan/             # Development plan management
-│   ├── design-on-lot/    # House design compatibility analysis
-│   ├── builder/          # Builder management
-│   └── geo/              # Geographic data services
-├── prisma/
-│   ├── schema.prisma     # Database schema with PostGIS support
-│   ├── seeds/
-│   │   └── seed.ts       # Database seeding
-│   └── data/             # GeoJSON and CSV data files
-├── config/               # Application configuration
-└── shared/               # Shared utilities, decorators, and types
-```
+### Shared BlockPlanner flows
 
-## 🗄️ Database Schema
+The backend supports these paid product codes:
 
-### Core Models
+| `productCode` | Product | Fulfillment mapping |
+| --- | --- | --- |
+| `site_report` | BlockPlanner Site Assessment Report | `site_report` |
+| `crown_lease` | Crown Lease Service | `crown_lease` |
+| `feasibility_report` | Financial Feasibility Report | `feasibility_report` |
 
-- **Lot**: Land parcels with geospatial data, zoning info, and estate relationships
-- **Estate**: Property development projects containing multiple lots
-- **HouseDesign**: House designs with dimensions and lot requirements
-- **ZoningRule**: Land use regulations and building restrictions
-- **DesignOnLot**: Compatibility analysis results
-- **Builder**: Construction company information
-- **Enquiry**: User inquiries and property assessments
+Supported source applications are:
 
-### Key Features
+- `discover`
+- `lvc_estimator`
+- `upgrade_estimator`
+- `legacy`, retained for older callers
 
-- PostGIS geometry columns for spatial operations
-- GeoJSON backup storage with lot dimensions
-- Spatial indexing for performance
-- UUID-based primary keys
-- Comprehensive audit trails (createdAt, updatedAt)
+The paid flow does not maintain a separate orders database:
 
-## 🛠️ Prerequisites
+1. A frontend calls `POST /api/stripe/create-checkout-session`.
+2. The backend validates the product, source application, trusted site and
+   cancel URL.
+3. Stripe Checkout stores the report and customer fields as metadata.
+4. A signed Stripe webhook confirms that the payment is paid.
+5. The backend creates or updates the relevant monday.com item.
 
-- Node.js (v18 or higher)
-- PostgreSQL with PostGIS extension
-- npm package manager
-- Docker & Docker Compose (for containerized development)
+monday.com upserts use the Stripe Payment Intent ID first and the generated
+report ID second. This prevents duplicate fulfillment when Stripe retries a
+webhook.
 
-## 📦 Installation
+### Backward compatibility
 
-### Option 1: Local Development
+The service remains compatible with existing LotCheck and older Discover
+callers:
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd LotLogic-Be
-   ```
+- Existing non-BlockPlanner controllers and database models are unchanged.
+- `productCode` defaults to `site_report`.
+- `email` remains accepted as an alias for `clientEmail`.
+- `sourceApp` can be inferred from known canonical paths and legacy
+  subdomains when it is omitted.
+- Existing apex URLs, `www` tool URLs, legacy tool subdomains and localhost
+  development URLs are accepted.
+- Checkout remains live by default unless a source-specific server override
+  or an explicit valid `checkoutMode` selects sandbox.
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+New clients should always send an explicit `productCode` and `sourceApp`.
 
-3. **Environment Setup**
-   Create a `.env` file in the root directory:
-   ```env
-   DATABASE_URL="postgresql://postgres:lotlogic123@localhost:5432/lotlogic?schema=public"
-   PORT=3000
-   ```
+## Configuration
 
-4. **Database Setup**
-   ```bash
-   # Generate Prisma client
-   npx prisma generate
-   
-   # Run database migrations
-   npx prisma migrate dev
-   
-   # Seed the database (optional)
-   npx tsx prisma/seeds/seed.ts
-   npx tsx prisma/seeds/lot.ts
-   ```
+Copy `.env-example` to `.env` for local development and supply the required
+values. Never commit `.env`, API tokens, signing secrets, SMTP credentials,
+database credentials or Azure connection strings.
 
-### Option 2: Docker Development (Recommended)
+Configuration is deliberately split between versioned JSON and secret
+environment variables.
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd LotLogic-Be
-   ```
+### Product catalog
 
-2. **Start with Docker Compose**
-   ```bash
-   # Build and start all services
-   docker-compose up --build -d
-   
-   # Run database migrations
-   docker exec lotlogic-backend npx prisma migrate deploy
-   
-   # Seed the database
-   docker exec lotlogic-backend npx tsx prisma/seeds/seed.ts
-   docker exec lotlogic-backend npx tsx prisma/seeds/lot.ts
-   ```
+`src/config/blockplanner-products.json` contains the supported product display
+names, AUD amounts, and live and sandbox Stripe Price IDs.
 
-## 🚀 Running the Application
+Update this file when a product price changes. Stripe secret keys do not belong
+in this file.
 
-### Local Development
-```bash
-# Start in development mode with hot reload
-npm run start:dev
+The catalog is validated at application startup. Unknown products, missing
+products and malformed Price IDs cause startup or checkout to fail rather than
+silently using the wrong product.
 
-# Start in debug mode
-npm run start:debug
-```
+### monday.com mappings
 
-### Docker Development
-```bash
-# Start all services
-docker-compose up -d
+`src/config/blockplanner-monday-workflows.json` contains the board IDs, group
+IDs, column IDs and status-label mappings used by the BlockPlanner workflows.
+It currently maps:
 
-# View logs
-docker-compose logs -f backend
+- site reports
+- Crown lease purchases
+- feasibility reports
+- LVC estimator leads
+- upgrade report leads
+- contact requests
+- free assessment leads
 
-# Stop services
-docker-compose down
-```
+Board and column mappings belong in this file, not in a large collection of
+environment variables. `MONDAY_API_TOKEN` remains an environment secret.
+Changes to a monday.com board must be reflected in the JSON mapping before the
+corresponding workflow is deployed.
 
-### Production
-```bash
-# Build the application
-npm run build
+### Required service credentials
 
-# Start in production mode
-npm run start:prod
-```
+Use `.env-example` as the baseline variable template. The main integration
+groups are:
 
+- Database: `DATABASE_URL`
+- Stripe live: `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`
+- Stripe sandbox: `STRIPE_SANDBOX_API_KEY`,
+  `STRIPE_SANDBOX_WEBHOOK_SECRET`
+- monday.com: `MONDAY_API_TOKEN`
+- Mail: `SMTP_*`, with optional `LOTCHECK_SMTP_*` overrides
+- Geocoding: `GOOGLE_MAPS_API_KEY`
+- Generated reports: `AZURE_STORAGE_CONNECTION_STRING`,
+  `AZURE_STORAGE_CONTAINER` and a Chromium executable path where required
+- Microsoft Entra invitations: `ENTRA_*` or `AZURE_TENANT_ID`
+- Mixpanel reporting: `MIXPANEL_*`
 
+The Azure Container App owns production runtime secrets. The deployment
+workflow does not replace the full environment on each release.
 
-## 📊 Data Management
+## Stripe Checkout
 
-The project includes comprehensive data seeding:
-- **Sample Lots**: Land parcels with geospatial data and zoning information
-- **Zoning Rules**: RZ1-RZ5 zoning regulations with building restrictions
-- **House Designs**: Sample house designs with dimensions and requirements
-- **Compatibility Analysis**: Automated matching of house designs to lots
+Create a hosted checkout session with:
 
-### Importing Data
-```bash
-# Run the seed script to import sample data
-npx tsx prisma/seeds/seed.ts
-npx tsx prisma/seeds/lot.ts
-```
-
-## 🗺️ ACT Land Use Zones (Address → Zone Lookup)
-
-This repo supports importing ACT Gov GeoJSON datasets (EPSG:4326) into PostGIS and querying them via the API:
-- `data/ACTGOV_BLOCKS_-3707349334185229602.geojson` (blocks; includes `BLOCK_DERIVED_AREA`)
-- `data/ACTGOV_TP_LAND_USE_ZONE_-3480885847246569636.geojson` (land use zones; includes `LAND_USE_ZONE_CODE_ID`)
-
-### 1) Configure Google Geocoding
-- Add `GOOGLE_MAPS_API_KEY` to your `.env` (see `.env-example`).
-
-### 2) Apply DB migrations + import GeoJSON (Docker)
-```bash
-docker exec lotcheck-backend npx prisma migrate deploy
-docker exec lotcheck-backend npx tsx prisma/seeds/actLandUseZone.ts --skip-if-exists
-docker exec lotcheck-backend npx tsx prisma/seeds/actBlock.ts --skip-if-exists
-```
-
-- Use `--truncate` to force a full re-import (drops existing rows first).
-- In Azure Container Apps, you can set `AUTO_IMPORT_ACT_DATA=true` to run these imports in the background on boot.
-
-### 3) Call the endpoint
-- By address: `GET http://localhost:3000/api/geo/act-zone?address=1%20Bunda%20St%20Canberra%20ACT`
-- By coordinates (no Google call): `GET http://localhost:3000/api/geo/act-zone?lat=-35.2809&lng=149.1310`
-- Response includes both `block` and `zone` (when available). `source` indicates which matched dataset is preferred (blocks first, then land-use zones).
-- If `data/2. LotCheck - Reference Data - Rules v3.csv` exists, matching rules for the resolved zone are included under `lotCheckRules` (override path via `LOT_CHECK_RULES_CSV_PATH`).
-
-## 🔧 Development Tools
-
-### Code Quality
-```bash
-# Format code
-npm run format
-
-# Lint code
-npm run lint
-```
-
-### Database Management
-```bash
-# Open Prisma Studio
-npx prisma studio
-
-# Reset database
-npx prisma migrate reset
-
-# Deploy migrations to production
-npx prisma migrate deploy
-```
-
-## 🌐 API Endpoints
-
-The application provides RESTful APIs for:
-
-- **Lots**: CRUD operations for land parcels
-- **Estates**: Property development management
-- **Zoning**: Land use regulation queries
-- **House Designs**: House design management
-- **Design-on-Lot**: Compatibility analysis
-- **Enquiries**: User inquiry handling
-- **Plans**: Development plan management
-- **Facades**: Building facade data
-- **Builders**: Construction company management
-- **Geo**: Geographic data services
-
-### Key Endpoints
-
-#### Stripe live and sandbox checkout
-
-`POST /api/stripe/create-checkout-session` remains live by default. Callers can
-send `checkoutMode: "sandbox"` to use Stripe test mode without affecting the
-existing live configuration.
-
-Sandbox mode requires these additional backend environment variables:
-
-```env
-STRIPE_SANDBOX_API_KEY="sk_test_..."
-STRIPE_SANDBOX_WEBHOOK_SECRET="whsec_..."
-```
-
-Supported BlockPlanner products and their live/sandbox Stripe Price IDs are
-maintained in `src/config/blockplanner-products.json`. Stripe API keys and
-webhook signing secrets remain environment variables.
-
-Configure the Stripe test-mode webhook to use the existing
-`POST /api/stripe/webhook` endpoint. The endpoint verifies both live and test
-signatures. Successful sandbox payments still exercise the monday.com workflow;
-their item names are prefixed with `[SANDBOX]`.
-
-#### Design-on-Lot Compatibility
 ```http
-GET /design-on-lot/calculate?lotId={lotId}
+POST /api/stripe/create-checkout-session
+Content-Type: application/json
 ```
 
-**Response Example:**
+Example request:
+
 ```json
 {
-  "lotId": "23d5cee7-f1fd-454c-a1c7-c932d6c41ec5",
-  "zoning": "RZ1",
-  "matches": [
-    {
-      "houseDesignId": "design-1",
-      "floorplanUrl": "/floorplans/floorplan.png",
-      "spacing": {"front": 4, "rear": 3, "side": 3},
-      "maxCoverageArea": 250,
-      "houseArea": 150,
-      "lotDimensions": {"width": 20, "depth": 35}
-    }
-  ]
+  "site": "https://www.blockplanner.com.au/tools/discover",
+  "cancelUrl": "https://www.blockplanner.com.au/tools/discover/assessment",
+  "checkoutMode": "live",
+  "productCode": "site_report",
+  "sourceApp": "discover",
+  "clientName": "Example Customer",
+  "clientEmail": "customer@example.com",
+  "clientPhone": "+61 400 000 000",
+  "address": "Example address",
+  "suburb": "EXAMPLE",
+  "blockSizeM2": 800,
+  "zone": "RZ1",
+  "intention": "Sell"
 }
 ```
 
-## 🐳 Docker Services
+`site`, `clientEmail` and `address` are required. The response contains the
+Stripe-hosted checkout URL.
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Backend API | 3000 | NestJS application |
-| PostgreSQL | 5432 | Database with PostGIS |
-| pgAdmin | 5050 | Database management UI |
+### Site allowlisting and return URLs
 
-### Accessing Services
-- **Backend API**: http://localhost:3000
-- **pgAdmin**: http://localhost:5050 (admin@lotlogic.com / admin123)
-- **PostgreSQL**: localhost:5432
+Each non-legacy `sourceApp` has a fixed list of accepted production URLs.
+Optional `BLOCKPLANNER_*_SITE_URL` values can add a trusted deployment URL for
+each frontend.
 
-## 🔒 Environment Variables
+The backend:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `PORT` | Application port | 3000 |
-| `NODE_ENV` | Environment mode | development |
+- accepts only HTTP or HTTPS site URLs
+- rejects query strings and fragments on `site`
+- requires `cancelUrl` to use the same origin as `site`
+- requires canonical-path cancel URLs to remain inside that tool's path
+- builds the success URL under the validated site path
 
-## 🤝 Contributing
+Do not use `legacy` for new integrations. It exists only to avoid breaking
+older callers that predate source-specific allowlisting.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Live and sandbox behavior
 
-## 📝 License
+`checkoutMode` accepts `live` or `sandbox`. Existing callers default to live.
+The server can override a frontend's requested mode with:
 
-This project is private and unlicensed. All rights reserved.
+- `STRIPE_DISCOVER_CHECKOUT_MODE`
+- `STRIPE_LVC_CHECKOUT_MODE`
+- `STRIPE_UPGRADE_CHECKOUT_MODE`
 
-## 🆘 Support
+This permits unreleased frontends to run end to end in Stripe test mode while
+production Discover remains live. Confirm these values in the Azure Container
+App before promoting a frontend.
 
-For support and questions, please contact the development team or create an issue in the repository.
+Sandbox mode requires both the sandbox API key and the sandbox Price ID for the
+selected product. Sandbox monday.com item names are prefixed with `[SANDBOX]`.
 
----
+### Stripe webhook
 
-**Last Updated**: August 2025
-**Status**: ✅ Fully functional with npm package manager and Docker support
+Configure Stripe live mode and test mode to send relevant Checkout and Payment
+Intent events to:
 
+```text
+POST /api/stripe/webhook
+```
+
+The endpoint requires Stripe's unmodified raw body and `stripe-signature`
+header. NestJS raw-body support is enabled in `src/main.ts`.
+
+The backend attempts verification with the configured live and sandbox webhook
+secrets, confirms that the event mode matches the secret, and ignores unpaid
+Checkout Sessions. Fulfillment is handled for:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `payment_intent.succeeded`
+
+Stripe can deliver more than one relevant event for a payment, so the
+monday.com upsert behavior is required for idempotency.
+
+## monday.com Endpoints
+
+Frontend lead submission endpoints:
+
+```text
+POST /api/monday/free-assessment-leads
+POST /api/monday/product-leads
+```
+
+Supported `leadType` values for product leads are `lvc_estimator`,
+`upgrade_report` and `contact_request`.
+
+`POST /api/enquiry/get-in-touch` is retained for existing Discover callers. If
+the `contact_request` workflow is configured, it writes the enquiry to
+monday.com. Otherwise it falls back to the configured email recipient. The
+endpoint validates required contact fields, uses a honeypot field, and verifies
+reCAPTCHA when `RECAPTCHA_SECRET_KEY` is configured.
+
+Report automation endpoints:
+
+```text
+POST /api/monday/dashboard-trigger
+POST /api/monday/dashboard-delivery
+```
+
+Both report endpoints support monday.com's initial `challenge` request. For
+normal requests they extract the monday.com item ID, load the mapped item and
+then queue report generation or delivery.
+
+Set `MONDAY_WEBHOOK_SECRET` in every non-local environment. Supply it using the
+`x-webhook-secret` header where the caller permits custom headers. Query-string
+and request-body secret forms are retained for integrations that cannot set
+headers, but URLs containing secrets must not be logged or shared.
+
+Report generation additionally requires Azure Blob Storage and Chromium.
+Report delivery requires valid mail configuration and a populated final PDF
+link and client email in monday.com.
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 20
+- npm
+- PostgreSQL with PostGIS, or Docker Desktop with Docker Compose
+
+### Native application with a local database
+
+```bash
+npm ci
+npx prisma generate
+npx prisma migrate dev
+npm run start:dev
+```
+
+The API listens on `http://localhost:3000/api` unless `PORT` is changed.
+
+### Docker Compose
+
+```bash
+docker compose up --build
+```
+
+The local stack exposes:
+
+| Service | URL or port |
+| --- | --- |
+| Backend | `http://localhost:3000/api` |
+| PostgreSQL/PostGIS | `localhost:5432` |
+| pgAdmin | `http://localhost:5050` |
+
+`docker-compose.yml` is a development convenience file, not a production
+configuration. Replace all local credentials with developer-specific values
+and never reuse them in a hosted environment.
+
+### Available commands
+
+These are the scripts currently defined in `package.json`:
+
+```bash
+npm run start
+npm run start:dev
+npm run start:debug
+npm run build
+npm run test:stripe-checkout
+npm run format
+```
+
+`npm run format` modifies TypeScript files. Run it only when formatting changes
+are intended. There is currently no general `lint` or full test-suite script.
+
+Useful Prisma commands:
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+npx prisma migrate deploy
+npx prisma studio
+```
+
+## ACT Spatial Data
+
+The zone endpoint supports lookup by address or coordinates:
+
+```text
+GET /api/geo/act-zone?address=1%20Bunda%20St%20Canberra%20ACT
+GET /api/geo/act-zone?lat=-35.2809&lng=149.1310
+```
+
+ACT block and land-use-zone GeoJSON can be imported into PostGIS with:
+
+```bash
+npx tsx prisma/seeds/actLandUseZone.ts --skip-if-exists
+npx tsx prisma/seeds/actBlock.ts --skip-if-exists
+```
+
+Use `--truncate` only when a full replacement is intended.
+
+The production runtime image intentionally excludes the large GeoJSON files.
+`AUTO_IMPORT_ACT_DATA` is therefore disabled by the production deployment
+workflow unless the runtime is separately provided with import files.
+
+## Security and Operations
+
+- Keep all secrets in local `.env`, GitHub Actions secrets or Azure Container
+  App secrets. Versioned JSON contains identifiers and mappings only.
+- Stripe webhook signing is mandatory. Never fulfill an order from the browser
+  return URL.
+- Set `MONDAY_WEBHOOK_SECRET` in production. monday.com's challenge handshake
+  is the only request handled before normal secret verification.
+- CORS is not authentication. Protect administrative routes with the existing
+  Azure and application authorization controls.
+- Leave `STRIPE_WEBHOOK_LOG_PAYLOAD` disabled in production. Payload logs can
+  contain customer information.
+- Do not expose Stripe secret keys, monday.com tokens, SMTP credentials,
+  database URLs or Azure storage connection strings to frontend builds.
+- Preserve `productCode`, `sourceApp`, report ID and Stripe payment ID metadata
+  when adding a new paid frontend.
+- Add a product to the TypeScript supported-code list, product JSON, monday.com
+  JSON mapping and checkout tests as one change.
+
+## Production Deployment
+
+`.github/workflows/deploy-azure-acr-prod.yml` runs on every push to `main` and
+can also be started manually.
+
+The workflow:
+
+1. Builds `Dockerfile.runtime` with Docker Buildx.
+2. Pushes SHA-tagged and `prod-latest` images to
+   `lotcheck.azurecr.io/lotlogic-be`.
+3. Authenticates to Azure.
+4. Deploys the immutable SHA-tagged image to the `lotcheck-be` Container App in
+   the `Production` resource group.
+5. Enables automatic Prisma migrations and disables automatic seed and ACT
+   data imports.
+
+Required GitHub Actions secrets are:
+
+- `ACR_USERNAME`
+- `ACR_PASSWORD`
+- `AZURE_CREDENTIALS`
+- `PROD_DATABASE_URL`, optional when the Container App already owns the correct
+  database setting
+
+The runtime image includes Chromium for PDF generation, runs
+`npx prisma migrate deploy` through `scripts/runtime-entrypoint.sh`, and starts
+`dist/src/main.js`.
+
+Before pushing to `main`, run:
+
+```bash
+npm run test:stripe-checkout
+npm run build
+```
+
+After deployment, verify `/api/health`, one trusted checkout request in the
+intended mode, Stripe webhook delivery, and the corresponding monday.com item.
+
+## Repository Notes
+
+This is a private, unlicensed repository. Coordinate changes to shared
+controllers and deployment configuration because a release can affect both
+LotCheck and all BlockPlanner frontends.
